@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:16
+    container_name: happy-schools-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: happyschools2026
+      POSTGRES_DB: happy_schools
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init-simple.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin -d happy_schools" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
