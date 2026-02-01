@@ -11,17 +11,20 @@ import {
     School,
     LogOut,
     BookOpen,
-    FileText
+    FileText,
+    Trophy
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
 const navItems = [
     { href: '/', label: 'Bảng điều khiển', icon: LayoutDashboard },
+    { href: '/lop-hoc', label: 'Lớp học', icon: School },
     { href: '/thong-ke', label: 'Thống kê', icon: BarChart3 },
     { href: '/hoat-dong', label: 'Hoạt động', icon: Activity },
     { href: '/kiem-tra', label: 'Bài kiểm tra', icon: BookOpen },
     { href: '/bai-tap', label: 'Bài tập', icon: FileText },
     { href: '/hoc-sinh', label: 'Học sinh', icon: Users },
+    { href: '/thi-dua', label: 'Thi đua', icon: Trophy },
     { href: '/cai-dat', label: 'Cài đặt', icon: Settings },
 ];
 

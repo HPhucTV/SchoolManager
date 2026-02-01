@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import {
     Plus, FileText, Calendar, Users, CheckCircle, Clock, Trash2,
-    Edit, Eye, Send, X, Save, GripVertical, MessageSquare
+    Edit, Eye, Send, X, Save, GripVertical, MessageSquare, Upload, RefreshCw
 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -83,6 +83,52 @@ export default function BaiTapPage() {
     });
     const [questions, setQuestions] = useState<Question[]>([]);
     const [saving, setSaving] = useState(false);
+
+    // Upload state
+    const [creationMode, setCreationMode] = useState<'manual' | 'upload'>('manual');
+    const [uploadFile, setUploadFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadFile(file);
+
+        await parseFile(file);
+    };
+
+    const parseFile = async (file: File) => {
+        setIsUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch(`${API_URL}/api/assignments/upload-docx`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                const parsedQuestions: Question[] = await response.json();
+                // Append parsed questions to existing ones, or replace?
+                // For now, let's append to allow mixing manual + upload
+                setQuestions(prev => [...prev, ...parsedQuestions]);
+                alert(`Đã thêm ${parsedQuestions.length} câu hỏi từ file!`);
+                // Switch back to manual mode to review
+                setCreationMode('manual');
+            } else {
+                alert('Không thể đọc file. Vui lòng thử lại.');
+            }
+        } catch (err) {
+            console.error('Upload error:', err);
+            alert('Lỗi kết nối khi tải file.');
+        } finally {
+            setIsUploading(false);
+        }
+    };
 
     // Grading state
     const [grades, setGrades] = useState<{ [key: number]: { score: number; feedback: string } }>({});
@@ -266,6 +312,8 @@ export default function BaiTapPage() {
     const resetForm = () => {
         setFormData({ title: '', description: '', subject: '', class_id: 0, deadline: '' });
         setQuestions([]);
+        setCreationMode('manual');
+        setUploadFile(null);
     };
 
     const viewSubmissions = (assignment: Assignment) => {
@@ -429,9 +477,40 @@ export default function BaiTapPage() {
                             padding: '20px 24px', borderBottom: '1px solid #e5e7eb',
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>Tạo bài tập mới</h2>
+                            <div>
+                                <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>Tạo bài tập mới</h2>
+                                <p style={{ fontSize: '13px', color: '#6b7280', margin: '2px 0 0 0' }}>
+                                    {creationMode === 'manual' ? 'Nhập thông tin và câu hỏi' : 'Tải lên từ file Word'}
+                                </p>
+                            </div>
                             <button onClick={() => { setShowCreateModal(false); resetForm(); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                                 <X size={24} color="#6b7280" />
+                            </button>
+                        </div>
+
+                        {/* Tabs */}
+                        <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', padding: '0 24px' }}>
+                            <button
+                                onClick={() => setCreationMode('manual')}
+                                style={{
+                                    padding: '12px 16px', border: 'none', background: 'none',
+                                    fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+                                    color: creationMode === 'manual' ? '#2563eb' : '#6b7280',
+                                    borderBottom: creationMode === 'manual' ? '2px solid #2563eb' : 'none',
+                                }}
+                            >
+                                ✍️ Nhập thủ công
+                            </button>
+                            <button
+                                onClick={() => setCreationMode('upload')}
+                                style={{
+                                    padding: '12px 16px', border: 'none', background: 'none',
+                                    fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+                                    color: creationMode === 'upload' ? '#2563eb' : '#6b7280',
+                                    borderBottom: creationMode === 'upload' ? '2px solid #2563eb' : 'none',
+                                }}
+                            >
+                                📤 Tải file Word
                             </button>
                         </div>
 
@@ -493,103 +572,143 @@ export default function BaiTapPage() {
                                 </div>
                             </div>
 
-                            {/* Questions */}
-                            <div style={{ marginBottom: '16px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#111827', margin: 0 }}>Câu hỏi ({questions.length})</h3>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button
-                                            onClick={() => addQuestion('multiple_choice')}
-                                            style={{
-                                                padding: '8px 14px', borderRadius: '8px',
-                                                backgroundColor: '#dbeafe', color: '#2563eb',
-                                                border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '13px',
-                                            }}
-                                        >
-                                            + Trắc nghiệm
-                                        </button>
-                                        <button
-                                            onClick={() => addQuestion('essay')}
-                                            style={{
-                                                padding: '8px 14px', borderRadius: '8px',
-                                                backgroundColor: '#fef3c7', color: '#d97706',
-                                                border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '13px',
-                                            }}
-                                        >
-                                            + Tự luận
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {questions.map((q, index) => (
-                                    <div key={index} style={{
-                                        padding: '16px', borderRadius: '12px', border: '1px solid #e5e7eb',
-                                        marginBottom: '12px', backgroundColor: '#f9fafb',
+                            {/* Questions Section */}
+                            {creationMode === 'upload' ? (
+                                <div style={{
+                                    border: '2px dashed #9ca3af', borderRadius: '16px', padding: '40px',
+                                    textAlign: 'center', backgroundColor: '#f9fafb', cursor: 'pointer',
+                                    marginBottom: '20px'
+                                }}
+                                    onClick={() => document.getElementById('file-upload')?.click()}
+                                >
+                                    <input
+                                        id="file-upload"
+                                        type="file"
+                                        accept=".docx"
+                                        style={{ display: 'none' }}
+                                        onChange={handleFileSelect}
+                                    />
+                                    <div style={{
+                                        width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#eef2ff',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
+                                        color: '#6366f1'
                                     }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                            <span style={{
-                                                padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
-                                                backgroundColor: q.question_type === 'multiple_choice' ? '#dbeafe' : '#fef3c7',
-                                                color: q.question_type === 'multiple_choice' ? '#2563eb' : '#d97706',
-                                            }}>
-                                                Câu {index + 1} - {q.question_type === 'multiple_choice' ? 'Trắc nghiệm' : 'Tự luận'}
-                                            </span>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <input
-                                                    type="number"
-                                                    value={q.points}
-                                                    onChange={e => updateQuestion(index, 'points', parseInt(e.target.value) || 1)}
-                                                    min={1}
-                                                    style={{ width: '60px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', fontSize: '13px' }}
-                                                />
-                                                <span style={{ fontSize: '13px', color: '#6b7280' }}>điểm</span>
-                                                <button
-                                                    onClick={() => removeQuestion(index)}
-                                                    style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', cursor: 'pointer' }}
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
+                                        <Upload size={32} />
+                                    </div>
+                                    <p style={{ fontSize: '16px', fontWeight: 600, color: '#374151', margin: '0 0 4px 0' }}>
+                                        {uploadFile ? uploadFile.name : 'Nhấn để chọn file Word (.docx)'}
+                                    </p>
+                                    <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>
+                                        Hệ thống sẽ tự động đọc câu hỏi trắc nghiệm
+                                    </p>
+
+                                    {isUploading && (
+                                        <div style={{ marginTop: '16px', color: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                            <RefreshCw className="animate-spin" size={20} />
+                                            <span>Đang phân tích...</span>
                                         </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div style={{ marginBottom: '16px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                        <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#111827', margin: 0 }}>Câu hỏi ({questions.length})</h3>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button
+                                                onClick={() => addQuestion('multiple_choice')}
+                                                style={{
+                                                    padding: '8px 14px', borderRadius: '8px',
+                                                    backgroundColor: '#dbeafe', color: '#2563eb',
+                                                    border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '13px',
+                                                    display: 'flex', alignItems: 'center', gap: '4px'
+                                                }}
+                                            >
+                                                <Plus size={16} /> Trắc nghiệm
+                                            </button>
+                                            <button
+                                                onClick={() => addQuestion('essay')}
+                                                style={{
+                                                    padding: '8px 14px', borderRadius: '8px',
+                                                    backgroundColor: '#fef3c7', color: '#d97706',
+                                                    border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '13px',
+                                                    display: 'flex', alignItems: 'center', gap: '4px'
+                                                }}
+                                            >
+                                                <Plus size={16} /> Tự luận
+                                            </button>
+                                        </div>
+                                    </div>
 
-                                        <textarea
-                                            value={q.question_text}
-                                            onChange={e => updateQuestion(index, 'question_text', e.target.value)}
-                                            placeholder="Nội dung câu hỏi..."
-                                            rows={2}
-                                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '14px', marginBottom: '12px', resize: 'vertical' }}
-                                        />
-
-                                        {q.question_type === 'multiple_choice' && (
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                                                {['A', 'B', 'C', 'D'].map(opt => (
-                                                    <div key={opt} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <input
-                                                            type="radio"
-                                                            name={`correct_${index}`}
-                                                            checked={q.correct_answer === opt}
-                                                            onChange={() => updateQuestion(index, 'correct_answer', opt)}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            value={(q as any)[`option_${opt.toLowerCase()}`] || ''}
-                                                            onChange={e => updateQuestion(index, `option_${opt.toLowerCase()}`, e.target.value)}
-                                                            placeholder={`Đáp án ${opt}`}
-                                                            style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', fontSize: '13px' }}
-                                                        />
-                                                    </div>
-                                                ))}
+                                    {questions.map((q, index) => (
+                                        <div key={index} style={{
+                                            padding: '16px', borderRadius: '12px', border: '1px solid #e5e7eb',
+                                            marginBottom: '12px', backgroundColor: '#f9fafb',
+                                        }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                                <span style={{
+                                                    padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
+                                                    backgroundColor: q.question_type === 'multiple_choice' ? '#dbeafe' : '#fef3c7',
+                                                    color: q.question_type === 'multiple_choice' ? '#2563eb' : '#d97706',
+                                                }}>
+                                                    Câu {index + 1} - {q.question_type === 'multiple_choice' ? 'Trắc nghiệm' : 'Tự luận'}
+                                                </span>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <input
+                                                        type="number"
+                                                        value={q.points}
+                                                        onChange={e => updateQuestion(index, 'points', parseInt(e.target.value) || 1)}
+                                                        min={1}
+                                                        style={{ width: '60px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', fontSize: '13px' }}
+                                                    />
+                                                    <span style={{ fontSize: '13px', color: '#6b7280' }}>điểm</span>
+                                                    <button
+                                                        onClick={() => removeQuestion(index)}
+                                                        style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', cursor: 'pointer' }}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
                                             </div>
-                                        )}
-                                    </div>
-                                ))}
 
-                                {questions.length === 0 && (
-                                    <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af', border: '2px dashed #e5e7eb', borderRadius: '12px' }}>
-                                        Chưa có câu hỏi. Bấm nút ở trên để thêm.
-                                    </div>
-                                )}
-                            </div>
+                                            <textarea
+                                                value={q.question_text}
+                                                onChange={e => updateQuestion(index, 'question_text', e.target.value)}
+                                                placeholder="Nội dung câu hỏi..."
+                                                rows={2}
+                                                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '14px', marginBottom: '12px', resize: 'vertical' }}
+                                            />
+
+                                            {q.question_type === 'multiple_choice' && (
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                                                    {['A', 'B', 'C', 'D'].map(opt => (
+                                                        <div key={opt} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <input
+                                                                type="radio"
+                                                                name={`correct_${index}`}
+                                                                checked={q.correct_answer === opt}
+                                                                onChange={() => updateQuestion(index, 'correct_answer', opt)}
+                                                            />
+                                                            <input
+                                                                type="text"
+                                                                value={(q as any)[`option_${opt.toLowerCase()}`] || ''}
+                                                                onChange={e => updateQuestion(index, `option_${opt.toLowerCase()}`, e.target.value)}
+                                                                placeholder={`Đáp án ${opt}`}
+                                                                style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', fontSize: '13px' }}
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+
+                                    {questions.length === 0 && (
+                                        <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af', border: '2px dashed #e5e7eb', borderRadius: '12px' }}>
+                                            Chưa có câu hỏi. Bấm nút ở trên để thêm.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Footer */}

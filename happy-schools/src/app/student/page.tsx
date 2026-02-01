@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { Smile, Heart, Brain, Calendar, CheckCircle, Clock, LogOut, User, Settings, Bell, BellOff, Save, X, Upload, Camera, FileText } from 'lucide-react';
+import { Smile, Heart, Brain, Calendar, CheckCircle, Clock, LogOut, User, Settings, Bell, BellOff, Save, X, Upload, Camera, FileText, ArrowRight, Gamepad2 as GamepadIcon, Video } from 'lucide-react';
 import ChatBot from '@/components/ChatBot';
 import StudentNotifications from '@/components/StudentNotifications';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000').replace('localhost', '127.0.0.1');
 
 interface StudentDashboardData {
     student: {
@@ -15,6 +17,10 @@ interface StudentDashboardData {
         engagement_score: number;
         mental_health_score: number;
         status: string;
+    };
+    online_session?: {
+        active: boolean;
+        room_url: string | null;
     };
     recent_activities: Array<{
         id: number;
@@ -34,6 +40,9 @@ export default function StudentDashboard() {
     const { user, token, logout } = useAuth();
     const [data, setData] = useState<StudentDashboardData | null>(null);
     const [loading, setLoading] = useState(true);
+
+
+    // Survey State
 
     // Survey State
     const [showSurveyModal, setShowSurveyModal] = useState(false);
@@ -245,6 +254,7 @@ export default function StudentDashboard() {
 
     // Quiz & Assignment State
     const [assignments, setAssignments] = useState<any[]>([]);
+    const [assignmentTab, setAssignmentTab] = useState<'active' | 'history'>('active');
     const [quizzes, setQuizzes] = useState<any[]>([]);
 
     useEffect(() => {
@@ -411,6 +421,57 @@ export default function StudentDashboard() {
                     </div>
                 </div>
 
+                {/* Live Class Banner */}
+                {data?.online_session?.active && (
+                    <div style={{
+                        backgroundColor: '#dcfce7',
+                        borderRadius: '24px',
+                        padding: '24px',
+                        marginBottom: '24px',
+                        boxShadow: '0 10px 30px rgba(22, 163, 74, 0.15)',
+                        border: '2px solid #86efac',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        animation: 'pulse 2s infinite'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{
+                                width: '48px', height: '48px', borderRadius: '50%',
+                                backgroundColor: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}>
+                                <Video size={24} color="white" />
+                            </div>
+                            <div>
+                                <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#14532d', margin: 0 }}>
+                                    Lớp học đang diễn ra!
+                                </h2>
+                                <p style={{ color: '#166534', margin: '4px 0 0 0', fontWeight: 500 }}>
+                                    Giáo viên đang đợi bạn trong lớp học trực tuyến.
+                                </p>
+                            </div>
+                        </div>
+                        <Link href={`/meeting/${data.online_session.room_url}`} style={{
+                            padding: '12px 24px',
+                            backgroundColor: '#16a34a',
+                            color: 'white',
+                            fontWeight: 700,
+                            borderRadius: '12px',
+                            textDecoration: 'none',
+                            boxShadow: '0 4px 6px -1px rgba(22, 163, 74, 0.4)'
+                        }}>
+                            Vào học ngay
+                        </Link>
+                        <style jsx>{`
+                            @keyframes pulse {
+                                0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); }
+                                70% { box-shadow: 0 0 0 10px rgba(22, 163, 74, 0); }
+                                100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+                            }
+                        `}</style>
+                    </div>
+                )}
+
                 {/* Status Card */}
                 <div style={{
                     backgroundColor: 'white',
@@ -502,6 +563,44 @@ export default function StudentDashboard() {
                 {/* Content Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
 
+                    {/* Game Center - NEW */}
+                    <div style={{
+                        backgroundColor: 'white',
+                        borderRadius: '20px',
+                        padding: '24px',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+                        background: 'linear-gradient(135deg, #fce7f3 0%, #fff1f2 100%)',
+                        border: '2px solid #fbcfe8',
+                        gridColumn: 'span 2' // Make it span full width to emphasize
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div>
+                                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#be185d', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <GamepadIcon size={24} />
+                                    Góc Giải Trí
+                                </h3>
+                                <p style={{ color: '#9d174d', marginBottom: '0', maxWidth: '600px' }}>
+                                    Thư giãn sau giờ học với các trò chơi thú vị: <b>Lật hình</b>, <b>Giải đố</b> và <b>Nối từ</b>!
+                                </p>
+                            </div>
+                            <Link href="/student/entertain" style={{
+                                padding: '10px 24px',
+                                borderRadius: '12px',
+                                backgroundColor: '#be185d',
+                                color: 'white',
+                                textDecoration: 'none',
+                                fontWeight: 700,
+                                boxShadow: '0 4px 12px rgba(190, 24, 93, 0.3)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}>
+                                <span style={{ fontSize: '18px' }}>Play</span>
+                                <ArrowRight size={20} />
+                            </Link>
+                        </div>
+                    </div>
+
                     {/* Quizzes */}
                     <div style={{
                         backgroundColor: 'white',
@@ -571,6 +670,7 @@ export default function StudentDashboard() {
                         </div>
                     </div>
 
+
                     {/* Assignments */}
                     <div style={{
                         backgroundColor: 'white',
@@ -578,15 +678,49 @@ export default function StudentDashboard() {
                         padding: '24px',
                         boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
                     }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ padding: '6px', borderRadius: '8px', background: '#dbeafe' }}>
-                                <FileText size={20} color="#2563eb" />
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ padding: '6px', borderRadius: '8px', background: '#dbeafe' }}>
+                                    <FileText size={20} color="#2563eb" />
+                                </div>
+                                Bài tập
+                            </h3>
+
+                            <div style={{ display: 'flex', backgroundColor: '#f3f4f6', padding: '4px', borderRadius: '12px' }}>
+                                <button
+                                    onClick={() => setAssignmentTab('active')}
+                                    style={{
+                                        padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer',
+                                        backgroundColor: assignmentTab === 'active' ? 'white' : 'transparent',
+                                        color: assignmentTab === 'active' ? '#111827' : '#6b7280',
+                                        boxShadow: assignmentTab === 'active' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                                    }}
+                                >
+                                    Đang diễn ra
+                                </button>
+                                <button
+                                    onClick={() => setAssignmentTab('history')}
+                                    style={{
+                                        padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer',
+                                        backgroundColor: assignmentTab === 'history' ? 'white' : 'transparent',
+                                        color: assignmentTab === 'history' ? '#111827' : '#6b7280',
+                                        boxShadow: assignmentTab === 'history' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                                    }}
+                                >
+                                    Lịch sử
+                                </button>
                             </div>
-                            Bài tập được giao
-                        </h3>
+                        </div>
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {assignments.length > 0 ? (
-                                assignments.map((assignment) => (
+                            {(assignmentTab === 'active'
+                                ? assignments.filter(a => !a.submitted && !a.deadline_passed)
+                                : assignments.filter(a => a.submitted || a.deadline_passed)
+                            ).length > 0 ? (
+                                (assignmentTab === 'active'
+                                    ? assignments.filter(a => !a.submitted && !a.deadline_passed)
+                                    : assignments.filter(a => a.submitted || a.deadline_passed)
+                                ).map((assignment) => (
                                     <div key={assignment.id} style={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -594,7 +728,8 @@ export default function StudentDashboard() {
                                         padding: '12px',
                                         borderRadius: '12px',
                                         backgroundColor: '#f9fafb',
-                                        border: assignment.submitted ? '1px solid #dcfce7' : '1px solid #e5e7eb',
+                                        border: assignment.submitted ? '1px solid #dcfce7' : (assignment.deadline_passed ? '1px solid #fee2e2' : '1px solid #e5e7eb'),
+                                        opacity: assignment.deadline_passed && !assignment.submitted ? 0.7 : 1
                                     }}>
                                         <div style={{ flex: 1 }}>
                                             <p style={{ fontSize: '14px', fontWeight: 600, color: '#111827', margin: 0 }}>
@@ -623,6 +758,17 @@ export default function StudentDashboard() {
                                                     </p>
                                                 )}
                                             </div>
+                                        ) : assignment.deadline_passed ? (
+                                            <span style={{
+                                                padding: '6px 12px',
+                                                borderRadius: '8px',
+                                                fontSize: '12px',
+                                                fontWeight: 600,
+                                                backgroundColor: '#fee2e2',
+                                                color: '#dc2626',
+                                            }}>
+                                                Quá hạn
+                                            </span>
                                         ) : (
                                             <a
                                                 href={`/student/assignment/${assignment.id}`}
@@ -645,7 +791,7 @@ export default function StudentDashboard() {
                                 ))
                             ) : (
                                 <p style={{ color: '#6b7280', textAlign: 'center', padding: '20px' }}>
-                                    Không có bài tập nào
+                                    {assignmentTab === 'active' ? 'Không có bài tập cần làm' : 'Chưa có lịch sử bài tập'}
                                 </p>
                             )}
                         </div>
