@@ -17,15 +17,15 @@ import {
 import { useAuth } from '@/lib/auth';
 
 const navItems = [
-    { href: '/', label: 'Bảng điều khiển', icon: LayoutDashboard },
-    { href: '/lop-hoc', label: 'Lớp học', icon: School },
-    { href: '/thong-ke', label: 'Thống kê', icon: BarChart3 },
-    { href: '/hoat-dong', label: 'Hoạt động', icon: Activity },
-    { href: '/kiem-tra', label: 'Bài kiểm tra', icon: BookOpen },
-    { href: '/bai-tap', label: 'Bài tập', icon: FileText },
-    { href: '/hoc-sinh', label: 'Học sinh', icon: Users },
-    { href: '/thi-dua', label: 'Thi đua', icon: Trophy },
-    { href: '/cai-dat', label: 'Cài đặt', icon: Settings },
+    { href: '/teacher', label: 'Bảng điều khiển', icon: LayoutDashboard },
+    { href: '/teacher/lop-hoc', label: 'Lớp học', icon: School },
+    { href: '/teacher/thong-ke', label: 'Thống kê', icon: BarChart3 },
+    { href: '/teacher/hoat-dong', label: 'Hoạt động', icon: Activity },
+    { href: '/teacher/kiem-tra', label: 'Bài kiểm tra', icon: BookOpen },
+    { href: '/teacher/bai-tap', label: 'Bài tập', icon: FileText },
+    { href: '/teacher/hoc-sinh', label: 'Học sinh', icon: Users },
+    { href: '/teacher/thi-dua', label: 'Thi đua', icon: Trophy },
+    { href: '/teacher/cai-dat', label: 'Cài đặt', icon: Settings },
 ];
 
 export default function Header() {
@@ -52,7 +52,7 @@ export default function Header() {
                 padding: '0 20px',
             }}>
                 {/* Logo */}
-                <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+                <Link href="/teacher" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
                     <div style={{
                         display: 'flex',
                         height: '36px',

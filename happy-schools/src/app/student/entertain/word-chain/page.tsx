@@ -5,7 +5,8 @@ import { ArrowLeft, Send, MessageCircle, Info, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { API_URL } from '@/lib/api';
+// const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8001';
 
 interface Message {
     id: number;

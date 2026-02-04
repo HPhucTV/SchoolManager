@@ -8,7 +8,8 @@ import { Smile, Heart, Brain, Calendar, CheckCircle, Clock, LogOut, User, Settin
 import ChatBot from '@/components/ChatBot';
 import StudentNotifications from '@/components/StudentNotifications';
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000').replace('localhost', '127.0.0.1');
+import { API_URL } from '@/lib/api';
+// const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8001').replace('localhost', '127.0.0.1');
 
 interface StudentDashboardData {
     student: {
@@ -79,7 +80,7 @@ export default function StudentDashboard() {
     useEffect(() => {
         if (showSettingsModal && data?.student) {
             setProfileData({
-                name: data.student.name || '',
+                name: data?.student?.name || '',
                 email: user?.email || '',
                 phone: '',
                 avatar_url: '',
@@ -91,7 +92,7 @@ export default function StudentDashboard() {
 
     const fetchProfile = async () => {
         try {
-            const response = await fetch(`${API_URL}/api/upload/profile`, {
+            const response = await fetch(`${API_URL}/api/student/profile`, {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
             if (response.ok) {
@@ -142,7 +143,7 @@ export default function StudentDashboard() {
             const formData = new FormData();
             formData.append('file', avatarFile);
 
-            const response = await fetch(`${API_URL}/api/upload/avatar`, {
+            const response = await fetch(`${API_URL}/api/student/avatar`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData,
@@ -171,7 +172,7 @@ export default function StudentDashboard() {
             }
 
             // Save profile data
-            const response = await fetch(`${API_URL}/api/upload/profile`, {
+            const response = await fetch(`${API_URL}/api/student/profile`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -352,7 +353,7 @@ export default function StudentDashboard() {
         );
     }
 
-    const statusInfo = getStatusLabel(data?.student.status || 'good');
+    const statusInfo = getStatusLabel(data?.student?.status || 'good');
 
     return (
         <div style={{
@@ -370,7 +371,7 @@ export default function StudentDashboard() {
                 }}>
                     <div>
                         <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'white', margin: 0 }}>
-                            Xin chào, {data?.student.name || user?.name}! 👋
+                            Xin chào, {data?.student?.name || user?.name}! 👋
                         </h1>
                         <p style={{ color: 'rgba(255,255,255,0.8)', marginTop: '4px' }}>
                             Chúc em một ngày học tập vui vẻ
@@ -451,17 +452,23 @@ export default function StudentDashboard() {
                                 </p>
                             </div>
                         </div>
-                        <Link href={`/meeting/${data.online_session.room_url}`} style={{
-                            padding: '12px 24px',
-                            backgroundColor: '#16a34a',
-                            color: 'white',
-                            fontWeight: 700,
-                            borderRadius: '12px',
-                            textDecoration: 'none',
-                            boxShadow: '0 4px 6px -1px rgba(22, 163, 74, 0.4)'
-                        }}>
+                        <a
+                            href={`https://meet.jit.si/${data.online_session.room_url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                                padding: '12px 24px',
+                                backgroundColor: '#16a34a',
+                                color: 'white',
+                                fontWeight: 700,
+                                borderRadius: '12px',
+                                textDecoration: 'none',
+                                boxShadow: '0 4px 6px -1px rgba(22, 163, 74, 0.4)',
+                                display: 'inline-block'
+                            }}
+                        >
                             Vào học ngay
-                        </Link>
+                        </a>
                         <style jsx>{`
                             @keyframes pulse {
                                 0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); }
@@ -504,7 +511,7 @@ export default function StudentDashboard() {
                             </div>
                             <div>
                                 <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: 0 }}>
-                                    {data?.student.name}
+                                    {data?.student?.name}
                                 </h2>
                                 <p style={{ color: '#6b7280', fontSize: '14px' }}>Lớp {user?.class_name || '10A'}</p>
                             </div>
@@ -524,9 +531,9 @@ export default function StudentDashboard() {
                     {/* Scores */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                         {[
-                            { icon: Smile, label: 'Sôi nổi', score: data?.student.happiness_score || 0, color: '#fbbf24' },
-                            { icon: Heart, label: 'Gắn kết', score: data?.student.engagement_score || 0, color: '#ec4899' },
-                            { icon: Brain, label: 'Tinh thần', score: data?.student.mental_health_score || 0, color: '#f97316' },
+                            { icon: Smile, label: 'Sôi nổi', score: data?.student?.happiness_score || 0, color: '#fbbf24' },
+                            { icon: Heart, label: 'Gắn kết', score: data?.student?.engagement_score || 0, color: '#ec4899' },
+                            { icon: Brain, label: 'Tinh thần', score: data?.student?.mental_health_score || 0, color: '#f97316' },
                         ].map((item) => (
                             <div key={item.label} style={{
                                 backgroundColor: '#f9fafb',
@@ -580,26 +587,44 @@ export default function StudentDashboard() {
                                     Góc Giải Trí
                                 </h3>
                                 <p style={{ color: '#9d174d', marginBottom: '0', maxWidth: '600px' }}>
-                                    Thư giãn sau giờ học với các trò chơi thú vị: <b>Lật hình</b>, <b>Giải đố</b> và <b>Nối từ</b>!
+                                    Thư giãn sau giờ học với các trò chơi thú vị: <b>Lật hình</b>, <b>Giải đố</b>, <b>Nối từ</b> và <b>Ô chữ bí mật</b>!
                                 </p>
                             </div>
-                            <Link href="/student/entertain" style={{
-                                padding: '10px 24px',
-                                borderRadius: '12px',
-                                backgroundColor: '#be185d',
-                                color: 'white',
-                                textDecoration: 'none',
-                                fontWeight: 700,
-                                boxShadow: '0 4px 12px rgba(190, 24, 93, 0.3)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                            }}>
-                                <span style={{ fontSize: '18px' }}>Play</span>
-                                <ArrowRight size={20} />
-                            </Link>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <Link href="/student/entertain" style={{
+                                    padding: '10px 24px',
+                                    borderRadius: '12px',
+                                    backgroundColor: '#be185d',
+                                    color: 'white',
+                                    textDecoration: 'none',
+                                    fontWeight: 700,
+                                    boxShadow: '0 4px 12px rgba(190, 24, 93, 0.3)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}>
+                                    <span style={{ fontSize: '18px' }}>Play</span>
+                                    <ArrowRight size={20} />
+                                </Link>
+                                <Link href="/student/games/crossword" style={{
+                                    padding: '10px 24px',
+                                    borderRadius: '12px',
+                                    backgroundColor: '#f59e0b',
+                                    color: 'white',
+                                    textDecoration: 'none',
+                                    fontWeight: 700,
+                                    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}>
+                                    <span style={{ fontSize: '18px' }}>Ô chữ</span>
+                                    <ArrowRight size={20} />
+                                </Link>
+                            </div>
                         </div>
                     </div>
+
 
                     {/* Quizzes */}
                     <div style={{
@@ -911,355 +936,359 @@ export default function StudentDashboard() {
             </div>
 
             {/* Survey Modal */}
-            {showSurveyModal && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    zIndex: 1000
-                }}>
+            {
+                showSurveyModal && (
                     <div style={{
-                        backgroundColor: 'white',
-                        borderRadius: '24px',
-                        padding: '32px',
-                        width: '100%',
-                        maxWidth: '500px',
-                        boxShadow: '0 25px 50px rgba(0,0,0,0.25)'
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 1000
                     }}>
-                        <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px' }}>Thực hiện khảo sát</h2>
+                        <div style={{
+                            backgroundColor: 'white',
+                            borderRadius: '24px',
+                            padding: '32px',
+                            width: '100%',
+                            maxWidth: '500px',
+                            boxShadow: '0 25px 50px rgba(0,0,0,0.25)'
+                        }}>
+                            <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px' }}>Thực hiện khảo sát</h2>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            {/* Happiness */}
-                            <div>
-                                <p style={{ fontWeight: 600, marginBottom: '12px' }}>1. Mức độ sôi nổi trong học tập của em? (1-5)</p>
-                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                                    {[1, 2, 3, 4, 5].map(num => (
-                                        <button key={num}
-                                            onClick={() => setSurveyData({ ...surveyData, happiness_rating: num })}
-                                            style={{
-                                                width: '40px', height: '40px',
-                                                borderRadius: '50%',
-                                                border: '2px solid',
-                                                borderColor: surveyData.happiness_rating === num ? '#8b5cf6' : '#e5e7eb',
-                                                backgroundColor: surveyData.happiness_rating === num ? '#8b5cf6' : 'white',
-                                                color: surveyData.happiness_rating === num ? 'white' : '#6b7280',
-                                                fontWeight: 600,
-                                                cursor: 'pointer'
-                                            }}
-                                        >{num}</button>
-                                    ))}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                {/* Happiness */}
+                                <div>
+                                    <p style={{ fontWeight: 600, marginBottom: '12px' }}>1. Mức độ sôi nổi trong học tập của em? (1-5)</p>
+                                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                                        {[1, 2, 3, 4, 5].map(num => (
+                                            <button key={num}
+                                                onClick={() => setSurveyData({ ...surveyData, happiness_rating: num })}
+                                                style={{
+                                                    width: '40px', height: '40px',
+                                                    borderRadius: '50%',
+                                                    border: '2px solid',
+                                                    borderColor: surveyData.happiness_rating === num ? '#8b5cf6' : '#e5e7eb',
+                                                    backgroundColor: surveyData.happiness_rating === num ? '#8b5cf6' : 'white',
+                                                    color: surveyData.happiness_rating === num ? 'white' : '#6b7280',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer'
+                                                }}
+                                            >{num}</button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Engagement */}
+                                <div>
+                                    <p style={{ fontWeight: 600, marginBottom: '12px' }}>2. Em có sự hứng thú trong lớp học không? (1-5)</p>
+                                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                                        {[1, 2, 3, 4, 5].map(num => (
+                                            <button key={num}
+                                                onClick={() => setSurveyData({ ...surveyData, engagement_rating: num })}
+                                                style={{
+                                                    width: '40px', height: '40px',
+                                                    borderRadius: '50%',
+                                                    border: '2px solid',
+                                                    borderColor: surveyData.engagement_rating === num ? '#8b5cf6' : '#e5e7eb',
+                                                    backgroundColor: surveyData.engagement_rating === num ? '#8b5cf6' : 'white',
+                                                    color: surveyData.engagement_rating === num ? 'white' : '#6b7280',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer'
+                                                }}
+                                            >{num}</button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Mental Health */}
+                                <div>
+                                    <p style={{ fontWeight: 600, marginBottom: '12px' }}>3. Tinh thần của em hôm nay thế nào? (1-5)</p>
+                                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                                        {[1, 2, 3, 4, 5].map(num => (
+                                            <button key={num}
+                                                onClick={() => setSurveyData({ ...surveyData, mental_health_rating: num })}
+                                                style={{
+                                                    width: '40px', height: '40px',
+                                                    borderRadius: '50%',
+                                                    border: '2px solid',
+                                                    borderColor: surveyData.mental_health_rating === num ? '#8b5cf6' : '#e5e7eb',
+                                                    backgroundColor: surveyData.mental_health_rating === num ? '#8b5cf6' : 'white',
+                                                    color: surveyData.mental_health_rating === num ? 'white' : '#6b7280',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer'
+                                                }}
+                                            >{num}</button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Feedback */}
+                                <div>
+                                    <p style={{ fontWeight: 600, marginBottom: '8px' }}>Chia sẻ thêm (tùy chọn):</p>
+                                    <textarea
+                                        value={surveyData.feedback}
+                                        onChange={(e) => setSurveyData({ ...surveyData, feedback: e.target.value })}
+                                        rows={3}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            borderRadius: '12px',
+                                            border: '2px solid #e5e7eb'
+                                        }}
+                                        placeholder="Em có muốn chia sẻ điều gì không?"
+                                    />
                                 </div>
                             </div>
 
-                            {/* Engagement */}
-                            <div>
-                                <p style={{ fontWeight: 600, marginBottom: '12px' }}>2. Em có sự hứng thú trong lớp học không? (1-5)</p>
-                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                                    {[1, 2, 3, 4, 5].map(num => (
-                                        <button key={num}
-                                            onClick={() => setSurveyData({ ...surveyData, engagement_rating: num })}
-                                            style={{
-                                                width: '40px', height: '40px',
-                                                borderRadius: '50%',
-                                                border: '2px solid',
-                                                borderColor: surveyData.engagement_rating === num ? '#8b5cf6' : '#e5e7eb',
-                                                backgroundColor: surveyData.engagement_rating === num ? '#8b5cf6' : 'white',
-                                                color: surveyData.engagement_rating === num ? 'white' : '#6b7280',
-                                                fontWeight: 600,
-                                                cursor: 'pointer'
-                                            }}
-                                        >{num}</button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Mental Health */}
-                            <div>
-                                <p style={{ fontWeight: 600, marginBottom: '12px' }}>3. Tinh thần của em hôm nay thế nào? (1-5)</p>
-                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                                    {[1, 2, 3, 4, 5].map(num => (
-                                        <button key={num}
-                                            onClick={() => setSurveyData({ ...surveyData, mental_health_rating: num })}
-                                            style={{
-                                                width: '40px', height: '40px',
-                                                borderRadius: '50%',
-                                                border: '2px solid',
-                                                borderColor: surveyData.mental_health_rating === num ? '#8b5cf6' : '#e5e7eb',
-                                                backgroundColor: surveyData.mental_health_rating === num ? '#8b5cf6' : 'white',
-                                                color: surveyData.mental_health_rating === num ? 'white' : '#6b7280',
-                                                fontWeight: 600,
-                                                cursor: 'pointer'
-                                            }}
-                                        >{num}</button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Feedback */}
-                            <div>
-                                <p style={{ fontWeight: 600, marginBottom: '8px' }}>Chia sẻ thêm (tùy chọn):</p>
-                                <textarea
-                                    value={surveyData.feedback}
-                                    onChange={(e) => setSurveyData({ ...surveyData, feedback: e.target.value })}
-                                    rows={3}
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
+                                <button
+                                    onClick={() => setShowSurveyModal(false)}
                                     style={{
-                                        width: '100%',
-                                        padding: '12px',
+                                        flex: 1, padding: '14px',
                                         borderRadius: '12px',
-                                        border: '2px solid #e5e7eb'
+                                        backgroundColor: '#f3f4f6',
+                                        color: '#4b5563',
+                                        border: 'none',
+                                        fontWeight: 600,
+                                        cursor: 'pointer'
                                     }}
-                                    placeholder="Em có muốn chia sẻ điều gì không?"
-                                />
+                                >Hủy</button>
+                                <button
+                                    onClick={submitSurvey}
+                                    disabled={submittingSurvey}
+                                    style={{
+                                        flex: 1, padding: '14px',
+                                        borderRadius: '12px',
+                                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        fontWeight: 600,
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {submittingSurvey ? 'Đang gửi...' : 'Gửi trả lời'}
+                                </button>
                             </div>
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
-                            <button
-                                onClick={() => setShowSurveyModal(false)}
-                                style={{
-                                    flex: 1, padding: '14px',
-                                    borderRadius: '12px',
-                                    backgroundColor: '#f3f4f6',
-                                    color: '#4b5563',
-                                    border: 'none',
-                                    fontWeight: 600,
-                                    cursor: 'pointer'
-                                }}
-                            >Hủy</button>
-                            <button
-                                onClick={submitSurvey}
-                                disabled={submittingSurvey}
-                                style={{
-                                    flex: 1, padding: '14px',
-                                    borderRadius: '12px',
-                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                                    color: 'white',
-                                    border: 'none',
-                                    fontWeight: 600,
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                {submittingSurvey ? 'Đang gửi...' : 'Gửi trả lời'}
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Settings Modal */}
-            {showSettingsModal && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    zIndex: 1000
-                }}>
+            {
+                showSettingsModal && (
                     <div style={{
-                        backgroundColor: 'white',
-                        borderRadius: '24px',
-                        padding: '0',
-                        width: '100%',
-                        maxWidth: '500px',
-                        boxShadow: '0 25px 50px rgba(0,0,0,0.25)',
-                        overflow: 'hidden',
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 1000
                     }}>
-                        {/* Header */}
                         <div style={{
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            padding: '20px 24px',
-                            background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                            backgroundColor: 'white',
+                            borderRadius: '24px',
+                            padding: '0',
+                            width: '100%',
+                            maxWidth: '500px',
+                            boxShadow: '0 25px 50px rgba(0,0,0,0.25)',
+                            overflow: 'hidden',
                         }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'white', margin: 0 }}>
-                                <Settings style={{ display: 'inline', marginRight: '10px', verticalAlign: 'middle' }} size={22} />
-                                Cài đặt
-                            </h2>
-                            <button onClick={() => setShowSettingsModal(false)}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
-                                <X size={24} color="white" />
-                            </button>
-                        </div>
+                            {/* Header */}
+                            <div style={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                padding: '20px 24px',
+                                background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                            }}>
+                                <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'white', margin: 0 }}>
+                                    <Settings style={{ display: 'inline', marginRight: '10px', verticalAlign: 'middle' }} size={22} />
+                                    Cài đặt
+                                </h2>
+                                <button onClick={() => setShowSettingsModal(false)}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+                                    <X size={24} color="white" />
+                                </button>
+                            </div>
 
-                        {/* Tabs */}
-                        <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb' }}>
-                            <button
-                                onClick={() => setSettingsTab('profile')}
-                                style={{
-                                    flex: 1, padding: '14px', border: 'none', cursor: 'pointer',
-                                    backgroundColor: settingsTab === 'profile' ? 'white' : '#f9fafb',
-                                    color: settingsTab === 'profile' ? '#8b5cf6' : '#6b7280',
-                                    fontWeight: 600, fontSize: '14px',
-                                    borderBottom: settingsTab === 'profile' ? '3px solid #8b5cf6' : 'none',
-                                }}
-                            >
-                                <User size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-                                Thông tin cá nhân
-                            </button>
-                            <button
-                                onClick={() => setSettingsTab('notifications')}
-                                style={{
-                                    flex: 1, padding: '14px', border: 'none', cursor: 'pointer',
-                                    backgroundColor: settingsTab === 'notifications' ? 'white' : '#f9fafb',
-                                    color: settingsTab === 'notifications' ? '#8b5cf6' : '#6b7280',
-                                    fontWeight: 600, fontSize: '14px',
-                                    borderBottom: settingsTab === 'notifications' ? '3px solid #8b5cf6' : 'none',
-                                }}
-                            >
-                                <Bell size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-                                Thông báo
-                            </button>
-                        </div>
+                            {/* Tabs */}
+                            <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb' }}>
+                                <button
+                                    onClick={() => setSettingsTab('profile')}
+                                    style={{
+                                        flex: 1, padding: '14px', border: 'none', cursor: 'pointer',
+                                        backgroundColor: settingsTab === 'profile' ? 'white' : '#f9fafb',
+                                        color: settingsTab === 'profile' ? '#8b5cf6' : '#6b7280',
+                                        fontWeight: 600, fontSize: '14px',
+                                        borderBottom: settingsTab === 'profile' ? '3px solid #8b5cf6' : 'none',
+                                    }}
+                                >
+                                    <User size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                                    Thông tin cá nhân
+                                </button>
+                                <button
+                                    onClick={() => setSettingsTab('notifications')}
+                                    style={{
+                                        flex: 1, padding: '14px', border: 'none', cursor: 'pointer',
+                                        backgroundColor: settingsTab === 'notifications' ? 'white' : '#f9fafb',
+                                        color: settingsTab === 'notifications' ? '#8b5cf6' : '#6b7280',
+                                        fontWeight: 600, fontSize: '14px',
+                                        borderBottom: settingsTab === 'notifications' ? '3px solid #8b5cf6' : 'none',
+                                    }}
+                                >
+                                    <Bell size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                                    Thông báo
+                                </button>
+                            </div>
 
-                        {/* Content */}
-                        <div style={{ padding: '24px' }}>
-                            {settingsTab === 'profile' ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Họ và tên</label>
-                                        <input
-                                            type="text"
-                                            value={profileData.name}
-                                            onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                                            style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '2px solid #e5e7eb', fontSize: '14px' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Email</label>
-                                        <input
-                                            type="email"
-                                            value={profileData.email}
-                                            onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                                            style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '2px solid #e5e7eb', fontSize: '14px' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Số điện thoại</label>
-                                        <input
-                                            type="tel"
-                                            value={profileData.phone}
-                                            onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                                            placeholder="0123 456 789"
-                                            style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '2px solid #e5e7eb', fontSize: '14px' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '10px' }}>Ảnh đại diện</label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                            {/* Avatar Preview */}
-                                            <div style={{
-                                                width: '80px', height: '80px', borderRadius: '50%',
-                                                backgroundColor: '#f3f4f6', border: '3px solid #e5e7eb',
-                                                overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            }}>
-                                                {avatarPreview ? (
-                                                    <img src={avatarPreview} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                ) : (
-                                                    <User size={32} color="#9ca3af" />
-                                                )}
+                            {/* Content */}
+                            <div style={{ padding: '24px' }}>
+                                {settingsTab === 'profile' ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Họ và tên</label>
+                                            <input
+                                                type="text"
+                                                value={profileData.name}
+                                                onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                                                style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '2px solid #e5e7eb', fontSize: '14px' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Email</label>
+                                            <input
+                                                type="email"
+                                                value={profileData.email}
+                                                onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                                                style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '2px solid #e5e7eb', fontSize: '14px' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Số điện thoại</label>
+                                            <input
+                                                type="tel"
+                                                value={profileData.phone}
+                                                onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                                                placeholder="0123 456 789"
+                                                style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '2px solid #e5e7eb', fontSize: '14px' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '10px' }}>Ảnh đại diện</label>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                                {/* Avatar Preview */}
+                                                <div style={{
+                                                    width: '80px', height: '80px', borderRadius: '50%',
+                                                    backgroundColor: '#f3f4f6', border: '3px solid #e5e7eb',
+                                                    overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                }}>
+                                                    {avatarPreview ? (
+                                                        <img src={avatarPreview} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    ) : (
+                                                        <User size={32} color="#9ca3af" />
+                                                    )}
+                                                </div>
+                                                {/* Upload Button */}
+                                                <div style={{ flex: 1 }}>
+                                                    <input
+                                                        type="file"
+                                                        id="avatar-upload"
+                                                        accept="image/*"
+                                                        onChange={handleAvatarChange}
+                                                        style={{ display: 'none' }}
+                                                    />
+                                                    <label
+                                                        htmlFor="avatar-upload"
+                                                        style={{
+                                                            display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                                            padding: '10px 16px', borderRadius: '10px',
+                                                            backgroundColor: '#8b5cf6', color: 'white',
+                                                            cursor: 'pointer', fontWeight: 600, fontSize: '14px',
+                                                        }}
+                                                    >
+                                                        <Camera size={18} />
+                                                        Chọn ảnh
+                                                    </label>
+                                                    <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
+                                                        JPG, PNG, GIF. Tối đa 5MB
+                                                    </p>
+                                                    {avatarFile && (
+                                                        <p style={{ fontSize: '12px', color: '#22c55e', marginTop: '4px' }}>
+                                                            ✓ Đã chọn: {avatarFile.name}
+                                                        </p>
+                                                    )}
+                                                </div>
                                             </div>
-                                            {/* Upload Button */}
-                                            <div style={{ flex: 1 }}>
-                                                <input
-                                                    type="file"
-                                                    id="avatar-upload"
-                                                    accept="image/*"
-                                                    onChange={handleAvatarChange}
-                                                    style={{ display: 'none' }}
-                                                />
-                                                <label
-                                                    htmlFor="avatar-upload"
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        {[
+                                            { key: 'quiz_notifications', label: 'Thông báo bài kiểm tra', desc: 'Nhận thông báo khi có bài kiểm tra mới' },
+                                            { key: 'activity_notifications', label: 'Thông báo hoạt động', desc: 'Nhận thông báo về các hoạt động sắp tới' },
+                                            { key: 'survey_notifications', label: 'Thông báo khảo sát', desc: 'Nhận thông báo khi có khảo sát mới' },
+                                            { key: 'email_notifications', label: 'Gửi qua Email', desc: 'Nhận thông báo qua email' },
+                                        ].map((item) => (
+                                            <div key={item.key} style={{
+                                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                padding: '14px', backgroundColor: '#f9fafb', borderRadius: '12px',
+                                            }}>
+                                                <div>
+                                                    <p style={{ fontSize: '14px', fontWeight: 600, color: '#111827', margin: 0 }}>{item.label}</p>
+                                                    <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0 0 0' }}>{item.desc}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => setNotificationSettings({ ...notificationSettings, [item.key]: !notificationSettings[item.key as keyof typeof notificationSettings] })}
                                                     style={{
-                                                        display: 'inline-flex', alignItems: 'center', gap: '8px',
-                                                        padding: '10px 16px', borderRadius: '10px',
-                                                        backgroundColor: '#8b5cf6', color: 'white',
-                                                        cursor: 'pointer', fontWeight: 600, fontSize: '14px',
+                                                        width: '52px', height: '28px', borderRadius: '14px',
+                                                        backgroundColor: notificationSettings[item.key as keyof typeof notificationSettings] ? '#8b5cf6' : '#d1d5db',
+                                                        border: 'none', cursor: 'pointer', position: 'relative',
+                                                        transition: 'background-color 0.2s ease',
                                                     }}
                                                 >
-                                                    <Camera size={18} />
-                                                    Chọn ảnh
-                                                </label>
-                                                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
-                                                    JPG, PNG, GIF. Tối đa 5MB
-                                                </p>
-                                                {avatarFile && (
-                                                    <p style={{ fontSize: '12px', color: '#22c55e', marginTop: '4px' }}>
-                                                        ✓ Đã chọn: {avatarFile.name}
-                                                    </p>
-                                                )}
+                                                    <div style={{
+                                                        width: '22px', height: '22px', borderRadius: '50%',
+                                                        backgroundColor: 'white', position: 'absolute', top: '3px',
+                                                        left: notificationSettings[item.key as keyof typeof notificationSettings] ? '27px' : '3px',
+                                                        transition: 'left 0.2s ease',
+                                                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                                                    }} />
+                                                </button>
                                             </div>
-                                        </div>
+                                        ))}
                                     </div>
-                                </div>
-                            ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    {[
-                                        { key: 'quiz_notifications', label: 'Thông báo bài kiểm tra', desc: 'Nhận thông báo khi có bài kiểm tra mới' },
-                                        { key: 'activity_notifications', label: 'Thông báo hoạt động', desc: 'Nhận thông báo về các hoạt động sắp tới' },
-                                        { key: 'survey_notifications', label: 'Thông báo khảo sát', desc: 'Nhận thông báo khi có khảo sát mới' },
-                                        { key: 'email_notifications', label: 'Gửi qua Email', desc: 'Nhận thông báo qua email' },
-                                    ].map((item) => (
-                                        <div key={item.key} style={{
-                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                            padding: '14px', backgroundColor: '#f9fafb', borderRadius: '12px',
-                                        }}>
-                                            <div>
-                                                <p style={{ fontSize: '14px', fontWeight: 600, color: '#111827', margin: 0 }}>{item.label}</p>
-                                                <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0 0 0' }}>{item.desc}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => setNotificationSettings({ ...notificationSettings, [item.key]: !notificationSettings[item.key as keyof typeof notificationSettings] })}
-                                                style={{
-                                                    width: '52px', height: '28px', borderRadius: '14px',
-                                                    backgroundColor: notificationSettings[item.key as keyof typeof notificationSettings] ? '#8b5cf6' : '#d1d5db',
-                                                    border: 'none', cursor: 'pointer', position: 'relative',
-                                                    transition: 'background-color 0.2s ease',
-                                                }}
-                                            >
-                                                <div style={{
-                                                    width: '22px', height: '22px', borderRadius: '50%',
-                                                    backgroundColor: 'white', position: 'absolute', top: '3px',
-                                                    left: notificationSettings[item.key as keyof typeof notificationSettings] ? '27px' : '3px',
-                                                    transition: 'left 0.2s ease',
-                                                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                                                }} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                                )}
+                            </div>
 
-                        {/* Footer */}
-                        <div style={{ display: 'flex', gap: '12px', padding: '20px 24px', borderTop: '1px solid #e5e7eb' }}>
-                            <button
-                                onClick={() => setShowSettingsModal(false)}
-                                style={{
-                                    flex: 1, padding: '12px', borderRadius: '10px',
-                                    backgroundColor: '#f3f4f6', color: '#4b5563',
-                                    border: 'none', fontWeight: 600, cursor: 'pointer',
-                                }}
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                onClick={saveSettings}
-                                disabled={savingSettings}
-                                style={{
-                                    flex: 1, padding: '12px', borderRadius: '10px',
-                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                                    color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                                }}
-                            >
-                                <Save size={16} />
-                                {savingSettings ? 'Đang lưu...' : 'Lưu cài đặt'}
-                            </button>
+                            {/* Footer */}
+                            <div style={{ display: 'flex', gap: '12px', padding: '20px 24px', borderTop: '1px solid #e5e7eb' }}>
+                                <button
+                                    onClick={() => setShowSettingsModal(false)}
+                                    style={{
+                                        flex: 1, padding: '12px', borderRadius: '10px',
+                                        backgroundColor: '#f3f4f6', color: '#4b5563',
+                                        border: 'none', fontWeight: 600, cursor: 'pointer',
+                                    }}
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={saveSettings}
+                                    disabled={savingSettings}
+                                    style={{
+                                        flex: 1, padding: '12px', borderRadius: '10px',
+                                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                                        color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                                    }}
+                                >
+                                    <Save size={16} />
+                                    {savingSettings ? 'Đang lưu...' : 'Lưu cài đặt'}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* AI Chatbot */}
             <ChatBot />
-        </div>
+        </div >
     );
 }

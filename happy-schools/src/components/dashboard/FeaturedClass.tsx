@@ -1,4 +1,5 @@
 import { Trophy, Eye } from 'lucide-react';
+import Link from 'next/link';
 
 export default function FeaturedClass() {
     return (
@@ -53,8 +54,8 @@ export default function FeaturedClass() {
                 <p style={{ color: '#6b7280', marginBottom: '16px', fontSize: '13px' }}>Điểm sôi nổi: 95%</p>
 
                 {/* View Details Button */}
-                <button
-                    onClick={() => window.location.href = '/lop-hoc/1'} // Demo: Link to class 1
+                <Link
+                    href="/teacher/lop-hoc"
                     style={{
                         width: '100%',
                         display: 'flex',
@@ -71,10 +72,11 @@ export default function FeaturedClass() {
                         cursor: 'pointer',
                         boxShadow: '0 2px 8px rgba(34, 197, 94, 0.3)',
                         transition: 'all 0.2s ease',
+                        textDecoration: 'none'
                     }}>
                     <Eye style={{ height: '14px', width: '14px' }} />
                     Xem Chi tiết Lớp
-                </button>
+                </Link>
             </div>
         </div>
     );

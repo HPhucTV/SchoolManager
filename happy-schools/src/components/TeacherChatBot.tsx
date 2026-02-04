@@ -37,7 +37,7 @@ export default function TeacherChatBot() {
         try {
             const token = localStorage.getItem('token');
             // Use raw fetch for custom endpoint if api wrapper doesn't support it yet or for explicit control
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/ai/teacher-chat`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'}/api/ai/teacher-chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

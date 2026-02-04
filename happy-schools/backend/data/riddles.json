@@ -1,0 +1,602 @@
+[
+    {
+        "id": 1,
+        "question": "Con gì đập thì sống, không đập thì chết?",
+        "answer": "con tim",
+        "hint": "Một bộ phận quan trọng trong cơ thể"
+    },
+    {
+        "id": 2,
+        "question": "Cái gì đen khi sạch và trắng khi bẩn?",
+        "answer": "cái bảng",
+        "hint": "Thường thấy trong lớp học"
+    },
+    {
+        "id": 3,
+        "question": "Con gì chân ngắn mà lại có màng, mỏ bẹt màu vàng hay kêu cạp cạp?",
+        "answer": "con vịt",
+        "hint": "Một loài gia cầm quen thuộc"
+    },
+    {
+        "id": 4,
+        "question": "Cái gì càng kéo càng ngắn?",
+        "answer": "điếu thuốc",
+        "hint": "Một thứ không tốt cho sức khỏe"
+    },
+    {
+        "id": 5,
+        "question": "Lịch nào dài nhất?",
+        "answer": "lịch sử",
+        "hint": "Một môn học về quá khứ"
+    },
+    {
+        "id": 6,
+        "question": "Con gì tám cẳng hai càng, bò ngang ra chợ, ai cũng thích ăn?",
+        "answer": "con cua",
+        "hint": "Loại hải sản bò ngang"
+    },
+    {
+        "id": 7,
+        "question": "Cái gì luôn chạy không chờ ta bao giờ?",
+        "answer": "thời gian",
+        "hint": "Đo bằng giờ, phút, giây"
+    },
+    {
+        "id": 8,
+        "question": "Cái gì càng lau càng ướt?",
+        "answer": "cái khăn mặt",
+        "hint": "Đồ dùng vệ sinh cá nhân"
+    },
+    {
+        "id": 9,
+        "question": "Vừa đi vừa đứng, vừa ngồi vừa nằm, suốt đời chẳng nghỉ?",
+        "answer": "cái đồng hồ",
+        "hint": "Dùng để xem giờ"
+    },
+    {
+        "id": 10,
+        "question": "Người càng đi càng đứng, bóng càng đi càng nằm?",
+        "answer": "cái bóng",
+        "hint": "Luôn đi theo ta dưới ánh nắng"
+    },
+    {
+        "id": 11,
+        "question": "Vừa bằng hạt đỗ, ăn giỗ cả làng?",
+        "answer": "cái miệng",
+        "hint": "Bộ phận dùng để ăn và nói"
+    },
+    {
+        "id": 12,
+        "question": "Trái gì xanh vỏ đỏ lòng?",
+        "answer": "dưa hấu",
+        "hint": "Loại quả giải nhiệt mùa hè"
+    },
+    {
+        "id": 13,
+        "question": "Hoa vàng rực rỡ, báo xuân sang khắp nhà?",
+        "answer": "hoa mai",
+        "hint": "Loài hoa Tết miền Nam"
+    },
+    {
+        "id": 14,
+        "question": "Cành khẳng khiu, hoa hồng tươi, thấy hoa là thấy Tết?",
+        "answer": "hoa đào",
+        "hint": "Loài hoa Tết miền Bắc"
+    },
+    {
+        "id": 15,
+        "question": "Bánh gì vuông vức, gói lá dong, nhân đỗ xanh, thịt mỡ thơm?",
+        "answer": "bánh chưng",
+        "hint": "Bánh truyền thống ngày Tết"
+    },
+    {
+        "id": 16,
+        "question": "Con gì mới sinh ra đã có râu?",
+        "answer": "con tôm",
+        "hint": "Sống dưới nước, bơi lùi"
+    },
+    {
+        "id": 17,
+        "question": "Con mèo nào sợ chuột?",
+        "answer": "doraemon",
+        "hint": "Chú mèo máy đến từ tương lai"
+    },
+    {
+        "id": 18,
+        "question": "Con đường nào dài nhất?",
+        "answer": "đường đời",
+        "hint": "Cuộc đời của mỗi người"
+    },
+    {
+        "id": 19,
+        "question": "Quần rộng nhất là quần gì?",
+        "answer": "quần đảo",
+        "hint": "Tập hợp nhiều hòn đảo"
+    },
+    {
+        "id": 20,
+        "question": "Cái gì của mình nhưng người khác dùng nhiều hơn?",
+        "answer": "cái tên",
+        "hint": "Được dùng để gọi nhau"
+    },
+    {
+        "id": 21,
+        "question": "Cái gì đen khi mua, đỏ khi dùng, xám khi bỏ?",
+        "answer": "than",
+        "hint": "Dùng để đốt cháy"
+    },
+    {
+        "id": 22,
+        "question": "Cái gì có răng mà không có miệng?",
+        "answer": "cái lược",
+        "hint": "Dùng để chải tóc"
+    },
+    {
+        "id": 23,
+        "question": "Cái gì có cổ mà không có đầu?",
+        "answer": "cái áo",
+        "hint": "Trang phục mặc hàng ngày"
+    },
+    {
+        "id": 24,
+        "question": "Cái gì có lưỡi mà không có miệng?",
+        "answer": "con dao",
+        "hint": "Dụng cụ dùng để cắt"
+    },
+    {
+        "id": 25,
+        "question": "Con gì đầu dê mình ốc?",
+        "answer": "con dốc",
+        "hint": "Một đoạn đường nghiêng"
+    },
+    {
+        "id": 26,
+        "question": "Con gì vốn tính không lười, đi đâu cũng cõng nhà mình trên vai?",
+        "answer": "con ốc sên",
+        "hint": "Di chuyển rất chậm"
+    },
+    {
+        "id": 27,
+        "question": "Tháng nào trong năm có 28 ngày?",
+        "answer": "tất cả",
+        "hint": "Tháng nào cũng có ít nhất bấy nhiêu ngày"
+    },
+    {
+        "id": 28,
+        "question": "Cái gì không cánh mà bay, không chân mà chạy?",
+        "answer": "mây",
+        "hint": "Bay lơ lửng trên trời"
+    },
+    {
+        "id": 29,
+        "question": "Nắng ba năm ta chưa hề bỏ bạn, mưa một ngày bạn lại bỏ ta là cái gì?",
+        "answer": "cái bóng",
+        "hint": "Luôn đi theo ta khi có ánh sáng"
+    },
+    {
+        "id": 30,
+        "question": "Cây gì không lá, không thân, chỉ có một mình đứng ở giữa sân?",
+        "answer": "cột cờ",
+        "hint": "Thường có lá cờ treo trên đỉnh"
+    },
+    {
+        "id": 31,
+        "question": "Hoa gì chỉ nở ban đêm?",
+        "answer": "hoa quỳnh",
+        "hint": "Hoa có hương thơm dịu nhẹ"
+    },
+    {
+        "id": 32,
+        "question": "Con gì có cánh mà không biết bay, lại bơi rất giỏi?",
+        "answer": "chim cánh cụt",
+        "hint": "Sống ở vùng lạnh giá"
+    },
+    {
+        "id": 33,
+        "question": "Củ gì tên gọi như hoa?",
+        "answer": "củ cải",
+        "hint": "Một loại rau củ dùng để nấu ăn"
+    },
+    {
+        "id": 34,
+        "question": "Sông gì có tên một loài thú?",
+        "answer": "sông hồng",
+        "hint": "Con sông lớn ở miền Bắc"
+    },
+    {
+        "id": 35,
+        "question": "Con gì hay nằm đầu hè, sủa gâu gâu?",
+        "answer": "con chó",
+        "hint": "Bạn thân nhất của con người"
+    },
+    {
+        "id": 36,
+        "question": "Con gì hay trèo cây cau?",
+        "answer": "con mèo",
+        "hint": "Thích ăn cá và bắt chuột"
+    },
+    {
+        "id": 37,
+        "question": "Quả gì không hạt, không cành?",
+        "answer": "quả địa cầu",
+        "hint": "Mô hình của Trái đất"
+    },
+    {
+        "id": 38,
+        "question": "Cái gì có thể đi khắp thế giới mà vẫn ở trong một góc?",
+        "answer": "con tem",
+        "hint": "Dán trên phong bì thư"
+    },
+    {
+        "id": 39,
+        "question": "Cái gì càng lấy đi càng lớn thêm?",
+        "answer": "cái lỗ",
+        "hint": "Khi bạn đào đất"
+    },
+    {
+        "id": 40,
+        "question": "Cái gì hễ bạn cứ nói tên nó ra là nó biến mất?",
+        "answer": "sự im lặng",
+        "hint": "Trạng thái không có tiếng động"
+    },
+    {
+        "id": 41,
+        "question": "Bạn có thể chỉ cho tôi một người luôn đứng sau bạn?",
+        "answer": "người thợ cắt tóc",
+        "hint": "Khi họ làm việc cho bạn"
+    },
+    {
+        "id": 42,
+        "question": "Cái gì có mắt mà không thấy?",
+        "answer": "quả dứa",
+        "hint": "Một loại quả có nhiều gai"
+    },
+    {
+        "id": 43,
+        "question": "Cái gì có thể cầm ở tay trái nhưng không thể cầm ở tay phải?",
+        "answer": "khuỷu tay phải",
+        "hint": "Một bộ phận trên cánh tay"
+    },
+    {
+        "id": 44,
+        "question": "Tại sao con chó không bao giờ ăn được xương?",
+        "answer": "vì là chó đồ chơi",
+        "hint": "Không phải vật sống"
+    },
+    {
+        "id": 45,
+        "question": "Sông nào sâu nhất?",
+        "answer": "sông dài",
+        "hint": "Một cách chơi chữ"
+    },
+    {
+        "id": 46,
+        "question": "Loại nước nào không bao giờ đóng băng?",
+        "answer": "nước mắt",
+        "hint": "Tuôn ra khi buồn hoặc vui"
+    },
+    {
+        "id": 47,
+        "question": "Con gì biết nói tiếng người?",
+        "answer": "con vẹt",
+        "hint": "Loài chim có bộ lông sặc sỡ"
+    },
+    {
+        "id": 48,
+        "question": "Cái gì mà bạn không thể mua được bằng tiền nhưng lại có thể mất đi vì tiền?",
+        "answer": "lòng tin",
+        "hint": "Sự tin tưởng của người khác"
+    },
+    {
+        "id": 49,
+        "question": "Cái gì mà ai cũng muốn có nhưng khi có rồi lại muốn vứt đi?",
+        "answer": "cái túi rác",
+        "hint": "Dùng để đựng đồ bỏ đi"
+    },
+    {
+        "id": 50,
+        "question": "Tại sao con voi không thể nhảy?",
+        "answer": "vì nó quá nặng",
+        "hint": "Một đặc điểm sinh học"
+    },
+    {
+        "id": 51,
+        "question": "Chim gì không có cánh?",
+        "answer": "chim trong ảnh",
+        "hint": "Không phải chim thật"
+    },
+    {
+        "id": 52,
+        "question": "Trên nhấp dưới giật là đang làm gì?",
+        "answer": "câu cá",
+        "hint": "Một hoạt động giải trí"
+    },
+    {
+        "id": 53,
+        "question": "Cái gì càng thắng càng thua?",
+        "answer": "xe đạp",
+        "hint": "Liên quan đến phanh xe"
+    },
+    {
+        "id": 54,
+        "question": "Quả gì năm múi, tên gọi như sao?",
+        "answer": "quả khế",
+        "hint": "Có vị chua hoặc ngọt"
+    },
+    {
+        "id": 55,
+        "question": "Áo gì không mặc được?",
+        "answer": "áo quan",
+        "hint": "Dành cho người đã mất"
+    },
+    {
+        "id": 56,
+        "question": "Cái gì bằng cái vung, vùng xuống ao, đào chẳng thấy, lấy chẳng được?",
+        "answer": "mặt trăng",
+        "hint": "Hình ảnh phản chiếu dưới nước"
+    },
+    {
+        "id": 57,
+        "question": "Con đường nào ngắn nhất?",
+        "answer": "đường đi trong mơ",
+        "hint": "Xảy ra khi ngủ"
+    },
+    {
+        "id": 58,
+        "question": "Càng chơi càng ra mồ hôi là môn gì?",
+        "answer": "thể thao",
+        "hint": "Hoạt động rèn luyện sức khỏe"
+    },
+    {
+        "id": 59,
+        "question": "Bệnh gì bác sĩ bó tay?",
+        "answer": "gãy tay",
+        "hint": "Cần dùng băng gạc để cố định"
+    },
+    {
+        "id": 60,
+        "question": "Hoa gì không có màu sắc?",
+        "answer": "hoa gió",
+        "hint": "Cảm giác se lạnh"
+    },
+    {
+        "id": 61,
+        "question": "Tại sao con lừa lại ăn cỏ?",
+        "answer": "vì nó đói",
+        "hint": "Bản năng tự nhiên"
+    },
+    {
+        "id": 62,
+        "question": "Cái gì mà bạn càng cho đi nhiều thì bạn càng có nhiều?",
+        "answer": "tình yêu",
+        "hint": "Một loại cảm xúc"
+    },
+    {
+        "id": 63,
+        "question": "Cây gì mọc trong nhà?",
+        "answer": "cây nến",
+        "hint": "Dùng để thắp sáng"
+    },
+    {
+        "id": 64,
+        "question": "Con gì không có xương sống?",
+        "answer": "con giun",
+        "hint": "Sống trong đất"
+    },
+    {
+        "id": 65,
+        "question": "Cái gì mà bạn không thể thấy nhưng luôn ở trước mắt bạn?",
+        "answer": "tương lai",
+        "hint": "Những gì sắp xảy ra"
+    },
+    {
+        "id": 66,
+        "question": "Làm thế nào để con cua bò nhanh hơn?",
+        "answer": "cho nó xuống nước",
+        "hint": "Môi trường tự nhiên"
+    },
+    {
+        "id": 67,
+        "question": "Sơn gì không dùng để vẽ?",
+        "answer": "sơn hà",
+        "hint": "Tên gọi khác của đất nước"
+    },
+    {
+        "id": 68,
+        "question": "Cái gì càng bỏ nhiều muối càng nhạt?",
+        "answer": "lòng tin",
+        "hint": "Ví von về sự giả dối"
+    },
+    {
+        "id": 69,
+        "question": "Cái gì có chân mà không biết đi?",
+        "answer": "cái ghế",
+        "hint": "Dùng để ngồi"
+    },
+    {
+        "id": 70,
+        "question": "Hoa gì tượng trưng cho sự thanh khiết?",
+        "answer": "hoa sen",
+        "hint": "Gần bùn mà chẳng hôi tanh mùi bùn"
+    },
+    {
+        "id": 71,
+        "question": "Trái gì không thể ăn được?",
+        "answer": "trái đất",
+        "hint": "Hành tinh chúng ta đang sống"
+    },
+    {
+        "id": 72,
+        "question": "Cái gì mà bạn có thể bắt được nhưng không thể ném được?",
+        "answer": "cơn cảm lạnh",
+        "hint": "Một loại bệnh nhẹ"
+    },
+    {
+        "id": 73,
+        "question": "Con gì biết bơi nhưng không có vây?",
+        "answer": "con người",
+        "hint": "Bằng cách học kỹ năng"
+    },
+    {
+        "id": 74,
+        "question": "Cây gì mà ai cũng muốn có?",
+        "answer": "cây tiền",
+        "hint": "Sự giàu sang"
+    },
+    {
+        "id": 75,
+        "question": "Cái gì mà bạn càng nhìn lâu càng thấy mờ?",
+        "answer": "mặt trời",
+        "hint": "Nguồn sáng cực mạnh"
+    },
+    {
+        "id": 76,
+        "question": "Tại sao con kiến không bao giờ đi ngủ?",
+        "answer": "vì nó luôn làm việc",
+        "hint": "Đức tính chăm chỉ"
+    },
+    {
+        "id": 77,
+        "question": "Cái gì mà bạn có thể nghe thấy nhưng không thể thấy?",
+        "answer": "tiếng vang",
+        "hint": "Phản xạ âm thanh"
+    },
+    {
+        "id": 78,
+        "question": "Cầu gì không bắc qua sông?",
+        "answer": "cầu vồng",
+        "hint": "Tận sau cơn mưa"
+    },
+    {
+        "id": 79,
+        "question": "Cái gì có thể cắt được nước?",
+        "answer": "con dao",
+        "hint": "Nhưng nước sẽ liền lại ngay"
+    },
+    {
+        "id": 80,
+        "question": "Con gì bò trên tường?",
+        "answer": "con thạch sùng",
+        "hint": "Thường kêu tặc tặc"
+    },
+    {
+        "id": 81,
+        "question": "Cái gì mà bạn có thể giữ nhưng không thể cầm?",
+        "answer": "lời hứa",
+        "hint": "Sự cam kết"
+    },
+    {
+        "id": 82,
+        "question": "Vua nào còn nhỏ nhất?",
+        "answer": "vua trẻ con",
+        "hint": "Một cách chơi chữ"
+    },
+    {
+        "id": 83,
+        "question": "Cái gì mà bạn có thể tìm thấy trong một ngôi nhà cũ?",
+        "answer": "bụi bẩn",
+        "hint": "Tích tụ qua thời gian"
+    },
+    {
+        "id": 84,
+        "question": "Tại sao con gà lại gáy?",
+        "answer": "vì nó có họng",
+        "hint": "Cơ quan phát âm"
+    },
+    {
+        "id": 85,
+        "question": "Cái gì có thể bay mà không cần động cơ?",
+        "answer": "ý nghĩ",
+        "hint": "Trong tâm trí con người"
+    },
+    {
+        "id": 86,
+        "question": "Loại hạt nào nhỏ nhất?",
+        "answer": "hạt cát",
+        "hint": "Tìm thấy ở bãi biển"
+    },
+    {
+        "id": 87,
+        "question": "Con gì hay hù dọa người khác?",
+        "answer": "con ma",
+        "hint": "Nhân vật trong phim kinh dị"
+    },
+    {
+        "id": 88,
+        "question": "Cái gì mà bạn có thể tặng cho người khác mà vẫn giữ được?",
+        "answer": "nụ cười",
+        "hint": "Sự vui vẻ"
+    },
+    {
+        "id": 89,
+        "question": "Cái gì có thể đi xuyên qua gương mà không làm vỡ nó?",
+        "answer": "ánh sáng",
+        "hint": "Giúp chúng ta nhìn thấy mọi vật"
+    },
+    {
+        "id": 90,
+        "question": "Tại sao bầu trời có màu xanh?",
+        "answer": "phản xạ ánh sáng",
+        "hint": "Hiện tượng vật lý"
+    },
+    {
+        "id": 91,
+        "question": "Cái gì có thể làm bạn khóc?",
+        "answer": "củ hành",
+        "hint": "Khi bạn thái nó"
+    },
+    {
+        "id": 92,
+        "question": "Con gì hay bò dưới đất?",
+        "answer": "con sâu",
+        "hint": "Biến thành bướm sau này"
+    },
+    {
+        "id": 93,
+        "question": "Cái gì mà bạn không thể quên?",
+        "answer": "kỷ niệm",
+        "hint": "Những gì đã qua"
+    },
+    {
+        "id": 94,
+        "question": "Hoa gì báo hiệu mùa hè đến?",
+        "answer": "hoa phượng",
+        "hint": "Gắn liền với tuổi học trò"
+    },
+    {
+        "id": 95,
+        "question": "Trái gì có nhiều gai nhất?",
+        "answer": "trái sầu riêng",
+        "hint": "Có mùi rất đặc trưng"
+    },
+    {
+        "id": 96,
+        "question": "Cái gì mà bạn luôn mang theo bên mình?",
+        "answer": "niềm tin",
+        "hint": "Sức mạnh nội tâm"
+    },
+    {
+        "id": 97,
+        "question": "Tại sao biển lại có sóng?",
+        "answer": "vì gió thổi",
+        "hint": "Tác động của thiên nhiên"
+    },
+    {
+        "id": 98,
+        "question": "Con gì hay bay vào ban đêm?",
+        "answer": "con dơi",
+        "hint": "Ngủ treo ngược cành cây"
+    },
+    {
+        "id": 99,
+        "question": "Cái gì mà bạn có thể thấy ở cuối con đường?",
+        "answer": "vạch đích",
+        "hint": "Nơi kết thúc cuộc hành trình"
+    },
+    {
+        "id": 100,
+        "question": "Tại sao bạn lại thích giải đố?",
+        "answer": "kiểm tra trí thông minh",
+        "hint": "Một cách rèn luyện não bộ"
+    }
+]

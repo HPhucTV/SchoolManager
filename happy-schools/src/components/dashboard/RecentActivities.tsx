@@ -130,7 +130,7 @@ export default function RecentActivities() {
             <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
 
                 <button
-                    onClick={() => window.location.href = '/thong-ke'}
+                    onClick={() => window.location.href = '/teacher/thong-ke'}
                     style={{
                         gridColumn: '1 / -1',
                         display: 'flex',

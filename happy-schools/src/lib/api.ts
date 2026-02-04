@@ -1,5 +1,4 @@
-// Centralized API Configuration
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 // --- Types ---
 
@@ -7,7 +6,7 @@ export interface Activity {
     id: number;
     title: string;
     description: string;
-    status: 'completed' | 'in-progress' | 'scheduled';
+    status: 'completed' | 'in-progress' | 'scheduled' | 'upcoming';
     progress: number;
     participants_count: number;
     created_at: string;
@@ -72,15 +71,56 @@ export const api = {
 };
 
 export const activitiesApi = {
-    getActivities: async ({ limit = 5 }: { limit?: number } = {}) => {
+    getActivities: async ({ limit = 100 }: { limit?: number } = {}) => {
         try {
-            const response = await fetch(`${API_URL}/api/activities?limit=${limit}`, {
+            const response = await fetch(`${API_URL}/api/activities/?limit=${limit}`, {
                 headers: getHeaders()
             });
             if (!response.ok) throw new Error('Failed to fetch activities');
             return await response.json();
         } catch (error) {
             console.error('Error fetching activities:', error);
+            throw error;
+        }
+    },
+    createActivity: async (data: any) => {
+        try {
+            const response = await fetch(`${API_URL}/api/activities/`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) throw new Error('Failed to create activity');
+            return await response.json();
+        } catch (error) {
+            console.error('Error creating activity:', error);
+            throw error;
+        }
+    },
+    updateActivity: async (id: number, data: any) => {
+        try {
+            const response = await fetch(`${API_URL}/api/activities/${id}`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) throw new Error('Failed to update activity');
+            return await response.json();
+        } catch (error) {
+            console.error('Error updating activity:', error);
+            throw error;
+        }
+    },
+    deleteActivity: async (id: number) => {
+        try {
+            const response = await fetch(`${API_URL}/api/activities/${id}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            if (!response.ok) throw new Error('Failed to delete activity');
+            return await response.json();
+        } catch (error) {
+            console.error('Error deleting activity:', error);
             throw error;
         }
     }
@@ -155,6 +195,104 @@ export const statisticsApi = {
             return await response.json();
         } catch (error) {
             console.error('Error fetching classes stats:', error);
+            throw error;
+        }
+    }
+};
+
+export const adminApi = {
+    getUsers: async (role?: string) => {
+        try {
+            const params = role ? `?role=${role}` : '';
+            const response = await fetch(`${API_URL}/api/auth/users${params}`, {
+                headers: getHeaders()
+            });
+            if (!response.ok) throw new Error('Failed to fetch users');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            throw error;
+        }
+    },
+    getClasses: async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/auth/classes`, {
+                headers: getHeaders()
+            });
+            if (!response.ok) throw new Error('Failed to fetch classes');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching classes:', error);
+            throw error;
+        }
+    },
+    createUser: async (userData: any) => {
+        try {
+            const response = await fetch(`${API_URL}/api/auth/users`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify(userData)
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'Failed to create user');
+            return data;
+        } catch (error) {
+            console.error('Error creating user:', error);
+            throw error;
+        }
+    },
+    deleteUser: async (id: number) => {
+        try {
+            const response = await fetch(`${API_URL}/api/auth/users/${id}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            if (!response.ok) throw new Error('Failed to delete user');
+            return await response.json();
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            throw error;
+        }
+    },
+    createClass: async (classData: any) => {
+        try {
+            const response = await fetch(`${API_URL}/api/auth/classes`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify(classData)
+            });
+            if (!response.ok) throw new Error('Failed to create class');
+            return await response.json();
+        } catch (error) {
+            console.error('Error creating class:', error);
+            throw error;
+        }
+    },
+    updateClass: async (id: number, classData: any) => {
+        try {
+            const response = await fetch(`${API_URL}/api/auth/classes/${id}`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify(classData)
+            });
+            if (!response.ok) throw new Error('Failed to update class');
+            return await response.json();
+        } catch (error) {
+            console.error('Error updating class:', error);
+            throw error;
+        }
+    },
+    updateUser: async (id: number, userData: any) => {
+        try {
+            const response = await fetch(`${API_URL}/api/auth/users/${id}`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify(userData)
+            });
+            if (!response.ok) throw new Error('Failed to update user');
+            return await response.json();
+        } catch (error) {
+            console.error('Error updating user:', error);
             throw error;
         }
     }

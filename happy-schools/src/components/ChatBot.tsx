@@ -16,7 +16,7 @@ const PERSONAS: { id: Persona; label: string; icon: React.ReactNode; description
     { id: 'teacher', label: 'Thầy cô', icon: <GraduationCap size={20} />, description: 'Hướng dẫn từ thầy cô' },
 ];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
 
 export default function ChatBot() {
     const [isOpen, setIsOpen] = useState(false);

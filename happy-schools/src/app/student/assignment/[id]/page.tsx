@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth';
 import { ArrowLeft, Clock, CheckCircle, Send, FileText } from 'lucide-react';
 import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
 
 interface Question {
     id: number;

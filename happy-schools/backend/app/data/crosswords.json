@@ -1,0 +1,387 @@
+[
+    {
+        "id": 1,
+        "topic": "Lịch sử",
+        "question": "Vị vua nào đã dời đô từ Hoa Lư về Thăng Long?",
+        "answer": "LYTHAITO",
+        "hint": "Ông là người sáng lập ra nhà Lý."
+    },
+    {
+        "id": 2,
+        "topic": "Lịch sử",
+        "question": "Chiến thắng Điện Biên Phủ diễn ra vào năm nào?",
+        "answer": "1954",
+        "hint": "Năm này cũng là năm ký hiệp định Genève."
+    },
+    {
+        "id": 3,
+        "topic": "Địa lý",
+        "question": "Đỉnh núi nào cao nhất Việt Nam?",
+        "answer": "FANSIPAN",
+        "hint": "Nó được mệnh danh là Nóc nhà Đông Dương."
+    },
+    {
+        "id": 4,
+        "topic": "Văn học",
+        "question": "Tác giả của Truyện Kiều là ai?",
+        "answer": "NGUYENDU",
+        "hint": "Ông là một đại thi hào dân tộc."
+    },
+    {
+        "id": 5,
+        "topic": "Khoa học",
+        "question": "Hành tinh nào gần Mặt Trời nhất?",
+        "answer": "SAOTHUY",
+        "hint": "Tên hành tinh này liên quan đến nước."
+    },
+    {
+        "id": 6,
+        "topic": "Địa lý",
+        "question": "Thủ đô của nước Việt Nam là gì?",
+        "answer": "HANOI",
+        "hint": "Thành phố vì hòa bình."
+    },
+    {
+        "id": 7,
+        "topic": "Lịch sử",
+        "question": "Ai là người chỉ huy trận chiến trên sông Bạch Đằng năm 938?",
+        "answer": "NGOQUYEN",
+        "hint": "Ông đã đánh bại quân Nam Hán."
+    },
+    {
+        "id": 8,
+        "topic": "Văn học",
+        "question": "Bài thơ 'Nam quốc sơn hà' được coi là bản Tuyên ngôn độc lập đầu tiên của nước ta, tương truyền do ai đọc?",
+        "answer": "LYTHUONGKIET",
+        "hint": "Một danh tướng thời Lý."
+    },
+    {
+        "id": 9,
+        "topic": "Khoa học",
+        "question": "Khí nào chiếm tỉ lệ lớn nhất trong không khí?",
+        "answer": "NITO",
+        "hint": "Chiếm khoảng 78% thể tích không khí."
+    },
+    {
+        "id": 10,
+        "topic": "Đố vui",
+        "question": "Con gì càng to càng nhỏ?",
+        "answer": "CONCUA",
+        "hint": "Một loài động vật sống dưới nước, có càng."
+    },
+    {
+        "id": 11,
+        "topic": "Lịch sử",
+        "question": "Tên nước ta dưới thời vua Minh Mạng là gì?",
+        "answer": "DAINAM",
+        "hint": "Tên này có ý nghĩa là nước Nam lớn."
+    },
+    {
+        "id": 12,
+        "topic": "Địa lý",
+        "question": "Hang động tự nhiên lớn nhất thế giới nằm ở Việt Nam tên là gì?",
+        "answer": "SONDOONG",
+        "hint": "Nằm ở tỉnh Quảng Bình."
+    },
+    {
+        "id": 13,
+        "topic": "Văn học",
+        "question": "Nhân vật Chí Phèo xuất hiện trong tác phẩm của nhà văn nào?",
+        "answer": "NAMCAO",
+        "hint": "Nhà văn hiện thực xuất sắc trước 1945."
+    },
+    {
+        "id": 14,
+        "topic": "Khoa học",
+        "question": "Công thức hóa học của nước là gì?",
+        "answer": "H2O",
+        "hint": "Gồm 2 nguyên tử Hydro và 1 nguyên tử Oxi."
+    },
+    {
+        "id": 15,
+        "topic": "Âm nhạc",
+        "question": "Nhạc sĩ sáng tác bài hát 'Tiến quân ca' là ai?",
+        "answer": "VANKAO",
+        "hint": "Tên ông bắt đầu bằng chữ V."
+    },
+    {
+        "id": 16,
+        "topic": "Lịch sử",
+        "question": "Nữ tướng đầu tiên của nước ta là ai?",
+        "answer": "HAIBATRUNG",
+        "hint": "Hai chị em cưỡi voi đánh giặc."
+    },
+    {
+        "id": 17,
+        "topic": "Địa lý",
+        "question": "Sông Mê Kông chảy vào Việt Nam bắt đầu từ tỉnh nào?",
+        "answer": "ANGIANG",
+        "hint": "Một tỉnh thuộc vùng Đồng bằng sông Cửu Long."
+    },
+    {
+        "id": 18,
+        "topic": "Khoa học",
+        "question": "Loài vật nào chạy nhanh nhất trên cạn?",
+        "answer": "BAOGAM",
+        "hint": "Một loài thuộc họ Mèo."
+    },
+    {
+        "id": 19,
+        "topic": "Tổng hợp",
+        "question": "Đơn vị tiền tệ của Việt Nam là gì?",
+        "answer": "DONG",
+        "hint": "Viết tắt là VND."
+    },
+    {
+        "id": 20,
+        "topic": "Văn học",
+        "question": "Tác phẩm 'Dế Mèn phiêu lưu ký' là của ai?",
+        "answer": "TOHOAI",
+        "hint": "Nhà văn chuyên viết truyện cho thiếu nhi."
+    },
+    {
+        "id": 21,
+        "topic": "Lịch sử",
+        "question": "Chiến dịch Hồ Chí Minh toàn thắng vào ngày tháng năm nào?",
+        "answer": "3041975",
+        "hint": "Ngày giải phóng miền Nam, thống nhất đất nước."
+    },
+    {
+        "id": 22,
+        "topic": "Địa lý",
+        "question": "Tỉnh nào ở Việt Nam có diện tích lớn nhất?",
+        "answer": "NGHEAN",
+        "hint": "Quê hương của Bác Hồ."
+    },
+    {
+        "id": 23,
+        "topic": "Địa lý",
+        "question": "Thành phố nào đông dân nhất Việt Nam?",
+        "answer": "HOCHIMINH",
+        "hint": "Tên cũ là Sài Gòn."
+    },
+    {
+        "id": 24,
+        "topic": "Ẩm thực",
+        "question": "Món ăn đặc sản nổi tiếng của Hà Nội là gì?",
+        "answer": "PHO",
+        "hint": "Làm từ bánh gạo, nước dùng bò hoặc gà."
+    },
+    {
+        "id": 25,
+        "topic": "Lịch sử",
+        "question": "Vị tướng nào đã lãnh đạo quân dân ta đánh tan quân Mông - Nguyên 3 lần?",
+        "answer": "TRANHUNGDAO",
+        "hint": "Ông là Quốc công tiết chế thời Trần."
+    },
+    {
+        "id": 26,
+        "topic": "Đố vui",
+        "question": "Cái gì không có mắt, không tai, không mũi nhưng hễ đâu có mặt ai cũng nhìn?",
+        "answer": "DONGHO",
+        "hint": "Dùng để xem giờ."
+    },
+    {
+        "id": 27,
+        "topic": "Đố vui",
+        "question": "Thân em xưa ở bụi tre, mùa đông xếp lại mùa hè mở ra. Là cái gì?",
+        "answer": "CAIQUAT",
+        "hint": "Dùng để làm mát."
+    },
+    {
+        "id": 28,
+        "topic": "Đố vui",
+        "question": "Con gì tám cẳng hai càng?",
+        "answer": "CONCUA",
+        "hint": "Bò ngang."
+    },
+    {
+        "id": 29,
+        "topic": "Đố vui",
+        "question": "Con gì ăn cỏ, đầu có hai sừng, mũi buộc thừng, kéo cày rất giỏi?",
+        "answer": "CONTRAU",
+        "hint": "Bạn của nhà nông."
+    },
+    {
+        "id": 30,
+        "topic": "Khoa học",
+        "question": "Chất nào cần thiết nhất cho sự hô hấp của con người?",
+        "answer": "OXI",
+        "hint": "Kí hiệu là O2."
+    },
+    {
+        "id": 31,
+        "topic": "Văn học",
+        "question": "Ai là tác giả của bài thơ 'Lượm'?",
+        "answer": "TOHUU",
+        "hint": "Nhà thơ cách mạng nổi tiếng."
+    },
+    {
+        "id": 32,
+        "topic": "Tự nhiên",
+        "question": "Con vật nào được mệnh danh là chúa sơn lâm?",
+        "answer": "CONHO",
+        "hint": "Có vằn, tiếng gầm vang."
+    },
+    {
+        "id": 33,
+        "topic": "Văn hóa",
+        "question": "Loại áo truyền thống của phụ nữ Việt Nam là gì?",
+        "answer": "AODAI",
+        "hint": "Thường mặc vào dịp lễ tết."
+    },
+    {
+        "id": 34,
+        "topic": "Địa lý",
+        "question": "Vịnh biển nào của Việt Nam được UNESCO công nhận là di sản thiên nhiên thế giới?",
+        "answer": "HALONG",
+        "hint": "Nằm ở tỉnh Quảng Ninh."
+    },
+    {
+        "id": 35,
+        "topic": "Lịch sử",
+        "question": "Ai là người sáng lập ra Đảng Cộng sản Việt Nam?",
+        "answer": "HOCHIMINH",
+        "hint": "Bác Hồ kính yêu."
+    },
+    {
+        "id": 36,
+        "topic": "Đố vui",
+        "question": "Cái gì càng rửa càng bẩn?",
+        "answer": "NUOC",
+        "hint": "Nước sau khi rửa tay chân."
+    },
+    {
+        "id": 37,
+        "topic": "Đố vui",
+        "question": "Cái gì đi thì nằm, đứng thì nằm, nhưng nằm lại đứng?",
+        "answer": "BANCHAN",
+        "hint": "Bộ phận cơ thể dùng để đi."
+    },
+    {
+        "id": 38,
+        "topic": "Khoa học",
+        "question": "Nhiệt độ sôi của nước ở điều kiện tiêu chuẩn là bao nhiêu độ C?",
+        "answer": "100",
+        "hint": "Số tròn trăm."
+    },
+    {
+        "id": 39,
+        "topic": "Văn học",
+        "question": "Truyện cổ tích 'Tấm Cám' thuộc thể loại gì?",
+        "answer": "COTICHTHANKY",
+        "hint": "Có yếu tố phép thuật."
+    },
+    {
+        "id": 40,
+        "topic": "Địa lý",
+        "question": "Tỉnh nào là điểm cực Bắc của Việt Nam?",
+        "answer": "HAGIANG",
+        "hint": "Nơi có cột cờ Lũng Cú."
+    },
+    {
+        "id": 41,
+        "topic": "Lịch sử",
+        "question": "Cuộc khởi nghĩa Lam Sơn do ai lãnh đạo?",
+        "answer": "LENLOI",
+        "hint": "Vị vua sáng lập nhà Hậu Lê."
+    },
+    {
+        "id": 42,
+        "topic": "Văn học",
+        "question": "Nhà thơ nào được mệnh danh là 'Bà chúa thơ Nôm'?",
+        "answer": "HOXUANHUONG",
+        "hint": "Tác giả của 'Bánh trôi nước'."
+    },
+    {
+        "id": 43,
+        "topic": "Địa lý",
+        "question": "Sông nào dài nhất chảy qua lãnh thổ Việt Nam?",
+        "answer": "SONGMEKONG",
+        "hint": "Chảy qua 6 nước."
+    },
+    {
+        "id": 44,
+        "topic": "Đố vui",
+        "question": "Con gì vừa sinh ra đã là người già?",
+        "answer": "OBA",
+        "hint": "Đảo ngược chữ B."
+    },
+    {
+        "id": 45,
+        "topic": "Tổng hợp",
+        "question": "Tháng 2 năm nhuận có bao nhiêu ngày?",
+        "answer": "29",
+        "hint": "Nhiều hơn năm thường 1 ngày."
+    },
+    {
+        "id": 46,
+        "topic": "Thể thao",
+        "question": "Cầu thủ bóng đá nào của Việt Nam giành quả bóng vàng năm 2023?",
+        "answer": "HOANGDUC",
+        "hint": "Tiền vệ của Viettel."
+    },
+    {
+        "id": 47,
+        "topic": "Công nghệ",
+        "question": "Mạng xã hội lớn nhất thế giới hiện nay là gì?",
+        "answer": "FACEBOOK",
+        "hint": "Biểu tượng màu xanh dương chữ F."
+    },
+    {
+        "id": 48,
+        "topic": "Âm nhạc",
+        "question": "Nhạc cụ dân tộc nào có một dây?",
+        "answer": "DANBAU",
+        "hint": "Tiếng đàn bầu."
+    },
+    {
+        "id": 49,
+        "topic": "Lịch sử",
+        "question": "Vị vua cuối cùng của triều đại phong kiến Việt Nam là ai?",
+        "answer": "BAODAI",
+        "hint": "Ông thoái vị năm 1945."
+    },
+    {
+        "id": 50,
+        "topic": "Văn học",
+        "question": "Ai là tác giả bài thơ 'Quê hương' (Quê hương là chùm khế ngọt)?",
+        "answer": "DOTRUNGQUAN",
+        "hint": "Bài thơ được phổ nhạc."
+    },
+    {
+        "id": 51,
+        "topic": "Đố vui",
+        "question": "Con gì đập thì sống, không đập thì chết?",
+        "answer": "CONTIM",
+        "hint": "Bộ phận quan trọng trong lồng ngực."
+    },
+    {
+        "id": 52,
+        "topic": "Khoa học",
+        "question": "Mặt Trời mọc ở hướng nào?",
+        "answer": "DONG",
+        "hint": "Ngược với hướng Tây."
+    },
+    {
+        "id": 53,
+        "topic": "Địa lý",
+        "question": "Hòn đảo lớn nhất Việt Nam là đảo nào?",
+        "answer": "PHUQUOC",
+        "hint": "Đảo Ngọc."
+    },
+    {
+        "id": 54,
+        "topic": "Văn hóa",
+        "question": "Bánh chưng hình gì?",
+        "answer": "VUONG",
+        "hint": "Tượng trưng cho Đất."
+    },
+    {
+        "id": 55,
+        "topic": "Lịch sử",
+        "question": "Ai là người dẹp loạn 12 sứ quân?",
+        "answer": "DINHBOLINH",
+        "hint": "Ông lên ngôi vua lấy hiệu là Đinh Tiên Hoàng."
+    }
+]
