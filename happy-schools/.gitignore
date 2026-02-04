@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Env
+.env
+.env.*
+
+# Backend & dataset
+backend/
+word_chain_dataset.json
+
+# Node / Python
+node_modules/
+.venv/
+__pycache__/
