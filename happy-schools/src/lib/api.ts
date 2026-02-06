@@ -48,6 +48,34 @@ export interface StudentStats {
 
 export interface Statistics extends StudentStats { }
 
+export interface Question {
+    id: number;
+    question_text: string;
+    option_a: string;
+    option_b: string;
+    option_c: string;
+    option_d: string;
+    correct_answer: 'A' | 'B' | 'C' | 'D';
+    difficulty: 'easy' | 'medium' | 'hard';
+}
+
+export interface Quiz {
+    id: number;
+    title: string;
+    subject: string;
+    topic: string;
+    status: 'draft' | 'active' | 'closed';
+    easy_count: number;
+    medium_count: number;
+    hard_count: number;
+    total_questions: number;
+    deadline?: string;
+    allow_retake: boolean;
+    class_id: number;
+    questions?: Question[];
+    created_at?: string;
+}
+
 // --- APIs ---
 
 const getHeaders = () => {
@@ -293,6 +321,80 @@ export const adminApi = {
             return await response.json();
         } catch (error) {
             console.error('Error updating user:', error);
+            throw error;
+        }
+    }
+};
+
+export const quizzesApi = {
+    getQuizzes: async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/quizzes`, {
+                headers: getHeaders()
+            });
+            if (!response.ok) throw new Error('Failed to fetch quizzes');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching quizzes:', error);
+            throw error;
+        }
+    },
+    createQuiz: async (data: any) => {
+        try {
+            const response = await fetch(`${API_URL}/api/quizzes`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to create quiz');
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error creating quiz:', error);
+            throw error;
+        }
+    },
+    updateQuiz: async (id: number, data: any) => {
+        try {
+            const response = await fetch(`${API_URL}/api/quizzes/${id}`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) throw new Error('Failed to update quiz');
+            return await response.json();
+        } catch (error) {
+            console.error('Error updating quiz:', error);
+            throw error;
+        }
+    },
+    deleteQuiz: async (id: number) => {
+        try {
+            const response = await fetch(`${API_URL}/api/quizzes/${id}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            if (!response.ok) throw new Error('Failed to delete quiz');
+            return await response.json();
+        } catch (error) {
+            console.error('Error deleting quiz:', error);
+            throw error;
+        }
+    }
+};
+
+export const classesApi = {
+    getClasses: async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/auth/classes`, {
+                headers: getHeaders()
+            });
+            if (!response.ok) throw new Error('Failed to fetch classes');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching classes:', error);
             throw error;
         }
     }

@@ -21,7 +21,7 @@ const navItems = [
     { href: '/teacher/lop-hoc', label: 'Lớp học', icon: School },
     { href: '/teacher/thong-ke', label: 'Thống kê', icon: BarChart3 },
     { href: '/teacher/hoat-dong', label: 'Hoạt động', icon: Activity },
-    { href: '/teacher/kiem-tra', label: 'Bài kiểm tra', icon: BookOpen },
+    // { href: '/teacher/kiem-tra', label: 'Bài kiểm tra', icon: BookOpen },
     { href: '/teacher/bai-tap', label: 'Bài tập', icon: FileText },
     { href: '/teacher/hoc-sinh', label: 'Học sinh', icon: Users },
     { href: '/teacher/thi-dua', label: 'Thi đua', icon: Trophy },
