@@ -27,7 +27,7 @@ export default function HappyRacePage() {
     useEffect(() => {
         const fetchClasses = async () => {
             try {
-                const data = await statisticsApi.getClasses();
+                const data = await statisticsApi.getClasses() as ClassData[];
                 // Sort by score descending
                 const sorted = data.sort((a, b) => b.happiness_score - a.happiness_score);
                 setClasses(sorted);

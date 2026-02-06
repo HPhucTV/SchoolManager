@@ -47,7 +47,6 @@ export default function MoodBoard({ students }: { students: Student[] }) {
                             alignItems: 'center',
                             gap: '8px',
                             cursor: 'pointer',
-                            group: 'true'
                         }} className="group">
                             <div style={{
                                 position: 'relative',

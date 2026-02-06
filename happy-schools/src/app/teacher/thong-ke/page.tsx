@@ -17,6 +17,11 @@ export default function ThongKePage() {
                 console.error('Failed to fetch statistics:', err);
                 // Fallback data
                 setStats({
+                    total: 1247,
+                    excellent: 450,
+                    good: 500,
+                    attention: 200,
+                    warning: 97,
                     growth_rate: '+12%',
                     total_students: 1247,
                     total_activities: 48,
