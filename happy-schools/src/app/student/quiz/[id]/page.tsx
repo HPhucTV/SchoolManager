@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Brain, Clock, CheckCircle, AlertCircle, ArrowRight, Save, Lock } from 'lucide-react';
@@ -29,7 +29,8 @@ interface Quiz {
     questions: Question[];
 }
 
-export default function QuizTakingPage({ params }: { params: { id: string } }) {
+export default function QuizTakingPage({ params }: { params: Promise<{ id: string }> }) {
+    const resolvedParams = use(params);
     const { token } = useAuth();
     const router = useRouter();
     const [quiz, setQuiz] = useState<Quiz | null>(null);
@@ -37,13 +38,14 @@ export default function QuizTakingPage({ params }: { params: { id: string } }) {
     const [answers, setAnswers] = useState<Record<string, string>>({});
     const [submitting, setSubmitting] = useState(false);
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [result, setResult] = useState<any>(null);
 
     // Fetch Quiz
     useEffect(() => {
-        if (token && params.id) {
+        if (token && resolvedParams.id) {
             // First check if already attempted
-            fetch(`${API_URL}/api/quizzes/${params.id}/my-result`, {
+            fetch(`${API_URL}/api/quizzes/${resolvedParams.id}/my-result`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => res.json())
@@ -61,11 +63,11 @@ export default function QuizTakingPage({ params }: { params: { id: string } }) {
                     setLoading(false);
                 });
         }
-    }, [token, params.id]);
+    }, [token, resolvedParams.id]);
 
     const fetchQuiz = async () => {
         try {
-            const response = await fetch(`${API_URL}/api/quizzes/${params.id}`, {
+            const response = await fetch(`${API_URL}/api/quizzes/${resolvedParams.id}`, {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
             if (response.ok) {
@@ -134,7 +136,7 @@ export default function QuizTakingPage({ params }: { params: { id: string } }) {
 
         setSubmitting(true);
         try {
-            const response = await fetch(`${API_URL}/api/quizzes/${params.id}/submit`, {
+            const response = await fetch(`${API_URL}/api/quizzes/${resolvedParams.id}/submit`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -162,14 +164,14 @@ export default function QuizTakingPage({ params }: { params: { id: string } }) {
 
     if (loading) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f9fafb' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#0f172a' }}>
                 <div style={{ textAlign: 'center' }}>
                     <div className="spinner" style={{
                         width: '48px', height: '48px',
                         border: '4px solid #e5e7eb', borderTop: '4px solid #8b5cf6',
                         borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px'
                     }}></div>
-                    <p style={{ color: '#6b7280' }}>Đang tải đề...</p>
+                    <p style={{ color: '#94a3b8' }}>Đang tải đề...</p>
                 </div>
                 <style jsx global>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
             </div>
@@ -178,32 +180,32 @@ export default function QuizTakingPage({ params }: { params: { id: string } }) {
 
     if (result) {
         return (
-            <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '40px 20px' }}>
-                <div style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', borderRadius: '24px', padding: '40px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', textAlign: 'center' }}>
+            <div style={{ minHeight: '100vh', background: '#0f172a', padding: '40px 20px' }}>
+                <div style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: '#1e293b', borderRadius: '24px', padding: '40px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', textAlign: 'center' }}>
 
                     <div style={{
-                        width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#dcfce7',
+                        width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'rgba(52, 211, 153, 0.15)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px'
                     }}>
                         <CheckCircle size={40} color="#16a34a" />
                     </div>
 
-                    <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#111827', marginBottom: '8px' }}>
+                    <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#e2e8f0', marginBottom: '8px' }}>
                         Hoàn thành bài kiểm tra!
                     </h1>
-                    <p style={{ color: '#6b7280', marginBottom: '32px' }}>
+                    <p style={{ color: '#94a3b8', marginBottom: '32px' }}>
                         Dưới đây là kết quả của bạn
                     </p>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-                        <div style={{ padding: '20px', borderRadius: '16px', backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Điểm số</p>
-                            <p style={{ fontSize: '32px', fontWeight: 800, color: '#111827' }}>
-                                {result.score} <span style={{ fontSize: '16px', color: '#9ca3af', fontWeight: 500 }}>/ {result.total_questions}</span>
+                        <div style={{ padding: '20px', borderRadius: '16px', backgroundColor: '#0f172a', border: '1px solid #334155' }}>
+                            <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '4px' }}>Điểm số</p>
+                            <p style={{ fontSize: '32px', fontWeight: 800, color: '#e2e8f0' }}>
+                                {result.score} <span style={{ fontSize: '16px', color: '#64748b', fontWeight: 500 }}>/ {result.total_questions}</span>
                             </p>
                         </div>
-                        <div style={{ padding: '20px', borderRadius: '16px', backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Tỷ lệ đúng</p>
+                        <div style={{ padding: '20px', borderRadius: '16px', backgroundColor: '#0f172a', border: '1px solid #334155' }}>
+                            <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '4px' }}>Tỷ lệ đúng</p>
                             <p style={{ fontSize: '32px', fontWeight: 800, color: result.percentage >= 50 ? '#16a34a' : '#ef4444' }}>
                                 {result.percentage}%
                             </p>
@@ -228,15 +230,15 @@ export default function QuizTakingPage({ params }: { params: { id: string } }) {
     if (!quiz) return null;
 
     return (
-        <div style={{ minHeight: '100vh', background: '#f3f4f6' }}>
+        <div style={{ minHeight: '100vh', background: '#0f172a' }}>
             {/* Header / Sticky Timer */}
             <div style={{
-                position: 'sticky', top: 0, zIndex: 50, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb',
-                padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                position: 'sticky', top: 0, zIndex: 50, backgroundColor: '#1e293b', borderBottom: '1px solid #334155',
+                padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
             }}>
                 <div>
-                    <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', margin: 0 }}>{quiz.title}</h2>
-                    <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>{quiz.subject} - {quiz.total_questions} câu hỏi</p>
+                    <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>{quiz.title}</h2>
+                    <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>{quiz.subject} - {quiz.total_questions} câu hỏi</p>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
@@ -272,19 +274,19 @@ export default function QuizTakingPage({ params }: { params: { id: string } }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     {quiz.questions.map((q, index) => (
                         <div key={q.id} style={{
-                            backgroundColor: 'white', borderRadius: '16px', padding: '24px',
+                            backgroundColor: '#1e293b', borderRadius: '16px', padding: '24px',
                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
                         }}>
                             <div style={{ display: 'flex', gap: '16px' }}>
                                 <div style={{
-                                    minWidth: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#f3f4f6',
+                                    minWidth: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#0f172a',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '14px', fontWeight: 700, color: '#4b5563'
+                                    fontSize: '14px', fontWeight: 700, color: '#94a3b8'
                                 }}>
                                     {index + 1}
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <p style={{ fontSize: '16px', fontWeight: 500, color: '#111827', margin: '0 0 16px 0', lineHeight: '1.5' }}>
+                                    <p style={{ fontSize: '16px', fontWeight: 500, color: '#e2e8f0', margin: '0 0 16px 0', lineHeight: '1.5' }}>
                                         {q.question_text}
                                     </p>
 
@@ -313,7 +315,7 @@ export default function QuizTakingPage({ params }: { params: { id: string } }) {
                                                     }}>
                                                         {opt}
                                                     </div>
-                                                    <span style={{ fontSize: '14px', color: '#374151' }}>{optionText}</span>
+                                                    <span style={{ fontSize: '14px', color: '#cbd5e1' }}>{optionText}</span>
                                                 </div>
                                             );
                                         })}

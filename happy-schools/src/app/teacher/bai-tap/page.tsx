@@ -201,6 +201,7 @@ export default function BaiTapPage() {
 
     const updateQuestion = (index: number, field: string, value: string | number) => {
         const updated = [...questions];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (updated[index] as any)[field] = value;
         setQuestions(updated);
     };
@@ -394,10 +395,10 @@ export default function BaiTapPage() {
 
     const getStatusBadge = (status: string) => {
         const styles: { [key: string]: { bg: string; color: string; label: string } } = {
-            draft: { bg: '#fef3c7', color: '#d97706', label: 'Nháp' },
+            draft: { bg: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', label: 'Nháp' },
             active: { bg: '#d1fae5', color: '#059669', label: 'Đang mở' },
-            closed: { bg: '#fee2e2', color: '#dc2626', label: 'Đã đóng' },
-            submitted: { bg: '#dbeafe', color: '#2563eb', label: 'Đã nộp' },
+            closed: { bg: 'rgba(248, 113, 113, 0.15)', color: '#f87171', label: 'Đã đóng' },
+            submitted: { bg: 'rgba(96, 165, 250, 0.15)', color: '#60a5fa', label: 'Đã nộp' },
             graded: { bg: '#d1fae5', color: '#059669', label: 'Đã chấm' },
         };
         const s = styles[status] || styles.draft;
@@ -435,7 +436,7 @@ export default function BaiTapPage() {
                     style={{
                         display: 'flex', alignItems: 'center', gap: '8px',
                         padding: '14px 24px', borderRadius: '14px',
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
                         color: 'white', fontWeight: 600, fontSize: '14px', border: 'none', cursor: 'pointer',
                         boxShadow: '0 4px 14px rgba(139, 92, 246, 0.4)',
                     }}
@@ -449,41 +450,41 @@ export default function BaiTapPage() {
             <div style={{ display: 'grid', gap: '16px' }}>
                 {assignments.length === 0 ? (
                     <div style={{
-                        backgroundColor: 'white', borderRadius: '20px', padding: '60px',
-                        textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                        backgroundColor: '#1e293b', borderRadius: '20px', padding: '60px',
+                        textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
                     }}>
                         <FileText size={64} color="#d1d5db" style={{ marginBottom: '16px' }} />
-                        <h3 style={{ color: '#6b7280', margin: 0 }}>Chưa có bài tập nào</h3>
-                        <p style={{ color: '#9ca3af' }}>Bấm &quot;Tạo bài tập&quot; để bắt đầu</p>
+                        <h3 style={{ color: '#94a3b8', margin: 0 }}>Chưa có bài tập nào</h3>
+                        <p style={{ color: '#64748b' }}>Bấm &quot;Tạo bài tập&quot; để bắt đầu</p>
                     </div>
                 ) : (
                     assignments.map(a => (
                         <div key={a.id} style={{
-                            backgroundColor: 'white', borderRadius: '16px', padding: '20px',
+                            backgroundColor: '#1e293b', borderRadius: '16px', padding: '20px',
                             boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                 <div style={{
                                     width: '48px', height: '48px', borderRadius: '12px',
-                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                                    background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 }}>
                                     <FileText size={24} color="white" />
                                 </div>
                                 <div>
-                                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#111827', margin: 0 }}>{a.title}</h3>
+                                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{a.title}</h3>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
-                                        <span style={{ fontSize: '13px', color: '#6b7280' }}>
+                                        <span style={{ fontSize: '13px', color: '#94a3b8' }}>
                                             {a.questions.length} câu • {a.total_points} điểm
                                         </span>
                                         {a.deadline && (
-                                            <span style={{ fontSize: '13px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <span style={{ fontSize: '13px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                 <Calendar size={14} />
                                                 {new Date(a.deadline).toLocaleDateString('vi-VN')}
                                             </span>
                                         )}
-                                        <span style={{ fontSize: '13px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <span style={{ fontSize: '13px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             <Users size={14} />
                                             {a.submission_count} bài nộp
                                         </span>
@@ -496,7 +497,7 @@ export default function BaiTapPage() {
                                     onClick={() => viewSubmissions(a)}
                                     style={{
                                         padding: '8px 16px', borderRadius: '10px',
-                                        backgroundColor: '#f3f4f6', color: '#374151',
+                                        backgroundColor: '#0f172a', color: '#cbd5e1',
                                         border: 'none', cursor: 'pointer', fontWeight: 500,
                                         display: 'flex', alignItems: 'center', gap: '6px',
                                     }}
@@ -510,7 +511,7 @@ export default function BaiTapPage() {
                                         title="Kết thúc sớm"
                                         style={{
                                             padding: '8px', borderRadius: '10px',
-                                            backgroundColor: '#fef3c7', color: '#d97706',
+                                            backgroundColor: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24',
                                             border: 'none', cursor: 'pointer',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center'
                                         }}
@@ -522,7 +523,7 @@ export default function BaiTapPage() {
                                     onClick={() => handleDelete(a.id)}
                                     style={{
                                         padding: '8px', borderRadius: '10px',
-                                        backgroundColor: '#fee2e2', color: '#dc2626',
+                                        backgroundColor: 'rgba(248, 113, 113, 0.15)', color: '#f87171',
                                         border: 'none', cursor: 'pointer',
                                     }}
                                 >
@@ -532,7 +533,7 @@ export default function BaiTapPage() {
                                     onClick={() => handleEdit(a)}
                                     style={{
                                         padding: '8px', borderRadius: '10px',
-                                        backgroundColor: '#dbeafe', color: '#2563eb',
+                                        backgroundColor: 'rgba(96, 165, 250, 0.15)', color: '#60a5fa',
                                         border: 'none', cursor: 'pointer',
                                     }}
                                 >
@@ -552,19 +553,19 @@ export default function BaiTapPage() {
                     padding: '20px',
                 }}>
                     <div style={{
-                        backgroundColor: 'white', borderRadius: '20px', width: '100%', maxWidth: '800px',
+                        backgroundColor: '#1e293b', borderRadius: '20px', width: '100%', maxWidth: '800px',
                         maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
                     }}>
                         {/* Header */}
                         <div style={{
-                            padding: '20px 24px', borderBottom: '1px solid #e5e7eb',
+                            padding: '20px 24px', borderBottom: '1px solid #334155',
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         }}>
                             <div>
                                 <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>
                                     {editingId ? 'Chỉnh sửa bài tập' : 'Tạo bài tập mới'}
                                 </h2>
-                                <p style={{ fontSize: '13px', color: '#6b7280', margin: '2px 0 0 0' }}>
+                                <p style={{ fontSize: '13px', color: '#94a3b8', margin: '2px 0 0 0' }}>
                                     {creationMode === 'manual' ? 'Nhập thông tin và câu hỏi' : 'Tải lên từ file Word'}
                                 </p>
                             </div>
@@ -574,7 +575,7 @@ export default function BaiTapPage() {
                         </div>
 
                         {/* Tabs */}
-                        <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', padding: '0 24px' }}>
+                        <div style={{ display: 'flex', borderBottom: '1px solid #334155', padding: '0 24px' }}>
                             <button
                                 onClick={() => setCreationMode('manual')}
                                 style={{
@@ -604,31 +605,31 @@ export default function BaiTapPage() {
                             {/* Basic Info */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '24px' }}>
                                 <div style={{ gridColumn: 'span 2' }}>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>Tiêu đề *</label>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '6px' }}>Tiêu đề *</label>
                                     <input
                                         type="text"
                                         value={formData.title}
                                         onChange={e => setFormData({ ...formData, title: e.target.value })}
                                         placeholder="Bài tập Toán chương 1"
-                                        style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e5e7eb', fontSize: '14px' }}
+                                        style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px' }}
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>Môn học</label>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '6px' }}>Môn học</label>
                                     <input
                                         type="text"
                                         value={formData.subject}
                                         onChange={e => setFormData({ ...formData, subject: e.target.value })}
                                         placeholder="Toán"
-                                        style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e5e7eb', fontSize: '14px' }}
+                                        style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px' }}
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>Lớp *</label>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '6px' }}>Lớp *</label>
                                     <select
                                         value={formData.class_id}
                                         onChange={e => setFormData({ ...formData, class_id: parseInt(e.target.value) })}
-                                        style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e5e7eb', fontSize: '14px' }}
+                                        style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px' }}
                                     >
                                         <option value={0}>Chọn lớp</option>
                                         {classes.map(c => (
@@ -637,22 +638,22 @@ export default function BaiTapPage() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>Hạn nộp</label>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '6px' }}>Hạn nộp</label>
                                     <input
                                         type="datetime-local"
                                         value={formData.deadline}
                                         onChange={e => setFormData({ ...formData, deadline: e.target.value })}
-                                        style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e5e7eb', fontSize: '14px' }}
+                                        style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px' }}
                                     />
                                 </div>
                                 <div style={{ gridColumn: 'span 2' }}>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>Mô tả</label>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '6px' }}>Mô tả</label>
                                     <textarea
                                         value={formData.description}
                                         onChange={e => setFormData({ ...formData, description: e.target.value })}
                                         placeholder="Hướng dẫn làm bài..."
                                         rows={2}
-                                        style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #e5e7eb', fontSize: '14px', resize: 'vertical' }}
+                                        style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px', resize: 'vertical' }}
                                     />
                                 </div>
                             </div>
@@ -661,7 +662,7 @@ export default function BaiTapPage() {
                             {creationMode === 'upload' ? (
                                 <div style={{
                                     border: '2px dashed #9ca3af', borderRadius: '16px', padding: '40px',
-                                    textAlign: 'center', backgroundColor: '#f9fafb', cursor: 'pointer',
+                                    textAlign: 'center', backgroundColor: '#0f172a', cursor: 'pointer',
                                     marginBottom: '20px'
                                 }}
                                     onClick={() => document.getElementById('file-upload')?.click()}
@@ -680,10 +681,10 @@ export default function BaiTapPage() {
                                     }}>
                                         <Upload size={32} />
                                     </div>
-                                    <p style={{ fontSize: '16px', fontWeight: 600, color: '#374151', margin: '0 0 4px 0' }}>
+                                    <p style={{ fontSize: '16px', fontWeight: 600, color: '#cbd5e1', margin: '0 0 4px 0' }}>
                                         {uploadFile ? uploadFile.name : 'Nhấn để chọn file Word (.docx)'}
                                     </p>
-                                    <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>
+                                    <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
                                         Hệ thống sẽ tự động đọc câu hỏi trắc nghiệm
                                     </p>
 
@@ -697,13 +698,13 @@ export default function BaiTapPage() {
                             ) : (
                                 <div style={{ marginBottom: '16px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                        <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#111827', margin: 0 }}>Câu hỏi ({questions.length})</h3>
+                                        <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>Câu hỏi ({questions.length})</h3>
                                         <div style={{ display: 'flex', gap: '8px' }}>
                                             <button
                                                 onClick={() => addQuestion('multiple_choice')}
                                                 style={{
                                                     padding: '8px 14px', borderRadius: '8px',
-                                                    backgroundColor: '#dbeafe', color: '#2563eb',
+                                                    backgroundColor: 'rgba(96, 165, 250, 0.15)', color: '#60a5fa',
                                                     border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '13px',
                                                     display: 'flex', alignItems: 'center', gap: '4px'
                                                 }}
@@ -714,7 +715,7 @@ export default function BaiTapPage() {
                                                 onClick={() => addQuestion('essay')}
                                                 style={{
                                                     padding: '8px 14px', borderRadius: '8px',
-                                                    backgroundColor: '#fef3c7', color: '#d97706',
+                                                    backgroundColor: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24',
                                                     border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '13px',
                                                     display: 'flex', alignItems: 'center', gap: '4px'
                                                 }}
@@ -726,8 +727,8 @@ export default function BaiTapPage() {
 
                                     {questions.map((q, index) => (
                                         <div key={index} style={{
-                                            padding: '16px', borderRadius: '12px', border: '1px solid #e5e7eb',
-                                            marginBottom: '12px', backgroundColor: '#f9fafb',
+                                            padding: '16px', borderRadius: '12px', border: '1px solid #334155',
+                                            marginBottom: '12px', backgroundColor: '#0f172a',
                                         }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                                                 <span style={{
@@ -743,12 +744,12 @@ export default function BaiTapPage() {
                                                         value={q.points}
                                                         onChange={e => updateQuestion(index, 'points', parseInt(e.target.value) || 1)}
                                                         min={1}
-                                                        style={{ width: '60px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', fontSize: '13px' }}
+                                                        style={{ width: '60px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #334155', fontSize: '13px' }}
                                                     />
-                                                    <span style={{ fontSize: '13px', color: '#6b7280' }}>điểm</span>
+                                                    <span style={{ fontSize: '13px', color: '#94a3b8' }}>điểm</span>
                                                     <button
                                                         onClick={() => removeQuestion(index)}
-                                                        style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', cursor: 'pointer' }}
+                                                        style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'rgba(248, 113, 113, 0.15)', color: '#f87171', border: 'none', cursor: 'pointer' }}
                                                     >
                                                         <Trash2 size={14} />
                                                     </button>
@@ -760,7 +761,7 @@ export default function BaiTapPage() {
                                                 onChange={e => updateQuestion(index, 'question_text', e.target.value)}
                                                 placeholder="Nội dung câu hỏi..."
                                                 rows={2}
-                                                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '14px', marginBottom: '12px', resize: 'vertical' }}
+                                                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #334155', fontSize: '14px', marginBottom: '12px', resize: 'vertical' }}
                                             />
 
                                             {q.question_type === 'multiple_choice' && (
@@ -775,10 +776,11 @@ export default function BaiTapPage() {
                                                             />
                                                             <input
                                                                 type="text"
+                                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                                                 value={(q as any)[`option_${opt.toLowerCase()}`] || ''}
                                                                 onChange={e => updateQuestion(index, `option_${opt.toLowerCase()}`, e.target.value)}
                                                                 placeholder={`Đáp án ${opt}`}
-                                                                style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', fontSize: '13px' }}
+                                                                style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: '1px solid #334155', fontSize: '13px' }}
                                                             />
                                                         </div>
                                                     ))}
@@ -788,7 +790,7 @@ export default function BaiTapPage() {
                                     ))}
 
                                     {questions.length === 0 && (
-                                        <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af', border: '2px dashed #e5e7eb', borderRadius: '12px' }}>
+                                        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b', border: '2px dashed #e5e7eb', borderRadius: '12px' }}>
                                             Chưa có câu hỏi. Bấm nút ở trên để thêm.
                                         </div>
                                     )}
@@ -805,7 +807,7 @@ export default function BaiTapPage() {
                                 onClick={() => { setShowCreateModal(false); resetForm(); }}
                                 style={{
                                     padding: '12px 20px', borderRadius: '10px',
-                                    backgroundColor: '#f3f4f6', color: '#374151',
+                                    backgroundColor: '#0f172a', color: '#cbd5e1',
                                     border: 'none', cursor: 'pointer', fontWeight: 500,
                                 }}
                             >
@@ -816,7 +818,7 @@ export default function BaiTapPage() {
                                 disabled={saving}
                                 style={{
                                     padding: '12px 20px', borderRadius: '10px',
-                                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                                    background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
                                     color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600,
                                     display: 'flex', alignItems: 'center', gap: '8px',
                                     opacity: saving ? 0.7 : 1,
@@ -838,16 +840,16 @@ export default function BaiTapPage() {
                     padding: '20px',
                 }}>
                     <div style={{
-                        backgroundColor: 'white', borderRadius: '20px', width: '100%', maxWidth: '700px',
+                        backgroundColor: '#1e293b', borderRadius: '20px', width: '100%', maxWidth: '700px',
                         maxHeight: '80vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
                     }}>
                         <div style={{
-                            padding: '20px 24px', borderBottom: '1px solid #e5e7eb',
+                            padding: '20px 24px', borderBottom: '1px solid #334155',
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         }}>
                             <div>
                                 <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>{selectedAssignment.title}</h2>
-                                <p style={{ color: '#6b7280', margin: '4px 0 0', fontSize: '14px' }}>
+                                <p style={{ color: '#94a3b8', margin: '4px 0 0', fontSize: '14px' }}>
                                     {submissions.length} bài nộp • {selectedAssignment.total_points} điểm tối đa
                                 </p>
                             </div>
@@ -858,24 +860,24 @@ export default function BaiTapPage() {
 
                         <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
                             {submissions.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
+                                <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
                                     Chưa có học sinh nào nộp bài
                                 </div>
                             ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {submissions.map(s => (
                                         <div key={s.id} style={{
-                                            padding: '16px', borderRadius: '12px', border: '1px solid #e5e7eb',
+                                            padding: '16px', borderRadius: '12px', border: '1px solid #334155',
                                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                         }}>
                                             <div>
-                                                <h4 style={{ fontWeight: 600, color: '#111827', margin: 0 }}>{s.student_name}</h4>
-                                                <p style={{ fontSize: '13px', color: '#6b7280', margin: '4px 0 0' }}>
+                                                <h4 style={{ fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{s.student_name}</h4>
+                                                <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0' }}>
                                                     Nộp lúc: {new Date(s.submitted_at).toLocaleString('vi-VN')}
                                                 </p>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <span style={{ fontWeight: 600, color: '#111827' }}>
+                                                <span style={{ fontWeight: 600, color: '#e2e8f0' }}>
                                                     {s.total_score}/{selectedAssignment.total_points}
                                                 </span>
                                                 {getStatusBadge(s.status)}
@@ -883,7 +885,7 @@ export default function BaiTapPage() {
                                                     onClick={() => startGrading(s)}
                                                     style={{
                                                         padding: '8px 14px', borderRadius: '8px',
-                                                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                                                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
                                                         color: 'white', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '13px',
                                                     }}
                                                 >
@@ -907,11 +909,11 @@ export default function BaiTapPage() {
                     padding: '20px',
                 }}>
                     <div style={{
-                        backgroundColor: 'white', borderRadius: '20px', width: '100%', maxWidth: '700px',
+                        backgroundColor: '#1e293b', borderRadius: '20px', width: '100%', maxWidth: '700px',
                         maxHeight: '85vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
                     }}>
                         <div style={{
-                            padding: '20px 24px', borderBottom: '1px solid #e5e7eb',
+                            padding: '20px 24px', borderBottom: '1px solid #334155',
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         }}>
                             <div>
@@ -929,8 +931,8 @@ export default function BaiTapPage() {
 
                                 return (
                                     <div key={q.id} style={{
-                                        padding: '16px', borderRadius: '12px', border: '1px solid #e5e7eb',
-                                        marginBottom: '16px', backgroundColor: '#f9fafb',
+                                        padding: '16px', borderRadius: '12px', border: '1px solid #334155',
+                                        marginBottom: '16px', backgroundColor: '#0f172a',
                                     }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                                             <span style={{
@@ -951,22 +953,22 @@ export default function BaiTapPage() {
                                             )}
                                         </div>
 
-                                        <p style={{ fontWeight: 500, color: '#111827', marginBottom: '8px' }}>{q.question_text}</p>
+                                        <p style={{ fontWeight: 500, color: '#e2e8f0', marginBottom: '8px' }}>{q.question_text}</p>
 
                                         {answer && (
                                             <div style={{
-                                                padding: '12px', borderRadius: '8px', backgroundColor: 'white',
-                                                border: '1px solid #e5e7eb', marginBottom: '12px',
+                                                padding: '12px', borderRadius: '8px', backgroundColor: '#1e293b',
+                                                border: '1px solid #334155', marginBottom: '12px',
                                             }}>
-                                                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Câu trả lời:</p>
-                                                <p style={{ color: '#111827', whiteSpace: 'pre-wrap' }}>{answer.answer_text}</p>
+                                                <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Câu trả lời:</p>
+                                                <p style={{ color: '#e2e8f0', whiteSpace: 'pre-wrap' }}>{answer.answer_text}</p>
                                             </div>
                                         )}
 
                                         {isEssay && answer && (
                                             <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                                                 <div style={{ width: '100px' }}>
-                                                    <label style={{ fontSize: '12px', color: '#6b7280' }}>Điểm (/{q.points})</label>
+                                                    <label style={{ fontSize: '12px', color: '#94a3b8' }}>Điểm (/{q.points})</label>
                                                     <input
                                                         type="number"
                                                         min={0}
@@ -976,11 +978,11 @@ export default function BaiTapPage() {
                                                             ...grades,
                                                             [answer.id]: { ...grades[answer.id], score: parseInt(e.target.value) || 0 }
                                                         })}
-                                                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', fontSize: '14px' }}
+                                                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #334155', fontSize: '14px' }}
                                                     />
                                                 </div>
                                                 <div style={{ flex: 1 }}>
-                                                    <label style={{ fontSize: '12px', color: '#6b7280' }}>Nhận xét</label>
+                                                    <label style={{ fontSize: '12px', color: '#94a3b8' }}>Nhận xét</label>
                                                     <textarea
                                                         value={grades[answer.id]?.feedback || ''}
                                                         onChange={e => setGrades({
@@ -989,7 +991,7 @@ export default function BaiTapPage() {
                                                         })}
                                                         placeholder="Nhận xét cho học sinh..."
                                                         rows={2}
-                                                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #e5e7eb', fontSize: '13px', resize: 'vertical' }}
+                                                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #334155', fontSize: '13px', resize: 'vertical' }}
                                                     />
                                                 </div>
                                             </div>
@@ -1007,7 +1009,7 @@ export default function BaiTapPage() {
                                 onClick={() => setShowGradeModal(false)}
                                 style={{
                                     padding: '12px 20px', borderRadius: '10px',
-                                    backgroundColor: '#f3f4f6', color: '#374151',
+                                    backgroundColor: '#0f172a', color: '#cbd5e1',
                                     border: 'none', cursor: 'pointer', fontWeight: 500,
                                 }}
                             >
@@ -1017,7 +1019,7 @@ export default function BaiTapPage() {
                                 onClick={handleGrade}
                                 style={{
                                     padding: '12px 20px', borderRadius: '10px',
-                                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                                    background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
                                     color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600,
                                     display: 'flex', alignItems: 'center', gap: '8px',
                                 }}

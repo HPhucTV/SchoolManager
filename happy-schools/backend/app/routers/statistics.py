@@ -22,6 +22,20 @@ async def get_statistics(db: Session = Depends(get_db)):
             {"week": "T2", "score": 85},
             {"week": "T3", "score": 84},
             {"week": "T4", "score": 88}
+        ],
+        "total_surveys": 156, # Mock value
+        "class_comparison": [
+            {"name": "Lớp 10A", "score": 92, "color": "#14b8a6"},
+            {"name": "Lớp 11B", "score": 85, "color": "#3b82f6"},
+            {"name": "Lớp 12A", "score": 89, "color": "#8b5cf6"},
+            {"name": "Lớp 12D", "score": 78, "color": "#f59e0b"}
+        ],
+        "detailed_stats": [
+            {"name": "Mức độ Sôi nổi", "prev": 75, "curr": 82},
+            {"name": "Mức độ Gắn kết", "prev": 68, "curr": 74},
+            {"name": "Sức khỏe Tinh thần", "prev": 80, "curr": 78},
+            {"name": "Tham gia Hoạt động", "prev": 60, "curr": 72},
+            {"name": "Hài lòng với Giáo viên", "prev": 85, "curr": 88}
         ]
     }
 

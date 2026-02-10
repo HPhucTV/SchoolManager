@@ -292,13 +292,13 @@ export default function StudentSettingsPage() {
         <div style={{ animation: 'fadeIn 0.5s ease-out', padding: '24px' }}>
             {/* Header */}
             <div style={{ marginBottom: '32px' }}>
-                <h1 style={{ fontSize: '32px', fontWeight: 700, color: '#111827', margin: 0 }}>Cài đặt</h1>
-                <p style={{ color: '#6b7280', marginTop: '4px' }}>Quản lý cài đặt hệ thống và tài khoản</p>
+                <h1 style={{ fontSize: '32px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>Cài đặt</h1>
+                <p style={{ color: '#94a3b8', marginTop: '4px' }}>Quản lý cài đặt hệ thống và tài khoản</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '32px' }}>
                 {/* Sidebar Navigation */}
-                <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)', height: 'fit-content' }}>
+                <div style={{ backgroundColor: '#1e293b', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)', height: 'fit-content' }}>
                     <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {navItems.map((item) => (
                             <button
@@ -325,8 +325,8 @@ export default function StudentSettingsPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     {/* Profile Settings */}
                     {activeTab === 'profile' && (
-                        <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '24px' }}>Thông tin cá nhân</h2>
+                        <div style={{ backgroundColor: '#1e293b', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)' }}>
+                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', marginBottom: '24px' }}>Thông tin cá nhân</h2>
 
                             {/* Avatar */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '32px' }}>
@@ -363,8 +363,8 @@ export default function StudentSettingsPage() {
                                     </button>
                                 </div>
                                 <div>
-                                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', margin: 0 }}>{profile.name || 'Học sinh'}</h3>
-                                    <p style={{ color: '#6b7280', margin: '4px 0 0' }}>Học sinh</p>
+                                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{profile.name || 'Học sinh'}</h3>
+                                    <p style={{ color: '#94a3b8', margin: '4px 0 0' }}>Học sinh</p>
                                     <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                                         <button
                                             onClick={handleAvatarClick}
@@ -375,7 +375,7 @@ export default function StudentSettingsPage() {
                                         {avatarPreview && (
                                             <button
                                                 onClick={removeAvatarPreview}
-                                                style={{ fontSize: '14px', color: '#ef4444', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                                style={{ fontSize: '14px', color: '#f87171', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                                             >
                                                 Hủy
                                             </button>
@@ -387,29 +387,29 @@ export default function StudentSettingsPage() {
                             {/* Form */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '8px' }}>
                                         Họ và tên
                                     </label>
                                     <input
                                         type="text"
                                         value={profile.name}
                                         onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', outline: 'none', fontSize: '14px' }}
+                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #334155', outline: 'none', fontSize: '14px' }}
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '8px' }}>
                                         Email
                                     </label>
                                     <input
                                         type="email"
                                         value={profile.email}
                                         onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', outline: 'none', fontSize: '14px' }}
+                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #334155', outline: 'none', fontSize: '14px' }}
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '8px' }}>
                                         Số điện thoại
                                     </label>
                                     <input
@@ -417,18 +417,18 @@ export default function StudentSettingsPage() {
                                         value={profile.phone}
                                         onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                                         placeholder="0912 345 678"
-                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', outline: 'none', fontSize: '14px' }}
+                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #334155', outline: 'none', fontSize: '14px' }}
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '8px' }}>
                                         Vai trò
                                     </label>
                                     <input
                                         type="text"
                                         value="Học sinh"
                                         disabled
-                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', outline: 'none', fontSize: '14px', backgroundColor: '#f9fafb', color: '#6b7280', cursor: 'not-allowed' }}
+                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #334155', outline: 'none', fontSize: '14px', backgroundColor: '#0f172a', color: '#94a3b8', cursor: 'not-allowed' }}
                                     />
                                 </div>
                             </div>
@@ -437,11 +437,11 @@ export default function StudentSettingsPage() {
 
                     {/* Security Settings */}
                     {activeTab === 'security' && (
-                        <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '24px' }}>Đổi mật khẩu</h2>
+                        <div style={{ backgroundColor: '#1e293b', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)' }}>
+                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', marginBottom: '24px' }}>Đổi mật khẩu</h2>
 
                             {passwordError && (
-                                <div style={{ padding: '12px 16px', borderRadius: '12px', backgroundColor: '#fef2f2', color: '#dc2626', marginBottom: '20px', fontSize: '14px' }}>
+                                <div style={{ padding: '12px 16px', borderRadius: '12px', backgroundColor: '#fef2f2', color: '#f87171', marginBottom: '20px', fontSize: '14px' }}>
                                     {passwordError}
                                 </div>
                             )}
@@ -453,7 +453,7 @@ export default function StudentSettingsPage() {
                                     { key: 'confirm', label: 'Xác nhận mật khẩu mới' },
                                 ].map((field) => (
                                     <div key={field.key}>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '8px' }}>
                                             {field.label}
                                         </label>
                                         <div style={{ position: 'relative' }}>
@@ -462,7 +462,7 @@ export default function StudentSettingsPage() {
                                                 value={passwords[field.key as keyof typeof passwords]}
                                                 onChange={(e) => setPasswords({ ...passwords, [field.key]: e.target.value })}
                                                 placeholder="••••••••"
-                                                style={{ width: '100%', padding: '14px 48px 14px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', outline: 'none', fontSize: '14px' }}
+                                                style={{ width: '100%', padding: '14px 48px 14px 16px', borderRadius: '12px', border: '1px solid #334155', outline: 'none', fontSize: '14px' }}
                                             />
                                             <button
                                                 type="button"
@@ -471,7 +471,7 @@ export default function StudentSettingsPage() {
                                             >
                                                 {showPasswords[field.key as keyof typeof showPasswords]
                                                     ? <Eye style={{ height: '20px', width: '20px', color: '#3b82f6' }} />
-                                                    : <EyeOff style={{ height: '20px', width: '20px', color: '#9ca3af' }} />
+                                                    : <EyeOff style={{ height: '20px', width: '20px', color: '#64748b' }} />
                                                 }
                                             </button>
                                         </div>
@@ -479,7 +479,7 @@ export default function StudentSettingsPage() {
                                 ))}
                             </div>
 
-                            <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '16px' }}>
+                            <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '16px' }}>
                                 Mật khẩu phải có ít nhất 6 ký tự
                             </p>
                         </div>
@@ -487,18 +487,18 @@ export default function StudentSettingsPage() {
 
                     {/* Notification Tab Content */}
                     {activeTab === 'notifications' && (
-                        <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '24px' }}>Cài đặt Thông báo</h2>
+                        <div style={{ backgroundColor: '#1e293b', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)' }}>
+                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', marginBottom: '24px' }}>Cài đặt Thông báo</h2>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 {/* Assignment Notifications */}
                                 <div style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px'
+                                    padding: '16px', backgroundColor: '#0f172a', borderRadius: '12px'
                                 }}>
                                     <div>
-                                        <p style={{ fontWeight: 600, color: '#111827', margin: 0 }}>Thông báo bài kiểm tra</p>
-                                        <p style={{ fontSize: '13px', color: '#6b7280', margin: '4px 0 0 0' }}>Nhận thông báo khi có bài kiểm tra mới</p>
+                                        <p style={{ fontWeight: 600, color: '#e2e8f0', margin: 0 }}>Thông báo bài kiểm tra</p>
+                                        <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0 0' }}>Nhận thông báo khi có bài kiểm tra mới</p>
                                     </div>
                                     <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
                                         <input
@@ -515,7 +515,7 @@ export default function StudentSettingsPage() {
                                         <span style={{
                                             position: 'absolute', content: '""', height: '18px', width: '18px',
                                             left: notificationSettings.notify_assignments ? '22px' : '4px', bottom: '3px',
-                                            backgroundColor: 'white', borderRadius: '50%', transition: '.4s',
+                                            backgroundColor: '#1e293b', borderRadius: '50%', transition: '.4s',
                                             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                         }} />
                                     </label>
@@ -524,11 +524,11 @@ export default function StudentSettingsPage() {
                                 {/* Activity Notifications */}
                                 <div style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px'
+                                    padding: '16px', backgroundColor: '#0f172a', borderRadius: '12px'
                                 }}>
                                     <div>
-                                        <p style={{ fontWeight: 600, color: '#111827', margin: 0 }}>Thông báo hoạt động</p>
-                                        <p style={{ fontSize: '13px', color: '#6b7280', margin: '4px 0 0 0' }}>Nhận thông báo về các hoạt động sắp tới</p>
+                                        <p style={{ fontWeight: 600, color: '#e2e8f0', margin: 0 }}>Thông báo hoạt động</p>
+                                        <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0 0' }}>Nhận thông báo về các hoạt động sắp tới</p>
                                     </div>
                                     <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
                                         <input
@@ -545,7 +545,7 @@ export default function StudentSettingsPage() {
                                         <span style={{
                                             position: 'absolute', content: '""', height: '18px', width: '18px',
                                             left: notificationSettings.notify_activities ? '22px' : '4px', bottom: '3px',
-                                            backgroundColor: 'white', borderRadius: '50%', transition: '.4s',
+                                            backgroundColor: '#1e293b', borderRadius: '50%', transition: '.4s',
                                             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                         }} />
                                     </label>
@@ -554,11 +554,11 @@ export default function StudentSettingsPage() {
                                 {/* Survey Notifications */}
                                 <div style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px'
+                                    padding: '16px', backgroundColor: '#0f172a', borderRadius: '12px'
                                 }}>
                                     <div>
-                                        <p style={{ fontWeight: 600, color: '#111827', margin: 0 }}>Thông báo khảo sát</p>
-                                        <p style={{ fontSize: '13px', color: '#6b7280', margin: '4px 0 0 0' }}>Nhận thông báo khi có khảo sát mới</p>
+                                        <p style={{ fontWeight: 600, color: '#e2e8f0', margin: 0 }}>Thông báo khảo sát</p>
+                                        <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0 0' }}>Nhận thông báo khi có khảo sát mới</p>
                                     </div>
                                     <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
                                         <input
@@ -575,7 +575,7 @@ export default function StudentSettingsPage() {
                                         <span style={{
                                             position: 'absolute', content: '""', height: '18px', width: '18px',
                                             left: notificationSettings.notify_surveys ? '22px' : '4px', bottom: '3px',
-                                            backgroundColor: 'white', borderRadius: '50%', transition: '.4s',
+                                            backgroundColor: '#1e293b', borderRadius: '50%', transition: '.4s',
                                             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                         }} />
                                     </label>
@@ -584,12 +584,12 @@ export default function StudentSettingsPage() {
                                 {/* Email Toggle */}
                                 <div style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px',
+                                    padding: '16px', backgroundColor: '#0f172a', borderRadius: '12px',
                                     marginTop: '10px'
                                 }}>
                                     <div>
-                                        <p style={{ fontWeight: 600, color: '#111827', margin: 0 }}>Gửi qua Email</p>
-                                        <p style={{ fontSize: '13px', color: '#6b7280', margin: '4px 0 0 0' }}>Nhận tất cả thông báo qua email</p>
+                                        <p style={{ fontWeight: 600, color: '#e2e8f0', margin: 0 }}>Gửi qua Email</p>
+                                        <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0 0' }}>Nhận tất cả thông báo qua email</p>
                                     </div>
                                     <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
                                         <input
@@ -606,7 +606,7 @@ export default function StudentSettingsPage() {
                                         <span style={{
                                             position: 'absolute', content: '""', height: '18px', width: '18px',
                                             left: notificationSettings.email_enabled ? '22px' : '4px', bottom: '3px',
-                                            backgroundColor: 'white', borderRadius: '50%', transition: '.4s',
+                                            backgroundColor: '#1e293b', borderRadius: '50%', transition: '.4s',
                                             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                         }} />
                                     </label>
@@ -619,7 +619,7 @@ export default function StudentSettingsPage() {
                     {/* Save Button */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
                         {saved && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#22c55e', fontWeight: 500 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#14b8a6', fontWeight: 500 }}>
                                 <Check size={20} />
                                 Đã lưu thay đổi!
                             </div>

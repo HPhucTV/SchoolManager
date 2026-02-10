@@ -59,27 +59,25 @@ async def create_activity(activity: ActivityCreate, db: Session = Depends(get_db
     db.refresh(new_activity)
     db.refresh(new_activity)
     
+    
+    # --- Create Notification for Students ---
+    try:
+        from app.routers.notifications import create_notification_for_class
+        if new_activity.class_id:
+            create_notification_for_class(
+                db=db,
+                class_id=new_activity.class_id,
+                title=f"Hoạt động mới: {new_activity.title}",
+                message=f"Một hoạt động mới '{new_activity.type}' đã được tạo. Thời gian: {new_activity.scheduled_date}.",
+                notif_type="activity",
+                action_url="/student/dashboard"
+            )
+    except Exception as e:
+        print(f"Failed to create notification: {e}")
+
     # --- Send Email Notification ---
     try:
         from app.services.email_service import send_notification_email
-        # Get all students in the class (Activity model has class_id but the router didn't take it in create?)
-        # Wait, Activity model has class_id, but ActivityCreate schema DOES NOT have class_id?
-        # Let's check the view of activities.py again. 
-        # Ah, looking at models.py, Activity has class_id. 
-        # But ActivityCreate in activities.py (lines 27-31) does NOT have class_id.
-        # This means activities might be created without class_id or defaulting?
-        # Or maybe the current implementation is global/broken regarding class_id?
-        # Let's check models.py again in my memory... 
-        # class Activity(Base): ... class_id = Column(Integer, ForeignKey("classes.id"))
-        # Yes.
-        # So if create_activity doesn't set it, it's NULL?
-        # If it's NULL, who do we notify? Everyone? Or no one?
-        # Let's look at get_activities in activities.py: `activities = db.query(models.Activity).limit(limit).all()`
-        # It seems activities are currently treated as global?
-        # If so, I should notify ALL students? Or maybe just skip for now if logic is ambiguous.
-        # BUT the user request says "khi giáo viên giao bài hay có 1 hoạt động nào tạo 1 hoạt động gì thì sẽ có thông báo".
-        # So I should probably notify all students if it's global.
-        
         students = db.query(models.User).filter(models.User.role == "student").all()
         for student in students:
              if student.email_enabled and student.notify_activities and student.email:
@@ -88,7 +86,7 @@ async def create_activity(activity: ActivityCreate, db: Session = Depends(get_db
                     student_name=student.name,
                     title=f"Hoạt động mới: {new_activity.title}",
                     message=f"Một hoạt động mới '{new_activity.type}' đã được tạo. Thời gian: {new_activity.scheduled_date}.",
-                    action_url="http://localhost:3000/student/dashboard" # No specific detail page yet?
+                    action_url="http://localhost:3000/student/dashboard" 
                 )
     except Exception as e:
         print(f"Failed to send activity emails: {e}")

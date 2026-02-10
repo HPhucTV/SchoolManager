@@ -236,6 +236,7 @@ export default function StudentDashboard() {
 
                 if (error.detail) {
                     if (Array.isArray(error.detail)) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         errorMessage = error.detail.map((e: any) => e.msg).join(', ');
                     } else {
                         errorMessage = error.detail;
@@ -254,8 +255,10 @@ export default function StudentDashboard() {
 
 
     // Quiz & Assignment State
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [assignments, setAssignments] = useState<any[]>([]);
     const [assignmentTab, setAssignmentTab] = useState<'active' | 'history'>('active');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [quizzes, setQuizzes] = useState<any[]>([]);
 
     useEffect(() => {
@@ -323,10 +326,10 @@ export default function StudentDashboard() {
 
     const getStatusLabel = (status: string) => {
         const labels: Record<string, { label: string; color: string; bg: string }> = {
-            excellent: { label: 'Xuất sắc', color: '#16a34a', bg: '#dcfce7' },
-            good: { label: 'Tốt', color: '#2563eb', bg: '#dbeafe' },
-            attention: { label: 'Cần cố gắng', color: '#d97706', bg: '#fef3c7' },
-            warning: { label: 'Cần hỗ trợ', color: '#dc2626', bg: '#fee2e2' },
+            excellent: { label: 'Xuất sắc', color: '#0d9488', bg: 'rgba(52, 211, 153, 0.15)' },
+            good: { label: 'Tốt', color: '#60a5fa', bg: 'rgba(96, 165, 250, 0.15)' },
+            attention: { label: 'Cần cố gắng', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.15)' },
+            warning: { label: 'Cần hỗ trợ', color: '#f87171', bg: 'rgba(248, 113, 113, 0.15)' },
         };
         return labels[status] || labels.good;
     };
@@ -338,7 +341,7 @@ export default function StudentDashboard() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #4f46e5 100%)',
+                background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
             }}>
                 <div style={{
                     width: '48px',
@@ -358,7 +361,7 @@ export default function StudentDashboard() {
     return (
         <div style={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #4f46e5 100%)',
+            background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
             padding: '24px',
         }}>
             <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
@@ -391,7 +394,7 @@ export default function StudentDashboard() {
                                 width: '44px',
                                 height: '44px',
                                 borderRadius: '50%',
-                                backgroundColor: 'rgba(255,255,255,0.2)',
+                                backgroundColor: 'rgba(255,255,255,0.1)',
                                 border: 'none',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s ease',
@@ -408,7 +411,7 @@ export default function StudentDashboard() {
                                 gap: '8px',
                                 padding: '12px 20px',
                                 borderRadius: '12px',
-                                backgroundColor: 'rgba(255,255,255,0.2)',
+                                backgroundColor: 'rgba(255,255,255,0.1)',
                                 color: 'white',
                                 border: 'none',
                                 cursor: 'pointer',
@@ -425,12 +428,12 @@ export default function StudentDashboard() {
                 {/* Live Class Banner */}
                 {data?.online_session?.active && (
                     <div style={{
-                        backgroundColor: '#dcfce7',
+                        backgroundColor: 'rgba(52, 211, 153, 0.15)',
                         borderRadius: '24px',
                         padding: '24px',
                         marginBottom: '24px',
                         boxShadow: '0 10px 30px rgba(22, 163, 74, 0.15)',
-                        border: '2px solid #86efac',
+                        border: '2px solid rgba(52, 211, 153, 0.3)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -439,15 +442,15 @@ export default function StudentDashboard() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <div style={{
                                 width: '48px', height: '48px', borderRadius: '50%',
-                                backgroundColor: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                backgroundColor: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center'
                             }}>
                                 <Video size={24} color="white" />
                             </div>
                             <div>
-                                <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#14532d', margin: 0 }}>
+                                <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>
                                     Lớp học đang diễn ra!
                                 </h2>
-                                <p style={{ color: '#166534', margin: '4px 0 0 0', fontWeight: 500 }}>
+                                <p style={{ color: '#94a3b8', margin: '4px 0 0 0', fontWeight: 500 }}>
                                     Giáo viên đang đợi bạn trong lớp học trực tuyến.
                                 </p>
                             </div>
@@ -458,7 +461,7 @@ export default function StudentDashboard() {
                             rel="noopener noreferrer"
                             style={{
                                 padding: '12px 24px',
-                                backgroundColor: '#16a34a',
+                                backgroundColor: '#0d9488',
                                 color: 'white',
                                 fontWeight: 700,
                                 borderRadius: '12px',
@@ -481,11 +484,11 @@ export default function StudentDashboard() {
 
                 {/* Status Card */}
                 <div style={{
-                    backgroundColor: 'white',
+                    backgroundColor: '#1e293b',
                     borderRadius: '24px',
                     padding: '24px',
                     marginBottom: '24px',
-                    boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -510,10 +513,10 @@ export default function StudentDashboard() {
                                 )}
                             </div>
                             <div>
-                                <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: 0 }}>
+                                <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>
                                     {data?.student?.name}
                                 </h2>
-                                <p style={{ color: '#6b7280', fontSize: '14px' }}>Lớp {user?.class_name || '10A'}</p>
+                                <p style={{ color: '#94a3b8', fontSize: '14px' }}>Lớp {user?.class_name || '10A'}</p>
                             </div>
                         </div>
                         <span style={{
@@ -536,7 +539,7 @@ export default function StudentDashboard() {
                             { icon: Brain, label: 'Tinh thần', score: data?.student?.mental_health_score || 0, color: '#f97316' },
                         ].map((item) => (
                             <div key={item.label} style={{
-                                backgroundColor: '#f9fafb',
+                                backgroundColor: '#0f172a',
                                 borderRadius: '16px',
                                 padding: '20px',
                                 textAlign: 'center',
@@ -553,7 +556,7 @@ export default function StudentDashboard() {
                                 }}>
                                     <item.icon size={24} color={item.color} />
                                 </div>
-                                <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 4px 0' }}>{item.label}</p>
+                                <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0 0 4px 0' }}>{item.label}</p>
                                 <p style={{
                                     fontSize: '32px',
                                     fontWeight: 800,
@@ -572,21 +575,21 @@ export default function StudentDashboard() {
 
                     {/* Game Center - NEW */}
                     <div style={{
-                        backgroundColor: 'white',
+                        backgroundColor: '#1e293b',
                         borderRadius: '20px',
                         padding: '24px',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-                        background: 'linear-gradient(135deg, #fce7f3 0%, #fff1f2 100%)',
-                        border: '2px solid #fbcfe8',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+                        background: 'linear-gradient(135deg, rgba(236,72,153,0.1) 0%, rgba(248,113,113,0.1) 100%)',
+                        border: '2px solid rgba(236, 72, 153, 0.3)',
                         gridColumn: 'span 2' // Make it span full width to emphasize
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div>
-                                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#be185d', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#f472b6', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <GamepadIcon size={24} />
                                     Góc Giải Trí
                                 </h3>
-                                <p style={{ color: '#9d174d', marginBottom: '0', maxWidth: '600px' }}>
+                                <p style={{ color: '#f9a8d4', marginBottom: '0', maxWidth: '600px' }}>
                                     Thư giãn sau giờ học với các trò chơi thú vị: <b>Lật hình</b>, <b>Giải đố</b>, <b>Nối từ</b> và <b>Ô chữ bí mật</b>!
                                 </p>
                             </div>
@@ -628,13 +631,13 @@ export default function StudentDashboard() {
 
                     {/* Quizzes */}
                     <div style={{
-                        backgroundColor: 'white',
+                        backgroundColor: '#1e293b',
                         borderRadius: '20px',
                         padding: '24px',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
                     }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ padding: '6px', borderRadius: '8px', background: '#f3e8ff' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ padding: '6px', borderRadius: '8px', background: 'rgba(168, 139, 250, 0.15)' }}>
                                 <Brain size={20} color="#9333ea" />
                             </div>
                             Bài kiểm tra
@@ -649,21 +652,21 @@ export default function StudentDashboard() {
                                         gap: '12px',
                                         padding: '12px',
                                         borderRadius: '12px',
-                                        backgroundColor: '#faf5ff',
-                                        border: '1px solid #f3e8ff',
+                                        backgroundColor: 'rgba(168, 139, 250, 0.1)',
+                                        border: '1px solid rgba(168, 139, 250, 0.3)',
                                     }}>
                                         <div>
-                                            <p style={{ fontSize: '14px', fontWeight: 600, color: '#111827', margin: 0 }}>
+                                            <p style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>
                                                 {quiz.title}
                                             </p>
-                                            <p style={{ fontSize: '12px', color: '#6b7280', margin: '4px 0 0 0' }}>
+                                            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0 0' }}>
                                                 {quiz.subject} • {quiz.total_questions} câu
                                             </p>
                                         </div>
                                         {quiz.has_attempted ? (
                                             <span style={{
-                                                fontSize: '12px', fontWeight: 600, color: '#16a34a',
-                                                backgroundColor: '#dcfce7', padding: '4px 8px', borderRadius: '6px'
+                                                fontSize: '12px', fontWeight: 600, color: '#0d9488',
+                                                backgroundColor: 'rgba(52, 211, 153, 0.15)', padding: '4px 8px', borderRadius: '6px'
                                             }}>
                                                 Đã làm
                                             </span>
@@ -676,7 +679,7 @@ export default function StudentDashboard() {
                                                     fontSize: '13px',
                                                     fontWeight: 600,
                                                     color: 'white',
-                                                    background: 'linear-gradient(135deg, #9333ea 0%, #7e22ce 100%)',
+                                                    background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 100%)',
                                                     textDecoration: 'none',
                                                     border: 'none',
                                                     cursor: 'pointer',
@@ -688,7 +691,7 @@ export default function StudentDashboard() {
                                     </div>
                                 ))
                             ) : (
-                                <p style={{ color: '#6b7280', textAlign: 'center', padding: '20px' }}>
+                                <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>
                                     Không có bài kiểm tra nào
                                 </p>
                             )}
@@ -698,20 +701,20 @@ export default function StudentDashboard() {
 
                     {/* Assignments */}
                     <div style={{
-                        backgroundColor: 'white',
+                        backgroundColor: '#1e293b',
                         borderRadius: '20px',
                         padding: '24px',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <div style={{ padding: '6px', borderRadius: '8px', background: '#dbeafe' }}>
+                            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ padding: '6px', borderRadius: '8px', background: 'rgba(96, 165, 250, 0.15)' }}>
                                     <FileText size={20} color="#2563eb" />
                                 </div>
                                 Bài tập
                             </h3>
 
-                            <div style={{ display: 'flex', backgroundColor: '#f3f4f6', padding: '4px', borderRadius: '12px' }}>
+                            <div style={{ display: 'flex', backgroundColor: '#0f172a', padding: '4px', borderRadius: '12px' }}>
                                 <button
                                     onClick={() => setAssignmentTab('active')}
                                     style={{
@@ -752,15 +755,15 @@ export default function StudentDashboard() {
                                         gap: '12px',
                                         padding: '12px',
                                         borderRadius: '12px',
-                                        backgroundColor: '#f9fafb',
+                                        backgroundColor: '#0f172a',
                                         border: assignment.submitted ? '1px solid #dcfce7' : (assignment.deadline_passed ? '1px solid #fee2e2' : '1px solid #e5e7eb'),
                                         opacity: assignment.deadline_passed && !assignment.submitted ? 0.7 : 1
                                     }}>
                                         <div style={{ flex: 1 }}>
-                                            <p style={{ fontSize: '14px', fontWeight: 600, color: '#111827', margin: 0 }}>
+                                            <p style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>
                                                 {assignment.title}
                                             </p>
-                                            <p style={{ fontSize: '12px', color: '#6b7280', margin: '4px 0 0 0' }}>
+                                            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0 0' }}>
                                                 Hạn nộp: {assignment.deadline ? new Date(assignment.deadline).toLocaleString('vi-VN') : 'Không giới hạn'}
                                             </p>
                                         </div>
@@ -771,14 +774,14 @@ export default function StudentDashboard() {
                                                     padding: '4px 8px',
                                                     borderRadius: '6px',
                                                     fontSize: '12px',
-                                                    backgroundColor: '#dcfce7',
-                                                    color: '#16a34a',
+                                                    backgroundColor: 'rgba(52, 211, 153, 0.15)',
+                                                    color: '#0d9488',
                                                     marginBottom: '4px'
                                                 }}>
                                                     Đã nộp
                                                 </span>
                                                 {assignment.graded && (
-                                                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#16a34a' }}>
+                                                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#0d9488' }}>
                                                         {assignment.score} điểm
                                                     </p>
                                                 )}
@@ -789,8 +792,8 @@ export default function StudentDashboard() {
                                                 borderRadius: '8px',
                                                 fontSize: '12px',
                                                 fontWeight: 600,
-                                                backgroundColor: '#fee2e2',
-                                                color: '#dc2626',
+                                                backgroundColor: 'rgba(248, 113, 113, 0.15)',
+                                                color: '#f87171',
                                             }}>
                                                 Quá hạn
                                             </span>
@@ -815,7 +818,7 @@ export default function StudentDashboard() {
                                     </div>
                                 ))
                             ) : (
-                                <p style={{ color: '#6b7280', textAlign: 'center', padding: '20px' }}>
+                                <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>
                                     {assignmentTab === 'active' ? 'Không có bài tập cần làm' : 'Chưa có lịch sử bài tập'}
                                 </p>
                             )}
@@ -824,12 +827,12 @@ export default function StudentDashboard() {
 
                     {/* Recent Activities */}
                     <div style={{
-                        backgroundColor: 'white',
+                        backgroundColor: '#1e293b',
                         borderRadius: '20px',
                         padding: '24px',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
                     }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '16px' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '16px' }}>
                             📅 Hoạt động sắp tới
                         </h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -840,7 +843,7 @@ export default function StudentDashboard() {
                                     gap: '12px',
                                     padding: '12px',
                                     borderRadius: '12px',
-                                    backgroundColor: '#f9fafb',
+                                    backgroundColor: '#0f172a',
                                 }}>
                                     <div style={{
                                         padding: '8px',
@@ -854,16 +857,16 @@ export default function StudentDashboard() {
                                         )}
                                     </div>
                                     <div style={{ flex: 1 }}>
-                                        <p style={{ fontSize: '14px', fontWeight: 600, color: '#111827', margin: 0 }}>
+                                        <p style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>
                                             {activity.title}
                                         </p>
-                                        <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>
+                                        <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>
                                             {activity.type} • {activity.scheduled_date}
                                         </p>
                                     </div>
                                 </div>
                             )) || (
-                                    <p style={{ color: '#6b7280', textAlign: 'center', padding: '20px' }}>
+                                    <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>
                                         Chưa có hoạt động nào
                                     </p>
                                 )}
@@ -872,12 +875,12 @@ export default function StudentDashboard() {
 
                     {/* Pending Surveys */}
                     <div style={{
-                        backgroundColor: 'white',
+                        backgroundColor: '#1e293b',
                         borderRadius: '20px',
                         padding: '24px',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
                     }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '16px' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '16px' }}>
                             📝 Khảo sát
                         </h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -889,9 +892,9 @@ export default function StudentDashboard() {
                                         justifyContent: 'space-between',
                                         padding: '12px',
                                         borderRadius: '12px',
-                                        backgroundColor: '#f9fafb',
+                                        backgroundColor: '#0f172a',
                                     }}>
-                                        <p style={{ fontSize: '14px', fontWeight: 500, color: '#111827', margin: 0 }}>
+                                        <p style={{ fontSize: '14px', fontWeight: 500, color: '#e2e8f0', margin: 0 }}>
                                             {survey.title}
                                         </p>
                                         {survey.completed ? (
@@ -899,8 +902,8 @@ export default function StudentDashboard() {
                                                 padding: '4px 12px',
                                                 borderRadius: '20px',
                                                 fontSize: '12px',
-                                                backgroundColor: '#dcfce7',
-                                                color: '#16a34a',
+                                                backgroundColor: 'rgba(52, 211, 153, 0.15)',
+                                                color: '#0d9488',
                                             }}>
                                                 Đã làm
                                             </span>
@@ -916,7 +919,7 @@ export default function StudentDashboard() {
                                                     fontSize: '13px',
                                                     fontWeight: 600,
                                                     color: 'white',
-                                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                                                    background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
                                                     border: 'none',
                                                     cursor: 'pointer',
                                                 }}>
@@ -926,7 +929,7 @@ export default function StudentDashboard() {
                                     </div>
                                 ))
                             ) : (
-                                <p style={{ color: '#6b7280', textAlign: 'center', padding: '20px' }}>
+                                <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>
                                     Chưa có khảo sát nào
                                 </p>
                             )}
@@ -945,7 +948,7 @@ export default function StudentDashboard() {
                         zIndex: 1000
                     }}>
                         <div style={{
-                            backgroundColor: 'white',
+                            backgroundColor: '#1e293b',
                             borderRadius: '24px',
                             padding: '32px',
                             width: '100%',
@@ -1045,8 +1048,8 @@ export default function StudentDashboard() {
                                     style={{
                                         flex: 1, padding: '14px',
                                         borderRadius: '12px',
-                                        backgroundColor: '#f3f4f6',
-                                        color: '#4b5563',
+                                        backgroundColor: '#0f172a',
+                                        color: '#94a3b8',
                                         border: 'none',
                                         fontWeight: 600,
                                         cursor: 'pointer'
@@ -1058,7 +1061,7 @@ export default function StudentDashboard() {
                                     style={{
                                         flex: 1, padding: '14px',
                                         borderRadius: '12px',
-                                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
                                         color: 'white',
                                         border: 'none',
                                         fontWeight: 600,
@@ -1083,7 +1086,7 @@ export default function StudentDashboard() {
                         zIndex: 1000
                     }}>
                         <div style={{
-                            backgroundColor: 'white',
+                            backgroundColor: '#1e293b',
                             borderRadius: '24px',
                             padding: '0',
                             width: '100%',
@@ -1095,7 +1098,7 @@ export default function StudentDashboard() {
                             <div style={{
                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                 padding: '20px 24px',
-                                background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                                background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
                             }}>
                                 <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'white', margin: 0 }}>
                                     <Settings style={{ display: 'inline', marginRight: '10px', verticalAlign: 'middle' }} size={22} />
@@ -1108,7 +1111,7 @@ export default function StudentDashboard() {
                             </div>
 
                             {/* Tabs */}
-                            <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb' }}>
+                            <div style={{ display: 'flex', borderBottom: '1px solid #334155' }}>
                                 <button
                                     onClick={() => setSettingsTab('profile')}
                                     style={{
@@ -1142,7 +1145,7 @@ export default function StudentDashboard() {
                                 {settingsTab === 'profile' ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                         <div>
-                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Họ và tên</label>
+                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>Họ và tên</label>
                                             <input
                                                 type="text"
                                                 value={profileData.name}
@@ -1151,7 +1154,7 @@ export default function StudentDashboard() {
                                             />
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Email</label>
+                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>Email</label>
                                             <input
                                                 type="email"
                                                 value={profileData.email}
@@ -1160,7 +1163,7 @@ export default function StudentDashboard() {
                                             />
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Số điện thoại</label>
+                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>Số điện thoại</label>
                                             <input
                                                 type="tel"
                                                 value={profileData.phone}
@@ -1170,12 +1173,12 @@ export default function StudentDashboard() {
                                             />
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '10px' }}>Ảnh đại diện</label>
+                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '10px' }}>Ảnh đại diện</label>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                                 {/* Avatar Preview */}
                                                 <div style={{
                                                     width: '80px', height: '80px', borderRadius: '50%',
-                                                    backgroundColor: '#f3f4f6', border: '3px solid #e5e7eb',
+                                                    backgroundColor: '#0f172a', border: '3px solid #e5e7eb',
                                                     overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 }}>
                                                     {avatarPreview ? (
@@ -1205,11 +1208,11 @@ export default function StudentDashboard() {
                                                         <Camera size={18} />
                                                         Chọn ảnh
                                                     </label>
-                                                    <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
+                                                    <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>
                                                         JPG, PNG, GIF. Tối đa 5MB
                                                     </p>
                                                     {avatarFile && (
-                                                        <p style={{ fontSize: '12px', color: '#22c55e', marginTop: '4px' }}>
+                                                        <p style={{ fontSize: '12px', color: '#14b8a6', marginTop: '4px' }}>
                                                             ✓ Đã chọn: {avatarFile.name}
                                                         </p>
                                                     )}
@@ -1227,11 +1230,11 @@ export default function StudentDashboard() {
                                         ].map((item) => (
                                             <div key={item.key} style={{
                                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                                padding: '14px', backgroundColor: '#f9fafb', borderRadius: '12px',
+                                                padding: '14px', backgroundColor: '#0f172a', borderRadius: '12px',
                                             }}>
                                                 <div>
-                                                    <p style={{ fontSize: '14px', fontWeight: 600, color: '#111827', margin: 0 }}>{item.label}</p>
-                                                    <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0 0 0' }}>{item.desc}</p>
+                                                    <p style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{item.label}</p>
+                                                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0 0' }}>{item.desc}</p>
                                                 </div>
                                                 <button
                                                     onClick={() => setNotificationSettings({ ...notificationSettings, [item.key]: !notificationSettings[item.key as keyof typeof notificationSettings] })}
@@ -1244,7 +1247,7 @@ export default function StudentDashboard() {
                                                 >
                                                     <div style={{
                                                         width: '22px', height: '22px', borderRadius: '50%',
-                                                        backgroundColor: 'white', position: 'absolute', top: '3px',
+                                                        backgroundColor: '#1e293b', position: 'absolute', top: '3px',
                                                         left: notificationSettings[item.key as keyof typeof notificationSettings] ? '27px' : '3px',
                                                         transition: 'left 0.2s ease',
                                                         boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
@@ -1262,7 +1265,7 @@ export default function StudentDashboard() {
                                     onClick={() => setShowSettingsModal(false)}
                                     style={{
                                         flex: 1, padding: '12px', borderRadius: '10px',
-                                        backgroundColor: '#f3f4f6', color: '#4b5563',
+                                        backgroundColor: '#0f172a', color: '#94a3b8',
                                         border: 'none', fontWeight: 600, cursor: 'pointer',
                                     }}
                                 >
@@ -1273,7 +1276,7 @@ export default function StudentDashboard() {
                                     disabled={savingSettings}
                                     style={{
                                         flex: 1, padding: '12px', borderRadius: '10px',
-                                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
                                         color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                                     }}

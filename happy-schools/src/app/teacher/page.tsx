@@ -43,7 +43,7 @@ export default function Dashboard() {
           width: '48px',
           height: '48px',
           border: '4px solid #e5e7eb',
-          borderTopColor: '#22c55e',
+          borderTopColor: '#14b8a6',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
@@ -62,9 +62,9 @@ export default function Dashboard() {
         <div style={{
           marginBottom: '16px',
           padding: '12px 16px',
-          backgroundColor: '#fef3c7',
+          backgroundColor: 'rgba(251, 191, 36, 0.15)',
           borderRadius: '8px',
-          color: '#92400e',
+          color: '#fbbf24',
           fontSize: '14px'
         }}>
           ⚠️ {error} - Đang hiển thị dữ liệu mẫu
@@ -107,7 +107,7 @@ export default function Dashboard() {
           changeType={metrics?.happiness.change_type as 'positive' | 'negative' | 'neutral' || 'positive'}
           icon={Smile}
           iconBgColor="linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)"
-          valueColor="#22c55e"
+          valueColor="#34d399"
           onClick={() => window.location.href = '/teacher/thong-ke'}
         />
         <MetricCard
@@ -117,7 +117,7 @@ export default function Dashboard() {
           changeType={metrics?.engagement.change_type as 'positive' | 'negative' | 'neutral' || 'positive'}
           icon={Heart}
           iconBgColor="linear-gradient(135deg, #f472b6 0%, #ec4899 100%)"
-          valueColor="#22c55e"
+          valueColor="#34d399"
         />
         <MetricCard
           title="Sức khỏe Tinh thần"
@@ -126,7 +126,7 @@ export default function Dashboard() {
           changeType={metrics?.mental_health.change_type as 'positive' | 'negative' | 'neutral' || 'negative'}
           icon={Brain}
           iconBgColor="linear-gradient(135deg, #fb923c 0%, #f97316 100%)"
-          valueColor="#22c55e"
+          valueColor="#34d399"
         />
         <MetricCard
           title="Hoạt động Tuần này"
@@ -134,7 +134,7 @@ export default function Dashboard() {
           subtitle={metrics?.activities.subtitle || '✓ Hoàn thành 80%'}
           icon={CalendarDays}
           iconBgColor="linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)"
-          valueColor="#8b5cf6"
+          valueColor="#818cf8"
         />
       </div>
 

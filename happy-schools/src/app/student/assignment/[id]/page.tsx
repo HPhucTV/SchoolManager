@@ -141,7 +141,7 @@ export default function AssignmentPage({ params }: { params: Promise<{ id: strin
         return (
             <div style={{
                 minHeight: '100vh',
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #4f46e5 100%)',
+                background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
                 display: 'flex', justifyContent: 'center', alignItems: 'center',
             }}>
                 <div style={{ textAlign: 'center', color: 'white' }}>
@@ -163,7 +163,7 @@ export default function AssignmentPage({ params }: { params: Promise<{ id: strin
         return (
             <div style={{
                 minHeight: '100vh',
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #4f46e5 100%)',
+                background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
                 display: 'flex', justifyContent: 'center', alignItems: 'center',
             }}>
                 <div style={{ textAlign: 'center', color: 'white' }}>
@@ -177,7 +177,7 @@ export default function AssignmentPage({ params }: { params: Promise<{ id: strin
     return (
         <div style={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #4f46e5 100%)',
+            background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
             padding: '24px',
         }}>
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -191,19 +191,19 @@ export default function AssignmentPage({ params }: { params: Promise<{ id: strin
                         Quay lại
                     </Link>
                     <div style={{
-                        backgroundColor: 'white', borderRadius: '16px', padding: '20px',
+                        backgroundColor: '#1e293b', borderRadius: '16px', padding: '20px',
                         boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
-                                <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', margin: 0 }}>
+                                <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>
                                     {assignment.title}
                                 </h1>
                                 {assignment.description && (
-                                    <p style={{ color: '#6b7280', marginTop: '8px' }}>{assignment.description}</p>
+                                    <p style={{ color: '#94a3b8', marginTop: '8px' }}>{assignment.description}</p>
                                 )}
                                 <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
-                                    <span style={{ fontSize: '14px', color: '#6b7280' }}>
+                                    <span style={{ fontSize: '14px', color: '#94a3b8' }}>
                                         {assignment.questions.length} câu • {assignment.total_points} điểm
                                     </span>
                                     {assignment.deadline && (
@@ -230,7 +230,7 @@ export default function AssignmentPage({ params }: { params: Promise<{ id: strin
                                     }}>
                                         {submission.status === 'graded' ? 'Đã chấm' : 'Đã nộp'}
                                     </p>
-                                    <p style={{ fontSize: '24px', fontWeight: 700, margin: '4px 0 0', color: '#111827' }}>
+                                    <p style={{ fontSize: '24px', fontWeight: 700, margin: '4px 0 0', color: '#e2e8f0' }}>
                                         {submission.total_score}/{assignment.total_points}
                                     </p>
                                 </div>
@@ -249,7 +249,7 @@ export default function AssignmentPage({ params }: { params: Promise<{ id: strin
 
                             return (
                                 <div key={q.id} style={{
-                                    backgroundColor: 'white', borderRadius: '16px', padding: '20px',
+                                    backgroundColor: '#1e293b', borderRadius: '16px', padding: '20px',
                                     boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                                 }}>
                                     <div style={{
@@ -278,7 +278,7 @@ export default function AssignmentPage({ params }: { params: Promise<{ id: strin
                                         )}
                                     </div>
 
-                                    <p style={{ fontSize: '16px', fontWeight: 500, color: '#111827', marginBottom: '16px' }}>
+                                    <p style={{ fontSize: '16px', fontWeight: 500, color: '#e2e8f0', marginBottom: '16px' }}>
                                         {q.question_text}
                                     </p>
 
@@ -287,17 +287,17 @@ export default function AssignmentPage({ params }: { params: Promise<{ id: strin
                                         <div>
                                             <div style={{
                                                 padding: '12px', borderRadius: '8px',
-                                                backgroundColor: '#f9fafb', border: '1px solid #e5e7eb',
+                                                backgroundColor: '#0f172a', border: '1px solid #334155',
                                             }}>
-                                                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Câu trả lời của bạn:</p>
-                                                <p style={{ color: '#111827', whiteSpace: 'pre-wrap' }}>
+                                                <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Câu trả lời của bạn:</p>
+                                                <p style={{ color: '#e2e8f0', whiteSpace: 'pre-wrap' }}>
                                                     {submittedAnswer?.answer_text || '(Chưa trả lời)'}
                                                 </p>
                                             </div>
                                             {submittedAnswer?.feedback && (
                                                 <div style={{
                                                     marginTop: '12px', padding: '12px', borderRadius: '8px',
-                                                    backgroundColor: '#dbeafe', border: '1px solid #93c5fd',
+                                                    backgroundColor: 'rgba(96, 165, 250, 0.15)', border: '1px solid #93c5fd',
                                                 }}>
                                                     <p style={{ fontSize: '13px', color: '#1d4ed8', fontWeight: 600, marginBottom: '4px' }}>
                                                         Nhận xét của giáo viên:
@@ -322,6 +322,7 @@ export default function AssignmentPage({ params }: { params: Promise<{ id: strin
                                         ) : (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                 {['A', 'B', 'C', 'D'].map(opt => {
+                                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                                     const optionText = (q as any)[`option_${opt.toLowerCase()}`];
                                                     if (!optionText) return null;
                                                     return (
@@ -351,7 +352,7 @@ export default function AssignmentPage({ params }: { params: Promise<{ id: strin
                                                             }}>
                                                                 {opt}
                                                             </span>
-                                                            <span style={{ color: '#374151' }}>{optionText}</span>
+                                                            <span style={{ color: '#cbd5e1' }}>{optionText}</span>
                                                         </label>
                                                     );
                                                 })}
@@ -372,7 +373,7 @@ export default function AssignmentPage({ params }: { params: Promise<{ id: strin
                             style={{
                                 display: 'inline-flex', alignItems: 'center', gap: '8px',
                                 padding: '16px 32px', borderRadius: '14px',
-                                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                                background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
                                 color: 'white', fontWeight: 700, fontSize: '16px', border: 'none', cursor: 'pointer',
                                 boxShadow: '0 4px 14px rgba(34, 197, 94, 0.4)',
                                 opacity: submitting ? 0.7 : 1,
@@ -387,8 +388,8 @@ export default function AssignmentPage({ params }: { params: Promise<{ id: strin
                 {isDeadlinePassed && !submission && (
                     <div style={{
                         marginTop: '24px', textAlign: 'center',
-                        padding: '16px', backgroundColor: '#fee2e2', borderRadius: '12px',
-                        color: '#dc2626', fontWeight: 600,
+                        padding: '16px', backgroundColor: 'rgba(248, 113, 113, 0.15)', borderRadius: '12px',
+                        color: '#f87171', fontWeight: 600,
                     }}>
                         ⏰ Đã hết hạn nộp bài
                     </div>

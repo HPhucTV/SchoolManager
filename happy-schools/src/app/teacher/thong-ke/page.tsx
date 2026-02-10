@@ -36,7 +36,7 @@ export default function ThongKePage() {
                         { week: 'T7', score: 87 },
                     ],
                     class_comparison: [
-                        { name: 'Lớp 10A', score: 95, color: '#22c55e' },
+                        { name: 'Lớp 10A', score: 95, color: '#14b8a6' },
                         { name: 'Lớp 10B', score: 88, color: '#3b82f6' },
                         { name: 'Lớp 11A', score: 82, color: '#8b5cf6' },
                         { name: 'Lớp 11B', score: 79, color: '#f59e0b' },
@@ -58,7 +58,7 @@ export default function ThongKePage() {
                     width: '48px',
                     height: '48px',
                     border: '4px solid #e5e7eb',
-                    borderTopColor: '#22c55e',
+                    borderTopColor: '#14b8a6',
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite'
                 }} />
@@ -78,8 +78,8 @@ export default function ThongKePage() {
                 <select style={{
                     padding: '12px 20px',
                     borderRadius: '12px',
-                    backgroundColor: 'rgba(255,255,255,0.95)',
-                    color: '#374151',
+                    backgroundColor: 'rgba(15,23,42,0.95)',
+                    color: '#cbd5e1',
                     fontWeight: 500,
                     border: 'none',
                     outline: 'none',
@@ -96,23 +96,23 @@ export default function ThongKePage() {
             {/* Stats Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
                 {[
-                    { icon: TrendingUp, label: 'Tăng trưởng', value: stats?.growth_rate || '+12%', color: '#22c55e', bg: '#dcfce7' },
-                    { icon: Users, label: 'Học sinh', value: stats?.total_students?.toLocaleString() || '1,247', color: '#3b82f6', bg: '#dbeafe' },
-                    { icon: Activity, label: 'Hoạt động', value: stats?.total_activities || 48, color: '#8b5cf6', bg: '#f3e8ff' },
-                    { icon: Calendar, label: 'Khảo sát', value: stats?.total_surveys || 156, color: '#f59e0b', bg: '#fef3c7' },
+                    { icon: TrendingUp, label: 'Tăng trưởng', value: stats?.growth_rate || '+12%', color: '#14b8a6', bg: 'rgba(52, 211, 153, 0.15)' },
+                    { icon: Users, label: 'Học sinh', value: stats?.total_students?.toLocaleString() || '1,247', color: '#3b82f6', bg: 'rgba(96, 165, 250, 0.15)' },
+                    { icon: Activity, label: 'Hoạt động', value: stats?.total_activities || 48, color: '#8b5cf6', bg: 'rgba(168, 139, 250, 0.15)' },
+                    { icon: Calendar, label: 'Khảo sát', value: stats?.total_surveys || 156, color: '#f59e0b', bg: 'rgba(251, 191, 36, 0.15)' },
                 ].map((stat) => (
                     <div key={stat.label} style={{
-                        backgroundColor: 'white',
+                        backgroundColor: '#1e293b',
                         borderRadius: '16px',
                         padding: '20px',
-                        boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <div style={{ padding: '12px', borderRadius: '12px', backgroundColor: stat.bg }}>
                                 <stat.icon style={{ height: '24px', width: '24px', color: stat.color }} />
                             </div>
                             <div>
-                                <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>{stat.label}</p>
+                                <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>{stat.label}</p>
                                 <p style={{ fontSize: '24px', fontWeight: 700, color: stat.color, margin: 0 }}>{stat.value}</p>
                             </div>
                         </div>
@@ -124,12 +124,12 @@ export default function ThongKePage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '32px' }}>
                 {/* Happiness Trend Chart */}
                 <div style={{
-                    backgroundColor: 'white',
+                    backgroundColor: '#1e293b',
                     borderRadius: '20px',
                     padding: '24px',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
                 }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '20px' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '20px' }}>
                         Xu hướng Sôi nổi theo Tuần
                     </h3>
                     <div style={{ height: '200px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', gap: '8px' }}>
@@ -142,7 +142,7 @@ export default function ThongKePage() {
                                     background: 'linear-gradient(to top, #22c55e, #4ade80)',
                                     transition: 'all 0.3s ease',
                                 }} />
-                                <span style={{ fontSize: '12px', color: '#6b7280' }}>{item.week}</span>
+                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>{item.week}</span>
                             </div>
                         ))}
                     </div>
@@ -150,20 +150,20 @@ export default function ThongKePage() {
 
                 {/* Class Comparison */}
                 <div style={{
-                    backgroundColor: 'white',
+                    backgroundColor: '#1e293b',
                     borderRadius: '20px',
                     padding: '24px',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
                 }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '20px' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '20px' }}>
                         So sánh giữa các Lớp
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {(stats?.class_comparison || []).map((cls) => (
                             <div key={cls.name}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '6px' }}>
-                                    <span style={{ fontWeight: 500, color: '#374151' }}>{cls.name}</span>
-                                    <span style={{ color: '#6b7280' }}>{cls.score}%</span>
+                                    <span style={{ fontWeight: 500, color: '#cbd5e1' }}>{cls.name}</span>
+                                    <span style={{ color: '#94a3b8' }}>{cls.score}%</span>
                                 </div>
                                 <div style={{ height: '10px', backgroundColor: '#e5e7eb', borderRadius: '5px', overflow: 'hidden' }}>
                                     <div style={{
@@ -182,21 +182,21 @@ export default function ThongKePage() {
 
             {/* Detailed Stats Table */}
             <div style={{
-                backgroundColor: 'white',
+                backgroundColor: '#1e293b',
                 borderRadius: '20px',
                 padding: '24px',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
             }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '20px' }}>
                     Chi tiết theo Chỉ số
                 </h3>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
-                        <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
-                            <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: '14px', fontWeight: 600, color: '#6b7280' }}>Chỉ số</th>
-                            <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: '14px', fontWeight: 600, color: '#6b7280' }}>Tuần trước</th>
-                            <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: '14px', fontWeight: 600, color: '#6b7280' }}>Tuần này</th>
-                            <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: '14px', fontWeight: 600, color: '#6b7280' }}>Thay đổi</th>
+                        <tr style={{ borderBottom: '2px solid #334155' }}>
+                            <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Chỉ số</th>
+                            <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Tuần trước</th>
+                            <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Tuần này</th>
+                            <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Thay đổi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -209,10 +209,10 @@ export default function ThongKePage() {
                         ]).map((row) => {
                             const change = row.curr - row.prev;
                             return (
-                                <tr key={row.name} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                                    <td style={{ padding: '16px', fontSize: '14px', fontWeight: 500, color: '#111827' }}>{row.name}</td>
-                                    <td style={{ padding: '16px', fontSize: '14px', color: '#6b7280', textAlign: 'center' }}>{row.prev}%</td>
-                                    <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: '#111827', textAlign: 'center' }}>{row.curr}%</td>
+                                <tr key={row.name} style={{ borderBottom: '1px solid #334155' }}>
+                                    <td style={{ padding: '16px', fontSize: '14px', fontWeight: 500, color: '#e2e8f0' }}>{row.name}</td>
+                                    <td style={{ padding: '16px', fontSize: '14px', color: '#94a3b8', textAlign: 'center' }}>{row.prev}%</td>
+                                    <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: '#e2e8f0', textAlign: 'center' }}>{row.curr}%</td>
                                     <td style={{ padding: '16px', textAlign: 'center' }}>
                                         <span style={{
                                             padding: '4px 12px',

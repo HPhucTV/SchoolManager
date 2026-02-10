@@ -10,10 +10,10 @@ interface Student {
 }
 
 const statusConfig = {
-    excellent: { color: '#22c55e', bg: '#dcfce7', icon: Smile },
-    good: { color: '#3b82f6', bg: '#dbeafe', icon: Smile },
-    attention: { color: '#f59e0b', bg: '#fef3c7', icon: Meh },
-    warning: { color: '#ef4444', bg: '#fee2e2', icon: Frown },
+    excellent: { color: '#14b8a6', bg: 'rgba(52, 211, 153, 0.15)', icon: Smile },
+    good: { color: '#3b82f6', bg: 'rgba(96, 165, 250, 0.15)', icon: Smile },
+    attention: { color: '#f59e0b', bg: 'rgba(251, 191, 36, 0.15)', icon: Meh },
+    warning: { color: '#f87171', bg: 'rgba(248, 113, 113, 0.15)', icon: Frown },
 };
 
 export default function MoodBoard({ students }: { students: Student[] }) {
@@ -24,12 +24,12 @@ export default function MoodBoard({ students }: { students: Student[] }) {
 
     return (
         <div style={{
-            backgroundColor: 'white',
+            backgroundColor: '#1e293b',
             borderRadius: '24px',
             padding: '24px',
             boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
         }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '24px' }}>
                 Bản đồ Cảm xúc (Mood Board)
             </h3>
 
@@ -61,7 +61,7 @@ export default function MoodBoard({ students }: { students: Student[] }) {
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    color: '#6b7280',
+                                    color: '#94a3b8',
                                     fontWeight: 600,
                                     fontSize: '18px',
                                     border: `3px solid ${config.color}`,
@@ -91,7 +91,7 @@ export default function MoodBoard({ students }: { students: Student[] }) {
                             <span style={{
                                 fontSize: '12px',
                                 fontWeight: 600,
-                                color: '#374151',
+                                color: '#cbd5e1',
                                 textAlign: 'center',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',

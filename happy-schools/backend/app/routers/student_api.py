@@ -17,10 +17,31 @@ async def get_upcoming_quizzes(db: Session = Depends(get_db), current_user: mode
     if current_user.role != "student":
         return []
     
-    # User requested to separate Quizzes from Assignments.
-    # Since we don't have a specific 'Quiz' type yet, we should not show Assignments here to avoid duplication.
-    # verified: "check lại bên bài kiểm tra bị lỗi hiện lên bài tập"
-    return []
+    # Fetch active quizzes for the student's class
+    quizzes = db.query(models.Quiz).filter(
+        models.Quiz.class_id == current_user.class_id,
+        models.Quiz.status == "active"
+    ).all()
+    
+    # Check attempts
+    results = []
+    for q in quizzes:
+        attempt = db.query(models.QuizResult).filter(
+            models.QuizResult.quiz_id == q.id,
+            models.QuizResult.student_id == current_user.id
+        ).first()
+        
+        results.append({
+            "id": q.id,
+            "title": q.title,
+            "subject": q.subject,
+            "total_questions": q.total_questions,
+            "has_attempted": attempt is not None,
+            "deadline": q.deadline if q.deadline else None,
+            "created_at": q.created_at
+        })
+
+    return results
 
     # Original logic (disabled):
     # assignments = db.query(models.Assignment).filter(

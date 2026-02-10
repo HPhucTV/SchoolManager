@@ -16,18 +16,18 @@ export default function ActivityTimeline({ activities }: { activities: Activity[
 
     return (
         <div style={{
-            backgroundColor: 'white',
+            backgroundColor: '#1e293b',
             borderRadius: '24px',
             padding: '24px',
             boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
         }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '24px' }}>
                 Dòng thời gian
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {activities.length === 0 ? (
-                    <p style={{ color: '#9ca3af', textAlign: 'center', fontStyle: 'italic' }}>Chưa có hoạt động nào</p>
+                    <p style={{ color: '#64748b', textAlign: 'center', fontStyle: 'italic' }}>Chưa có hoạt động nào</p>
                 ) : (
                     activities.map((activity, index) => (
                         <div key={activity.id} style={{ display: 'flex', gap: '16px', position: 'relative' }}>
@@ -39,7 +39,7 @@ export default function ActivityTimeline({ activities }: { activities: Activity[
                                     left: '20px',
                                     bottom: '-28px',
                                     width: '2px',
-                                    backgroundColor: '#f3f4f6'
+                                    backgroundColor: '#0f172a'
                                 }} />
                             )}
 
@@ -66,10 +66,10 @@ export default function ActivityTimeline({ activities }: { activities: Activity[
 
                             {/* Content */}
                             <div>
-                                <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#374151', margin: 0, marginBottom: '4px' }}>
+                                <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#cbd5e1', margin: 0, marginBottom: '4px' }}>
                                     {activity.title}
                                 </h4>
-                                <span style={{ fontSize: '12px', color: '#9ca3af' }}>
+                                <span style={{ fontSize: '12px', color: '#64748b' }}>
                                     {formatDate(activity.scheduled_date)}
                                 </span>
                             </div>

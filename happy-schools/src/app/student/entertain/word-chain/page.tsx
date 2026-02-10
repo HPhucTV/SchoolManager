@@ -266,15 +266,15 @@ export default function WordChainPage() {
                 <Link href="/student/entertain" style={{
                     display: 'flex', alignItems: 'center', gap: '8px',
                     color: 'white', textDecoration: 'none', fontWeight: 600,
-                    backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px 16px', borderRadius: '12px'
+                    backgroundColor: 'rgba(255,255,255,0.1)', padding: '8px 16px', borderRadius: '12px'
                 }}>
                     <ArrowLeft size={20} /> Thoát
                 </Link>
                 <div style={{ display: 'flex', gap: '12px' }}>
                     {/* Hearts Display */}
                     <div style={{
-                        backgroundColor: 'white', padding: '8px 16px', borderRadius: '20px',
-                        fontWeight: 700, color: '#dc2626',
+                        backgroundColor: '#1e293b', padding: '8px 16px', borderRadius: '20px',
+                        fontWeight: 700, color: '#f87171',
                         display: 'flex', gap: '4px', alignItems: 'center'
                     }}>
                         {[...Array(3)].map((_, i) => (
@@ -289,7 +289,7 @@ export default function WordChainPage() {
                     </div>
 
                     <div style={{
-                        backgroundColor: 'white', padding: '8px 16px', borderRadius: '20px',
+                        backgroundColor: '#1e293b', padding: '8px 16px', borderRadius: '20px',
                         fontWeight: 700, color: timeLeft < 10 ? '#ef4444' : '#d97706',
                         border: timeLeft < 10 ? '2px solid #ef4444' : 'none',
                         minWidth: '80px', textAlign: 'center'
@@ -297,8 +297,8 @@ export default function WordChainPage() {
                         ⏱️ {formatTime(timeLeft)}
                     </div>
                     <div style={{
-                        backgroundColor: 'white', padding: '8px 20px', borderRadius: '20px',
-                        fontWeight: 800, color: '#d97706', boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                        backgroundColor: '#1e293b', padding: '8px 20px', borderRadius: '20px',
+                        fontWeight: 800, color: '#fbbf24', boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
                     }}>
                         🏆 {score}
                     </div>
@@ -309,16 +309,16 @@ export default function WordChainPage() {
             <div style={{
                 width: '100%', maxWidth: '600px',
                 height: '70vh',
-                backgroundColor: 'white',
+                backgroundColor: '#1e293b',
                 borderRadius: '24px',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
                 display: 'flex', flexDirection: 'column',
                 overflow: 'hidden',
                 position: 'relative'
             }}>
                 {/* Title */}
                 <div style={{
-                    padding: '16px', borderBottom: '1px solid #f3f4f6',
+                    padding: '16px', borderBottom: '1px solid #334155',
                     textAlign: 'center', backgroundColor: '#fff7ed',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
@@ -363,7 +363,7 @@ export default function WordChainPage() {
                                 {msg.text}
                             </div>
                             <span style={{
-                                fontSize: '10px', color: '#9ca3af',
+                                fontSize: '10px', color: '#64748b',
                                 marginTop: '4px', display: 'block',
                                 textAlign: msg.sender === 'user' ? 'right' : 'left'
                             }}>
@@ -372,7 +372,7 @@ export default function WordChainPage() {
                         </div>
                     ))}
                     {loading && (
-                        <div style={{ alignSelf: 'flex-start', padding: '12px 16px', backgroundColor: '#f3f4f6', borderRadius: '16px 16px 16px 0' }}>
+                        <div style={{ alignSelf: 'flex-start', padding: '12px 16px', backgroundColor: '#0f172a', borderRadius: '16px 16px 16px 0' }}>
                             <div className="animate-pulse flex gap-1">
                                 <div style={{ width: '6px', height: '6px', backgroundColor: '#9ca3af', borderRadius: '50%' }}></div>
                                 <div style={{ width: '6px', height: '6px', backgroundColor: '#9ca3af', borderRadius: '50%' }}></div>
@@ -416,7 +416,7 @@ export default function WordChainPage() {
 
                 {/* Input Area */}
                 <div style={{
-                    padding: '16px', backgroundColor: 'white', borderTop: '1px solid #f3f4f6',
+                    padding: '16px', backgroundColor: '#1e293b', borderTop: '1px solid #f3f4f6',
                     display: 'flex', gap: '12px'
                 }}>
                     <input

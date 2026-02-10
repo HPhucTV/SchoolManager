@@ -11,7 +11,7 @@ export default function TeacherLayout({
 }) {
     return (
         <ProtectedRoute allowedRoles={['admin', 'teacher']}>
-            <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)' }}>
+            <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
                 <Header />
                 <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 24px' }}>
                     {children}

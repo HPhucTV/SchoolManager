@@ -67,6 +67,7 @@ export default function MemoryGamePage() {
     };
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         initGame('easy');
     }, []);
 
@@ -131,7 +132,7 @@ export default function MemoryGamePage() {
             <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px', gap: '16px' }}>
                     <Link href="/student/entertain" style={{
-                        padding: '10px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px', color: 'white',
+                        padding: '10px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white',
                         boxShadow: '0 2px 5px rgba(0,0,0,0.1)', display: 'flex', backdropFilter: 'blur(4px)',
                         transition: 'all 0.2s ease'
                     }}
@@ -145,7 +146,7 @@ export default function MemoryGamePage() {
 
                 {/* Controls */}
                 <div style={{
-                    backgroundColor: 'white', padding: '24px', borderRadius: '24px',
+                    backgroundColor: '#1e293b', padding: '24px', borderRadius: '24px',
                     marginBottom: '32px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px'
                 }}>
@@ -166,7 +167,7 @@ export default function MemoryGamePage() {
                         ))}
                     </div>
 
-                    <div style={{ display: 'flex', gap: '20px', fontWeight: 600, color: '#374151', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '20px', fontWeight: 600, color: '#cbd5e1', alignItems: 'center' }}>
                         <span>Số bước: {moves}</span>
                         <button
                             onClick={() => initGame(level)}
@@ -215,7 +216,7 @@ export default function MemoryGamePage() {
                                 {/* Back (Revealed) */}
                                 <div style={{
                                     position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
-                                    backgroundColor: 'white', borderRadius: '16px',
+                                    backgroundColor: '#1e293b', borderRadius: '16px',
                                     transform: 'rotateY(180deg)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
@@ -235,26 +236,26 @@ export default function MemoryGamePage() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
                         <div style={{
-                            backgroundColor: 'white', padding: '40px', borderRadius: '32px',
+                            backgroundColor: '#1e293b', padding: '40px', borderRadius: '32px',
                             textAlign: 'center', maxWidth: '90%', width: '400px',
                             animation: 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
                         }}>
                             <div style={{
-                                width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#fef3c7',
+                                width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'rgba(251, 191, 36, 0.15)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px',
                                 color: '#f59e0b'
                             }}>
                                 <Trophy size={40} fill="#f59e0b" />
                             </div>
-                            <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#111827', margin: '0 0 8px 0' }}>Xuất sắc!</h2>
-                            <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+                            <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#e2e8f0', margin: '0 0 8px 0' }}>Xuất sắc!</h2>
+                            <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
                                 Bạn đã hoàn thành mức {LEVELS[level].label} trong {moves} bước.
                             </p>
                             <button
                                 onClick={() => initGame(level)}
                                 style={{
                                     padding: '12px 32px', borderRadius: '16px', border: 'none', cursor: 'pointer',
-                                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                                    background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
                                     color: 'white', fontWeight: 700, fontSize: '16px',
                                     boxShadow: '0 4px 12px rgba(34, 197, 94, 0.4)'
                                 }}

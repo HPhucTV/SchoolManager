@@ -141,7 +141,7 @@ class Quiz(Base):
     created_at = Column(String)
 
     questions = relationship("QuizQuestion", back_populates="quiz", cascade="all, delete-orphan")
-    # Add submissions if needed later
+    results = relationship("QuizResult", back_populates="quiz", cascade="all, delete-orphan")
 
 class QuizQuestion(Base):
     __tablename__ = "quiz_questions"
@@ -158,3 +158,36 @@ class QuizQuestion(Base):
     order_num = Column(Integer, default=0)
 
     quiz = relationship("Quiz", back_populates="questions")
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    title = Column(String)
+    message = Column(String)
+    type = Column(String, default="system")  # quiz, activity, assignment, survey, system, event
+    is_read = Column(Boolean, default=False)
+    action_url = Column(String, nullable=True)
+    action_label = Column(String, nullable=True)
+    created_at = Column(String)
+
+    user = relationship("User", foreign_keys=[user_id])
+
+class QuizResult(Base):
+    __tablename__ = "quiz_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    quiz_id = Column(Integer, ForeignKey("quizzes.id"))
+    student_id = Column(Integer, ForeignKey("users.id"))
+    score = Column(Integer)
+    total_questions = Column(Integer)
+    percentage = Column(Float)
+    answers = Column(String) # JSON string of answers
+    completed_at = Column(String)
+
+    quiz = relationship("Quiz", back_populates="results")
+    student = relationship("User", foreign_keys=[student_id])
+
+# Add relationships to User
+User.quiz_results = relationship("QuizResult", back_populates="student", cascade="all, delete-orphan")

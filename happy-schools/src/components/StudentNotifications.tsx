@@ -31,6 +31,9 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
 
     useEffect(() => {
         fetchNotifications();
+        // Poll for new notifications every 15 seconds
+        const interval = setInterval(fetchNotifications, 15000);
+        return () => clearInterval(interval);
     }, [token]);
 
     useEffect(() => {
@@ -44,10 +47,13 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
     }, []);
 
     const fetchNotifications = async () => {
-        setLoading(true);
+        if (!token) return;
         try {
-            // Fetch upcoming quizzes and activities for student
-            const [quizzesRes, dashboardRes] = await Promise.all([
+            // Fetch from dedicated notifications API + quizzes + activities
+            const [notifRes, quizzesRes, dashboardRes] = await Promise.all([
+                fetch(`${apiUrl}/api/notifications`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }).catch(() => null),
                 fetch(`${apiUrl}/api/student/upcoming-quizzes`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }).catch(() => null),
@@ -58,42 +64,77 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
 
             const newNotifications: Notification[] = [];
 
-            // Parse quizzes
+            // Parse real notifications from backend
+            if (notifRes?.ok) {
+                const data = await notifRes.json();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                data.forEach((n: any) => {
+                    const typeMap: Record<string, Notification['type']> = {
+                        quiz: 'quiz', activity: 'activity', assignment: 'quiz',
+                        survey: 'survey', system: 'system', event: 'event'
+                    };
+                    const iconMap: Record<string, string> = {
+                        quiz: '📝', activity: '📅', assignment: '📄',
+                        survey: '📋', system: '🔔', event: '🎉'
+                    };
+                    newNotifications.push({
+                        id: `notif-${n.id}`,
+                        type: typeMap[n.type] || 'system',
+                        title: n.title,
+                        message: n.message,
+                        time: new Date(n.created_at),
+                        read: n.is_read,
+                        actionUrl: n.action_url || undefined,
+                        actionLabel: n.action_label || undefined,
+                        icon: iconMap[n.type] || '🔔'
+                    });
+                });
+            }
+
+            // Parse quizzes as supplementary notifications
             if (quizzesRes?.ok) {
                 const quizzes = await quizzesRes.json();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 quizzes.forEach((quiz: any) => {
-                    newNotifications.push({
-                        id: `quiz-${quiz.id}`,
-                        type: 'quiz',
-                        title: 'Bài kiểm tra mới',
-                        message: `${quiz.title} - ${quiz.subject}`,
-                        time: new Date(quiz.created_at),
-                        read: false,
-                        actionUrl: `/student/quiz/${quiz.id}`,
-                        actionLabel: 'Làm bài',
-                        icon: '📝'
-                    });
+                    const exists = newNotifications.some(n => n.id === `notif-quiz-${quiz.id}` || n.message?.includes(quiz.title));
+                    if (!exists) {
+                        newNotifications.push({
+                            id: `quiz-${quiz.id}`,
+                            type: 'quiz',
+                            title: 'Bài kiểm tra mới',
+                            message: `${quiz.title} - ${quiz.subject}`,
+                            time: new Date(quiz.created_at),
+                            read: false,
+                            actionUrl: `/student/quiz/${quiz.id}`,
+                            actionLabel: 'Làm bài',
+                            icon: '📝'
+                        });
+                    }
                 });
             }
 
             // Parse activities
             if (dashboardRes?.ok) {
                 const data = await dashboardRes.json();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data.recent_activities?.forEach((activity: any) => {
                     if (activity.status !== 'completed') {
-                        newNotifications.push({
-                            id: `activity-${activity.id}`,
-                            type: 'activity',
-                            title: 'Hoạt động sắp diễn ra',
-                            message: `${activity.title} - ${activity.type}`,
-                            time: new Date(activity.scheduled_date),
-                            read: false,
-                            icon: '📅'
-                        });
+                        const exists = newNotifications.some(n => n.message?.includes(activity.title));
+                        if (!exists) {
+                            newNotifications.push({
+                                id: `activity-${activity.id}`,
+                                type: 'activity',
+                                title: 'Hoạt động sắp diễn ra',
+                                message: `${activity.title} - ${activity.type}`,
+                                time: new Date(activity.scheduled_date),
+                                read: false,
+                                icon: '📅'
+                            });
+                        }
                     }
                 });
 
-                // Add pending surveys as notifications
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data.pending_surveys?.forEach((survey: any) => {
                     if (!survey.completed) {
                         newNotifications.push({
@@ -109,7 +150,7 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
                 });
             }
 
-            // Add demo notifications if empty
+            // Add demo notification if empty
             if (newNotifications.length === 0) {
                 newNotifications.push({
                     id: 'demo-1',
@@ -189,7 +230,7 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
                     width: '44px',
                     height: '44px',
                     borderRadius: '50%',
-                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    backgroundColor: 'rgba(255,255,255,0.1)',
                     border: 'none',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
@@ -211,7 +252,7 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        border: '2px solid #8b5cf6',
+                        border: '2px solid #818cf8',
                     }}>
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
@@ -226,7 +267,7 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
                     right: '0',
                     width: '380px',
                     maxHeight: '500px',
-                    backgroundColor: 'white',
+                    backgroundColor: '#1e293b',
                     borderRadius: '16px',
                     boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
                     zIndex: 1000,
@@ -236,12 +277,12 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
                     {/* Header */}
                     <div style={{
                         padding: '16px 20px',
-                        borderBottom: '1px solid #e5e7eb',
+                        borderBottom: '1px solid #334155',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                     }}>
-                        <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: 0 }}>
+                        <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>
                             Thông báo
                         </h3>
                         <button
@@ -260,7 +301,7 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
                     </div>
 
                     {/* Filter Tabs */}
-                    <div style={{ display: 'flex', gap: '8px', padding: '12px 20px', borderBottom: '1px solid #e5e7eb' }}>
+                    <div style={{ display: 'flex', gap: '8px', padding: '12px 20px', borderBottom: '1px solid #334155' }}>
                         <button
                             onClick={() => setFilter('all')}
                             style={{
@@ -270,8 +311,8 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
                                 fontWeight: 500,
                                 border: 'none',
                                 cursor: 'pointer',
-                                backgroundColor: filter === 'all' ? '#6366f1' : '#f3f4f6',
-                                color: filter === 'all' ? 'white' : '#6b7280',
+                                backgroundColor: filter === 'all' ? '#6366f1' : '#334155',
+                                color: filter === 'all' ? 'white' : '#94a3b8',
                             }}
                         >
                             Tất cả
@@ -285,8 +326,8 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
                                 fontWeight: 500,
                                 border: 'none',
                                 cursor: 'pointer',
-                                backgroundColor: filter === 'unread' ? '#6366f1' : '#f3f4f6',
-                                color: filter === 'unread' ? 'white' : '#6b7280',
+                                backgroundColor: filter === 'unread' ? '#6366f1' : '#334155',
+                                color: filter === 'unread' ? 'white' : '#94a3b8',
                             }}
                         >
                             Chưa đọc
@@ -307,7 +348,7 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
                                 }} />
                             </div>
                         ) : filteredNotifications.length === 0 ? (
-                            <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>
+                            <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
                                 <Bell size={40} style={{ opacity: 0.3, marginBottom: '12px' }} />
                                 <p>Không có thông báo nào</p>
                             </div>
@@ -316,7 +357,7 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
                                 {/* Recent */}
                                 {recentNotifications.length > 0 && (
                                     <div>
-                                        <div style={{ padding: '12px 20px', fontSize: '14px', fontWeight: 600, color: '#111827' }}>
+                                        <div style={{ padding: '12px 20px', fontSize: '14px', fontWeight: 600, color: '#e2e8f0' }}>
                                             Mới
                                         </div>
                                         {recentNotifications.map(notification => (
@@ -334,7 +375,7 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
                                 {/* Older */}
                                 {olderNotifications.length > 0 && (
                                     <div>
-                                        <div style={{ padding: '12px 20px', fontSize: '14px', fontWeight: 600, color: '#111827' }}>
+                                        <div style={{ padding: '12px 20px', fontSize: '14px', fontWeight: 600, color: '#e2e8f0' }}>
                                             Trước đó
                                         </div>
                                         {olderNotifications.map(notification => (
@@ -381,11 +422,11 @@ function NotificationItem({
     const [showActions, setShowActions] = useState(false);
 
     const typeColors = {
-        quiz: { bg: '#dbeafe', color: '#2563eb' },
-        event: { bg: '#dcfce7', color: '#16a34a' },
-        activity: { bg: '#fef3c7', color: '#d97706' },
-        survey: { bg: '#f3e8ff', color: '#7c3aed' },
-        system: { bg: '#f3f4f6', color: '#6b7280' },
+        quiz: { bg: 'rgba(96, 165, 250, 0.15)', color: '#60a5fa' },
+        event: { bg: 'rgba(52, 211, 153, 0.15)', color: '#0d9488' },
+        activity: { bg: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24' },
+        survey: { bg: 'rgba(168, 139, 250, 0.15)', color: '#7c3aed' },
+        system: { bg: 'rgba(148, 163, 184, 0.15)', color: '#94a3b8' },
     };
 
     const colors = typeColors[notification.type] || typeColors.system;
@@ -400,7 +441,7 @@ function NotificationItem({
                 alignItems: 'flex-start',
                 gap: '12px',
                 padding: '14px 20px',
-                backgroundColor: notification.read ? 'white' : '#f0f9ff',
+                backgroundColor: notification.read ? '#1e293b' : 'rgba(99, 102, 241, 0.08)',
                 cursor: 'pointer',
                 position: 'relative',
                 transition: 'background-color 0.15s ease',
@@ -425,7 +466,7 @@ function NotificationItem({
             <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{
                     fontSize: '14px',
-                    color: '#111827',
+                    color: '#e2e8f0',
                     margin: 0,
                     lineHeight: 1.4,
                 }}>
@@ -480,7 +521,7 @@ function NotificationItem({
                             padding: '6px',
                             borderRadius: '50%',
                             border: 'none',
-                            backgroundColor: '#f3f4f6',
+                            backgroundColor: '#0f172a',
                             cursor: 'pointer',
                         }}
                     >

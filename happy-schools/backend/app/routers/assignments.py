@@ -169,6 +169,20 @@ async def create_assignment(assignment_data: AssignmentCreate, db: Session = Dep
         print(f"Failed to send assignment emails: {e}")
         # Don't fail the request if email fails
         
+    # --- Create Notification for Students ---
+    try:
+        from app.routers.notifications import create_notification_for_class
+        create_notification_for_class(
+            db=db,
+            class_id=new_assignment.class_id,
+            title=f"Bài tập mới: {new_assignment.title}",
+            message=f"Môn {new_assignment.subject}. Hạn nộp: {new_assignment.deadline}.",
+            notif_type="assignment",  # map to quiz icon in frontend for now as per typeMap
+            action_url=f"/student/assignment/{new_assignment.id}"
+        )
+    except Exception as e:
+        print(f"Failed to create notification: {e}")
+
     return new_assignment
 
 @router.put("/{assignment_id}", response_model=AssignmentResponse)

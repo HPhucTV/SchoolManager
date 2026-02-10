@@ -240,7 +240,7 @@ export default function CaiDatPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '32px' }}>
                 {/* Sidebar Navigation */}
-                <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', height: 'fit-content' }}>
+                <div style={{ backgroundColor: '#1e293b', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.4)', height: 'fit-content' }}>
                     <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {navItems.map((item) => (
                             <button
@@ -267,8 +267,8 @@ export default function CaiDatPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     {/* Profile Settings */}
                     {activeTab === 'profile' && (
-                        <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '24px' }}>Thông tin cá nhân</h2>
+                        <div style={{ backgroundColor: '#1e293b', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.4)' }}>
+                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', marginBottom: '24px' }}>Thông tin cá nhân</h2>
 
                             {/* Avatar */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '32px' }}>
@@ -296,7 +296,7 @@ export default function CaiDatPage() {
                                         style={{
                                             position: 'absolute', bottom: '0', right: '0',
                                             width: '32px', height: '32px', borderRadius: '50%',
-                                            backgroundColor: '#22c55e', color: 'white', border: 'none',
+                                            backgroundColor: '#14b8a6', color: 'white', border: 'none',
                                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             boxShadow: '0 4px 12px rgba(34, 197, 94, 0.4)',
                                         }}
@@ -305,19 +305,19 @@ export default function CaiDatPage() {
                                     </button>
                                 </div>
                                 <div>
-                                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', margin: 0 }}>{profile.name || 'Người dùng'}</h3>
-                                    <p style={{ color: '#6b7280', margin: '4px 0 0' }}>Giáo viên</p>
+                                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{profile.name || 'Người dùng'}</h3>
+                                    <p style={{ color: '#94a3b8', margin: '4px 0 0' }}>Giáo viên</p>
                                     <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                                         <button
                                             onClick={handleAvatarClick}
-                                            style={{ fontSize: '14px', color: '#22c55e', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                            style={{ fontSize: '14px', color: '#14b8a6', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                                         >
                                             Đổi ảnh đại diện
                                         </button>
                                         {avatarPreview && (
                                             <button
                                                 onClick={removeAvatarPreview}
-                                                style={{ fontSize: '14px', color: '#ef4444', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                                style={{ fontSize: '14px', color: '#f87171', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                                             >
                                                 Hủy
                                             </button>
@@ -329,29 +329,29 @@ export default function CaiDatPage() {
                             {/* Form */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '8px' }}>
                                         Họ và tên
                                     </label>
                                     <input
                                         type="text"
                                         value={profile.name}
                                         onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', outline: 'none', fontSize: '14px' }}
+                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #334155', outline: 'none', fontSize: '14px' }}
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '8px' }}>
                                         Email
                                     </label>
                                     <input
                                         type="email"
                                         value={profile.email}
                                         onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', outline: 'none', fontSize: '14px' }}
+                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #334155', outline: 'none', fontSize: '14px' }}
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '8px' }}>
                                         Số điện thoại
                                     </label>
                                     <input
@@ -359,20 +359,20 @@ export default function CaiDatPage() {
                                         value={profile.phone}
                                         onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                                         placeholder="0912 345 678"
-                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', outline: 'none', fontSize: '14px' }}
+                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #334155', outline: 'none', fontSize: '14px' }}
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '8px' }}>
                                         Vai trò
                                     </label>
                                     <input
                                         type="text"
                                         value="Giáo viên"
                                         disabled
-                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', outline: 'none', fontSize: '14px', backgroundColor: '#f9fafb', color: '#6b7280', cursor: 'not-allowed' }}
+                                        style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #334155', outline: 'none', fontSize: '14px', backgroundColor: '#0f172a', color: '#94a3b8', cursor: 'not-allowed' }}
                                     />
-                                    <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>Liên hệ Admin để thay đổi vai trò</p>
+                                    <p style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Liên hệ Admin để thay đổi vai trò</p>
                                 </div>
                             </div>
                         </div>
@@ -380,14 +380,14 @@ export default function CaiDatPage() {
 
                     {/* Notification Settings */}
                     {activeTab === 'notifications' && (
-                        <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '24px' }}>Cài đặt thông báo</h2>
+                        <div style={{ backgroundColor: '#1e293b', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.4)' }}>
+                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', marginBottom: '24px' }}>Cài đặt thông báo</h2>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 {notifications.map((setting, index) => (
-                                    <div key={setting.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', borderRadius: '14px', border: '1px solid #f3f4f6' }}>
+                                    <div key={setting.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', borderRadius: '14px', border: '1px solid #334155' }}>
                                         <div>
-                                            <h4 style={{ fontWeight: 500, color: '#111827', margin: 0 }}>{setting.label}</h4>
-                                            <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>{setting.description}</p>
+                                            <h4 style={{ fontWeight: 500, color: '#e2e8f0', margin: 0 }}>{setting.label}</h4>
+                                            <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '4px' }}>{setting.description}</p>
                                         </div>
                                         <button
                                             onClick={() => toggleNotification(index)}
@@ -398,7 +398,7 @@ export default function CaiDatPage() {
                                         >
                                             <span style={{
                                                 position: 'absolute', top: '4px', left: setting.enabled ? '28px' : '4px',
-                                                width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'white',
+                                                width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#1e293b',
                                                 boxShadow: '0 2px 4px rgba(0,0,0,0.2)', transition: 'left 0.2s',
                                             }} />
                                         </button>
@@ -410,11 +410,11 @@ export default function CaiDatPage() {
 
                     {/* Security Settings */}
                     {activeTab === 'security' && (
-                        <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '24px' }}>Đổi mật khẩu</h2>
+                        <div style={{ backgroundColor: '#1e293b', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.4)' }}>
+                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', marginBottom: '24px' }}>Đổi mật khẩu</h2>
 
                             {passwordError && (
-                                <div style={{ padding: '12px 16px', borderRadius: '12px', backgroundColor: '#fef2f2', color: '#dc2626', marginBottom: '20px', fontSize: '14px' }}>
+                                <div style={{ padding: '12px 16px', borderRadius: '12px', backgroundColor: '#fef2f2', color: '#f87171', marginBottom: '20px', fontSize: '14px' }}>
                                     {passwordError}
                                 </div>
                             )}
@@ -426,7 +426,7 @@ export default function CaiDatPage() {
                                     { key: 'confirm', label: 'Xác nhận mật khẩu mới' },
                                 ].map((field) => (
                                     <div key={field.key}>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#cbd5e1', marginBottom: '8px' }}>
                                             {field.label}
                                         </label>
                                         <div style={{ position: 'relative' }}>
@@ -435,7 +435,7 @@ export default function CaiDatPage() {
                                                 value={passwords[field.key as keyof typeof passwords]}
                                                 onChange={(e) => setPasswords({ ...passwords, [field.key]: e.target.value })}
                                                 placeholder="••••••••"
-                                                style={{ width: '100%', padding: '14px 48px 14px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', outline: 'none', fontSize: '14px' }}
+                                                style={{ width: '100%', padding: '14px 48px 14px 16px', borderRadius: '12px', border: '1px solid #334155', outline: 'none', fontSize: '14px' }}
                                             />
                                             <button
                                                 type="button"
@@ -443,8 +443,8 @@ export default function CaiDatPage() {
                                                 style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                                             >
                                                 {showPasswords[field.key as keyof typeof showPasswords]
-                                                    ? <Eye style={{ height: '20px', width: '20px', color: '#22c55e' }} />
-                                                    : <EyeOff style={{ height: '20px', width: '20px', color: '#9ca3af' }} />
+                                                    ? <Eye style={{ height: '20px', width: '20px', color: '#14b8a6' }} />
+                                                    : <EyeOff style={{ height: '20px', width: '20px', color: '#64748b' }} />
                                                 }
                                             </button>
                                         </div>
@@ -452,7 +452,7 @@ export default function CaiDatPage() {
                                 ))}
                             </div>
 
-                            <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '16px' }}>
+                            <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '16px' }}>
                                 Mật khẩu phải có ít nhất 6 ký tự
                             </p>
                         </div>
@@ -461,7 +461,7 @@ export default function CaiDatPage() {
                     {/* Save Button */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
                         {saved && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#22c55e', fontWeight: 500 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#14b8a6', fontWeight: 500 }}>
                                 <Check size={20} />
                                 Đã lưu thay đổi!
                             </div>

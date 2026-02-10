@@ -114,7 +114,7 @@ export default function ChatBot() {
                     width: '64px',
                     height: '64px',
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                    background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
                     border: 'none',
                     boxShadow: '0 8px 32px rgba(34, 197, 94, 0.4)',
                     cursor: 'pointer',
@@ -137,7 +137,7 @@ export default function ChatBot() {
                     right: '24px',
                     width: '380px',
                     height: '520px',
-                    backgroundColor: 'white',
+                    backgroundColor: '#1e293b',
                     borderRadius: '20px',
                     boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
                     display: 'flex',
@@ -148,7 +148,7 @@ export default function ChatBot() {
                     {/* Header */}
                     <div style={{
                         padding: '16px 20px',
-                        background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                        background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
                         color: 'white',
                         display: 'flex',
                         alignItems: 'center',
@@ -181,7 +181,7 @@ export default function ChatBot() {
                         flex: 1,
                         padding: '16px',
                         overflowY: 'auto',
-                        backgroundColor: '#f8fafc',
+                        backgroundColor: '#0f172a',
                     }}>
                         {showPersonaSelector ? (
                             <div>
@@ -200,7 +200,7 @@ export default function ChatBot() {
                                                 padding: '16px',
                                                 borderRadius: '12px',
                                                 border: '2px solid #e2e8f0',
-                                                backgroundColor: 'white',
+                                                backgroundColor: '#1e293b',
                                                 cursor: 'pointer',
                                                 transition: 'all 0.2s',
                                             }}
@@ -209,7 +209,7 @@ export default function ChatBot() {
                                                 width: '44px',
                                                 height: '44px',
                                                 borderRadius: '12px',
-                                                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                                                background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
@@ -258,7 +258,7 @@ export default function ChatBot() {
                                         <div style={{
                                             padding: '12px 16px',
                                             borderRadius: '16px 16px 16px 4px',
-                                            backgroundColor: 'white',
+                                            backgroundColor: '#1e293b',
                                             boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                                         }}>
                                             <div style={{ display: 'flex', gap: '4px' }}>
@@ -279,7 +279,7 @@ export default function ChatBot() {
                         <div style={{
                             padding: '12px 16px',
                             borderTop: '1px solid #e2e8f0',
-                            backgroundColor: 'white',
+                            backgroundColor: '#1e293b',
                             display: 'flex',
                             gap: '12px',
                         }}>

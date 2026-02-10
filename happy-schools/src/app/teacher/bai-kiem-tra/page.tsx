@@ -6,19 +6,20 @@ import { Plus, BookOpen, Clock, Users, CheckCircle, Trash2, Eye, Play, Sparkles,
 import { quizzesApi, Quiz, classesApi } from '@/lib/api';
 
 const difficultyColors = {
-    easy: { bg: '#dcfce7', color: '#16a34a', label: 'Dễ' },
-    medium: { bg: '#fef3c7', color: '#d97706', label: 'Trung bình' },
-    hard: { bg: '#fee2e2', color: '#dc2626', label: 'Khó' },
+    easy: { bg: 'rgba(52, 211, 153, 0.15)', color: '#0d9488', label: 'Dễ' },
+    medium: { bg: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', label: 'Trung bình' },
+    hard: { bg: 'rgba(248, 113, 113, 0.15)', color: '#f87171', label: 'Khó' },
 };
 
 const statusConfig = {
-    draft: { label: 'Nháp', bg: '#f3f4f6', color: '#6b7280' },
-    active: { label: 'Đang mở', bg: '#dcfce7', color: '#16a34a' },
-    closed: { label: 'Đã đóng', bg: '#fee2e2', color: '#dc2626' },
+    draft: { label: 'Nháp', bg: '#f3f4f6', color: '#94a3b8' },
+    active: { label: 'Đang mở', bg: 'rgba(52, 211, 153, 0.15)', color: '#0d9488' },
+    closed: { label: 'Đã đóng', bg: 'rgba(248, 113, 113, 0.15)', color: '#f87171' },
 };
 
 export default function QuizPage() {
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [classes, setClasses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -77,6 +78,7 @@ export default function QuizPage() {
             setSelectedQuiz(quiz);
             setShowDetailModal(true);
             resetForm();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             alert('❌ Lỗi khi tạo bài kiểm tra: ' + (err.message || 'Unknown error'));
         } finally {
@@ -100,9 +102,12 @@ export default function QuizPage() {
 
     const handleUpdateStatus = async (quiz: Quiz, newStatus: string) => {
         try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await quizzesApi.updateQuiz(quiz.id, { status: newStatus as any });
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setQuizzes(quizzes.map(q => q.id === quiz.id ? { ...q, status: newStatus as any } : q));
             if (selectedQuiz?.id === quiz.id) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setSelectedQuiz({ ...selectedQuiz, status: newStatus as any });
             }
         } catch (err) {
@@ -152,9 +157,9 @@ export default function QuizPage() {
                     <div style={{ width: '48px', height: '48px', border: '4px solid #e5e7eb', borderTopColor: '#8b5cf6', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                 </div>
             ) : quizzes.length === 0 ? (
-                <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '48px', textAlign: 'center', boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)' }}>
+                <div style={{ backgroundColor: '#1e293b', borderRadius: '20px', padding: '48px', textAlign: 'center', boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)' }}>
                     <BookOpen style={{ width: '64px', height: '64px', color: '#d1d5db', margin: '0 auto 16px' }} />
-                    <p style={{ color: '#6b7280', fontSize: '16px' }}>Chưa có bài kiểm tra nào</p>
+                    <p style={{ color: '#94a3b8', fontSize: '16px' }}>Chưa có bài kiểm tra nào</p>
                     <button onClick={() => setShowCreateModal(true)} style={{ marginTop: '16px', padding: '12px 24px', borderRadius: '12px', background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', color: 'white', fontWeight: 600, border: 'none', cursor: 'pointer' }}>
                         Tạo bài kiểm tra đầu tiên
                     </button>
@@ -165,21 +170,21 @@ export default function QuizPage() {
                         const status = statusConfig[quiz.status] || statusConfig.draft;
                         return (
                             <div key={quiz.id} onClick={() => { setSelectedQuiz(quiz); setShowDetailModal(true); }}
-                                style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)', cursor: 'pointer', transition: 'all 0.3s ease' }}
+                                style={{ backgroundColor: '#1e293b', borderRadius: '20px', padding: '24px', boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)', cursor: 'pointer', transition: 'all 0.3s ease' }}
                                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; }}
                                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                                    <span style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 500, borderRadius: '20px', backgroundColor: '#f3e8ff', color: '#7c3aed' }}>{quiz.subject}</span>
+                                    <span style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 500, borderRadius: '20px', backgroundColor: 'rgba(168, 139, 250, 0.15)', color: '#7c3aed' }}>{quiz.subject}</span>
                                     <span style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 500, borderRadius: '20px', backgroundColor: status.bg, color: status.color }}>{status.label}</span>
                                 </div>
-                                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>{quiz.title}</h3>
-                                <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>{quiz.topic}</p>
+                                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '8px' }}>{quiz.title}</h3>
+                                <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '16px' }}>{quiz.topic}</p>
                                 <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
                                     <span style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '6px', backgroundColor: difficultyColors.easy.bg, color: difficultyColors.easy.color }}>{quiz.easy_count} Dễ</span>
                                     <span style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '6px', backgroundColor: difficultyColors.medium.bg, color: difficultyColors.medium.color }}>{quiz.medium_count} TB</span>
                                     <span style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '6px', backgroundColor: difficultyColors.hard.bg, color: difficultyColors.hard.color }}>{quiz.hard_count} Khó</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#6b7280' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#94a3b8' }}>
                                     <span><Clock style={{ display: 'inline', width: '14px', height: '14px', marginRight: '4px' }} />{formatDate(quiz.deadline)}</span>
                                     <span><BookOpen style={{ display: 'inline', width: '14px', height: '14px', marginRight: '4px' }} />{quiz.total_questions} câu</span>
                                 </div>
@@ -192,28 +197,28 @@ export default function QuizPage() {
             {/* Create Modal */}
             {showCreateModal && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div style={{ backgroundColor: 'white', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: '24px' }}>
+                    <div style={{ backgroundColor: '#1e293b', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+                        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#e2e8f0', marginBottom: '24px' }}>
                             <Sparkles style={{ display: 'inline', marginRight: '8px', color: '#8b5cf6' }} />
                             Tạo Bài Kiểm Tra AI
                         </h2>
                         <form onSubmit={handleCreate}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Tên bài kiểm tra *</label>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>Tên bài kiểm tra *</label>
                                     <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                         placeholder="VD: Kiểm tra 15 phút - Toán" required
                                         style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '2px solid #e5e7eb', fontSize: '14px' }} />
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Môn học *</label>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>Môn học *</label>
                                         <input type="text" value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                                             placeholder="VD: Toán" required
                                             style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '2px solid #e5e7eb', fontSize: '14px' }} />
                                     </div>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Lớp</label>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>Lớp</label>
                                         <select value={formData.class_id} onChange={(e) => setFormData({ ...formData, class_id: parseInt(e.target.value) })}
                                             style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '2px solid #e5e7eb', fontSize: '14px' }}>
                                             {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -221,13 +226,13 @@ export default function QuizPage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Chủ đề / Nội dung *</label>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>Chủ đề / Nội dung *</label>
                                     <textarea value={formData.topic} onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
                                         placeholder="VD: Phương trình bậc 2, công thức nghiệm, định lý Viète" required rows={3}
                                         style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '2px solid #e5e7eb', fontSize: '14px', resize: 'vertical' }} />
                                 </div>
-                                <div style={{ backgroundColor: '#f9fafb', borderRadius: '16px', padding: '20px' }}>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '16px' }}>Số câu hỏi theo độ khó</label>
+                                <div style={{ backgroundColor: '#0f172a', borderRadius: '16px', padding: '20px' }}>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '16px' }}>Số câu hỏi theo độ khó</label>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                                         <div>
                                             <label style={{ display: 'block', fontSize: '13px', color: difficultyColors.easy.color, marginBottom: '4px' }}>🟢 Dễ</label>
@@ -245,26 +250,26 @@ export default function QuizPage() {
                                                 style={{ width: '100%', padding: '12px', borderRadius: '10px', border: `2px solid ${difficultyColors.hard.color}`, fontSize: '16px', fontWeight: 600, textAlign: 'center' }} />
                                         </div>
                                     </div>
-                                    <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '12px', textAlign: 'center' }}>
+                                    <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '12px', textAlign: 'center' }}>
                                         Tổng: <strong>{formData.easy_count + formData.medium_count + formData.hard_count}</strong> câu hỏi
                                     </p>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Hạn làm bài</label>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>Hạn làm bài</label>
                                         <input type="datetime-local" value={formData.deadline} onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
                                             style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '2px solid #e5e7eb', fontSize: '14px' }} />
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', paddingTop: '28px' }}>
                                         <input type="checkbox" id="allowRetake" checked={formData.allow_retake} onChange={(e) => setFormData({ ...formData, allow_retake: e.target.checked })}
                                             style={{ width: '20px', height: '20px', marginRight: '10px', accentColor: '#8b5cf6' }} />
-                                        <label htmlFor="allowRetake" style={{ fontSize: '14px', color: '#374151' }}>Cho phép làm lại</label>
+                                        <label htmlFor="allowRetake" style={{ fontSize: '14px', color: '#cbd5e1' }}>Cho phép làm lại</label>
                                     </div>
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: '12px', marginTop: '28px' }}>
                                 <button type="button" onClick={() => setShowCreateModal(false)}
-                                    style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #e5e7eb', backgroundColor: 'white', color: '#6b7280', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                                    style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #e5e7eb', backgroundColor: '#1e293b', color: '#94a3b8', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
                                     Hủy
                                 </button>
                                 <button type="submit" disabled={creating || !formData.title.trim() || !formData.topic.trim() || (formData.easy_count + formData.medium_count + formData.hard_count) === 0}
@@ -280,21 +285,21 @@ export default function QuizPage() {
             {/* Detail Modal */}
             {showDetailModal && selectedQuiz && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div style={{ backgroundColor: 'white', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto' }}>
+                    <div style={{ backgroundColor: '#1e293b', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                             <div>
                                 <span style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 500, borderRadius: '20px', backgroundColor: statusConfig[selectedQuiz.status].bg, color: statusConfig[selectedQuiz.status].color }}>{statusConfig[selectedQuiz.status].label}</span>
-                                <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginTop: '12px' }}>{selectedQuiz.title}</h2>
-                                <p style={{ color: '#6b7280', marginTop: '4px' }}>{selectedQuiz.subject} • {selectedQuiz.topic}</p>
+                                <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#e2e8f0', marginTop: '12px' }}>{selectedQuiz.title}</h2>
+                                <p style={{ color: '#94a3b8', marginTop: '4px' }}>{selectedQuiz.subject} • {selectedQuiz.topic}</p>
                             </div>
-                            <button onClick={() => setShowDetailModal(false)} style={{ padding: '8px', borderRadius: '8px', border: 'none', backgroundColor: '#f3f4f6', cursor: 'pointer' }}>✕</button>
+                            <button onClick={() => setShowDetailModal(false)} style={{ padding: '8px', borderRadius: '8px', border: 'none', backgroundColor: '#0f172a', cursor: 'pointer' }}>✕</button>
                         </div>
 
                         {/* Stats */}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
-                            <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px', textAlign: 'center' }}>
-                                <p style={{ fontSize: '24px', fontWeight: 700, color: '#111827' }}>{selectedQuiz.total_questions}</p>
-                                <p style={{ fontSize: '13px', color: '#6b7280' }}>Câu hỏi</p>
+                            <div style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '12px', textAlign: 'center' }}>
+                                <p style={{ fontSize: '24px', fontWeight: 700, color: '#e2e8f0' }}>{selectedQuiz.total_questions}</p>
+                                <p style={{ fontSize: '13px', color: '#94a3b8' }}>Câu hỏi</p>
                             </div>
                             <div style={{ padding: '16px', backgroundColor: difficultyColors.easy.bg, borderRadius: '12px', textAlign: 'center' }}>
                                 <p style={{ fontSize: '24px', fontWeight: 700, color: difficultyColors.easy.color }}>{selectedQuiz.easy_count}</p>
@@ -312,12 +317,12 @@ export default function QuizPage() {
 
                         {/* Info */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-                            <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>
-                                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Hạn làm bài</p>
-                                <p style={{ fontSize: '16px', fontWeight: 600, color: '#111827' }}>{formatDate(selectedQuiz.deadline)}</p>
+                            <div style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '12px' }}>
+                                <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Hạn làm bài</p>
+                                <p style={{ fontSize: '16px', fontWeight: 600, color: '#e2e8f0' }}>{formatDate(selectedQuiz.deadline)}</p>
                             </div>
-                            <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>
-                                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Cho phép làm lại</p>
+                            <div style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '12px' }}>
+                                <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Cho phép làm lại</p>
                                 <p style={{ fontSize: '16px', fontWeight: 600, color: selectedQuiz.allow_retake ? '#16a34a' : '#dc2626' }}>
                                     {selectedQuiz.allow_retake ? '✓ Có' : '✕ Không'}
                                 </p>
@@ -327,20 +332,20 @@ export default function QuizPage() {
                         {/* Questions Preview */}
                         {selectedQuiz.questions && selectedQuiz.questions.length > 0 && (
                             <div style={{ marginBottom: '24px' }}>
-                                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#111827', marginBottom: '12px' }}>Xem trước câu hỏi</h3>
+                                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#e2e8f0', marginBottom: '12px' }}>Xem trước câu hỏi</h3>
                                 <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {selectedQuiz.questions.map((q, idx) => (
-                                        <div key={q.id} style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>
+                                        <div key={q.id} style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '12px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                                <span style={{ fontWeight: 600, color: '#111827' }}>Câu {idx + 1}</span>
+                                                <span style={{ fontWeight: 600, color: '#e2e8f0' }}>Câu {idx + 1}</span>
                                                 <span style={{ padding: '2px 8px', fontSize: '11px', borderRadius: '4px', backgroundColor: difficultyColors[q.difficulty].bg, color: difficultyColors[q.difficulty].color }}>{difficultyColors[q.difficulty].label}</span>
                                             </div>
-                                            <p style={{ fontSize: '14px', color: '#374151', marginBottom: '12px' }}>{q.question_text}</p>
+                                            <p style={{ fontSize: '14px', color: '#cbd5e1', marginBottom: '12px' }}>{q.question_text}</p>
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '13px' }}>
-                                                <div style={{ padding: '8px', backgroundColor: q.correct_answer === 'A' ? '#dcfce7' : 'white', borderRadius: '6px', border: '1px solid #e5e7eb' }}>A. {q.option_a}</div>
-                                                <div style={{ padding: '8px', backgroundColor: q.correct_answer === 'B' ? '#dcfce7' : 'white', borderRadius: '6px', border: '1px solid #e5e7eb' }}>B. {q.option_b}</div>
-                                                <div style={{ padding: '8px', backgroundColor: q.correct_answer === 'C' ? '#dcfce7' : 'white', borderRadius: '6px', border: '1px solid #e5e7eb' }}>C. {q.option_c}</div>
-                                                <div style={{ padding: '8px', backgroundColor: q.correct_answer === 'D' ? '#dcfce7' : 'white', borderRadius: '6px', border: '1px solid #e5e7eb' }}>D. {q.option_d}</div>
+                                                <div style={{ padding: '8px', backgroundColor: q.correct_answer === 'A' ? '#dcfce7' : 'white', borderRadius: '6px', border: '1px solid #334155' }}>A. {q.option_a}</div>
+                                                <div style={{ padding: '8px', backgroundColor: q.correct_answer === 'B' ? '#dcfce7' : 'white', borderRadius: '6px', border: '1px solid #334155' }}>B. {q.option_b}</div>
+                                                <div style={{ padding: '8px', backgroundColor: q.correct_answer === 'C' ? '#dcfce7' : 'white', borderRadius: '6px', border: '1px solid #334155' }}>C. {q.option_c}</div>
+                                                <div style={{ padding: '8px', backgroundColor: q.correct_answer === 'D' ? '#dcfce7' : 'white', borderRadius: '6px', border: '1px solid #334155' }}>D. {q.option_d}</div>
                                             </div>
                                         </div>
                                     ))}
@@ -352,7 +357,7 @@ export default function QuizPage() {
                         <div style={{ display: 'flex', gap: '12px' }}>
                             {selectedQuiz.status === 'draft' && (
                                 <button onClick={() => handleUpdateStatus(selectedQuiz, 'active')}
-                                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', color: 'white', fontWeight: 600, cursor: 'pointer' }}>
+                                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)', color: 'white', fontWeight: 600, cursor: 'pointer' }}>
                                     <Play size={18} /> Mở bài kiểm tra
                                 </button>
                             )}
@@ -363,7 +368,7 @@ export default function QuizPage() {
                                 </button>
                             )}
                             <button onClick={() => handleDelete(selectedQuiz.id)}
-                                style={{ padding: '14px 20px', borderRadius: '12px', border: '2px solid #ef4444', backgroundColor: 'white', color: '#ef4444', fontWeight: 600, cursor: 'pointer' }}>
+                                style={{ padding: '14px 20px', borderRadius: '12px', border: '2px solid #ef4444', backgroundColor: '#1e293b', color: '#f87171', fontWeight: 600, cursor: 'pointer' }}>
                                 <Trash2 size={18} />
                             </button>
                         </div>

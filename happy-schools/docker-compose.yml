@@ -1,16 +1,33 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: happy-schools-db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: happyschools2026
+      POSTGRES_DB: happy_schools
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   backend:
     build:
       context: ./backend
     container_name: happy-schools-backend
     ports:
-      - "8001:8000"
+      - "8001:8001"
     volumes:
-      - ./backend/sql_app.db:/app/sql_app.db
       - ./backend/app:/app/app
       - ./backend/static:/app/static
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://admin:happyschools2026@db:5432/happy_schools
+      - DATABASE_URL_SYNC=postgresql://admin:happyschools2026@db:5432/happy_schools
+    depends_on:
+      - db
     restart: always
 
   frontend:
@@ -20,7 +37,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://<YOUR_VPS_IP>:8001
+      - NEXT_PUBLIC_API_URL=http://localhost:8001
     depends_on:
       - backend
     restart: always
+
+volumes:
+  postgres_data:

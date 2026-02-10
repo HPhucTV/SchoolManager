@@ -17,8 +17,11 @@ export default function ClassDetailsPage() {
     const { token } = useAuth();
     const classId = params.id;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [classData, setClassData] = useState<any>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [students, setStudents] = useState<any[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [timeline, setTimeline] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -86,6 +89,7 @@ export default function ClassDetailsPage() {
 
             if (response.ok) {
                 const updatedClass = await response.json();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setClassData((prev: any) => ({ ...prev, ...updatedClass }));
                 setShowEditModal(false);
                 alert('Cập nhật thành công!');
@@ -115,27 +119,27 @@ export default function ClassDetailsPage() {
     return (
         <div style={{ paddingBottom: '40px' }}>
             <div style={{ marginBottom: '24px' }}>
-                <Link href="/teacher/lop-hoc" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6b7280', textDecoration: 'none', marginBottom: '16px', fontWeight: 500 }}>
+                <Link href="/teacher/lop-hoc" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', textDecoration: 'none', marginBottom: '16px', fontWeight: 500 }}>
                     <ArrowLeft size={20} /> Quay lại danh sách
                 </Link>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                            <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#111827', margin: 0 }}>
+                            <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#e2e8f0', margin: 0 }}>
                                 {classData.name}
                             </h1>
-                            <span style={{ padding: '4px 12px', borderRadius: '20px', backgroundColor: '#dbeafe', color: '#1e40af', fontSize: '14px', fontWeight: 600 }}>
+                            <span style={{ padding: '4px 12px', borderRadius: '20px', backgroundColor: 'rgba(96, 165, 250, 0.15)', color: '#1e40af', fontSize: '14px', fontWeight: 600 }}>
                                 Khối {classData.grade}
                             </span>
                             {classData.online_enabled && (
-                                <span style={{ padding: '4px 12px', borderRadius: '20px', backgroundColor: '#dcfce7', color: '#166534', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22c55e' }}></div>
+                                <span style={{ padding: '4px 12px', borderRadius: '20px', backgroundColor: 'rgba(52, 211, 153, 0.15)', color: '#94a3b8', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#14b8a6' }}></div>
                                     Lớp Online
                                 </span>
                             )}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', color: '#4b5563' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', color: '#94a3b8' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <Users size={18} />
                                 <span>{students.length} Học sinh</span>
@@ -182,6 +186,7 @@ export default function ClassDetailsPage() {
                                             });
                                             if (response.ok) {
                                                 const updated = await response.json();
+                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                                 setClassData((prev: any) => ({ ...prev, ...updated }));
                                                 alert('Đã tạo phòng học Online thành công!');
                                             } else {
@@ -196,8 +201,8 @@ export default function ClassDetailsPage() {
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '8px',
                                     padding: '10px 16px', borderRadius: '12px',
-                                    backgroundColor: '#dcfce7', color: '#166534',
-                                    fontWeight: 600, border: '1px solid #bbf7d0', cursor: 'pointer',
+                                    backgroundColor: 'rgba(52, 211, 153, 0.15)', color: '#94a3b8',
+                                    fontWeight: 600, border: '1px solid rgba(52, 211, 153, 0.3)', cursor: 'pointer',
                                     boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.05)'
                                 }}
                             >
@@ -209,8 +214,8 @@ export default function ClassDetailsPage() {
                             style={{
                                 display: 'flex', alignItems: 'center', gap: '8px',
                                 padding: '10px 16px', borderRadius: '12px',
-                                border: '1px solid #e5e7eb', backgroundColor: 'white',
-                                color: '#374151', fontWeight: 600, cursor: 'pointer'
+                                border: '1px solid #334155', backgroundColor: '#1e293b',
+                                color: '#cbd5e1', fontWeight: 600, cursor: 'pointer'
                             }}>
                             <Edit size={18} /> Chỉnh sửa
                         </button>
@@ -244,7 +249,7 @@ export default function ClassDetailsPage() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
                     <div style={{
-                        backgroundColor: 'white', borderRadius: '24px', padding: '32px',
+                        backgroundColor: '#1e293b', borderRadius: '24px', padding: '32px',
                         width: '100%', maxWidth: '500px',
                         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
                     }}>
@@ -279,14 +284,14 @@ export default function ClassDetailsPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowEditModal(false)}
-                                    style={{ padding: '12px 20px', borderRadius: '12px', border: '1px solid #d1d5db', backgroundColor: 'white', fontWeight: 600, cursor: 'pointer' }}
+                                    style={{ padding: '12px 20px', borderRadius: '12px', border: '1px solid #d1d5db', backgroundColor: '#1e293b', fontWeight: 600, cursor: 'pointer' }}
                                 >
                                     Hủy bỏ
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    style={{ padding: '12px 24px', borderRadius: '12px', backgroundColor: '#22c55e', color: 'white', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+                                    style={{ padding: '12px 24px', borderRadius: '12px', backgroundColor: '#14b8a6', color: 'white', fontWeight: 600, border: 'none', cursor: 'pointer' }}
                                 >
                                     {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
                                 </button>

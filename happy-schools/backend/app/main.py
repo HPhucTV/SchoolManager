@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
-from app.routers import ai, auth, activities, invitations, dashboard, students, statistics, assignments, student_api, classes, quizzes, games
+from app.routers import ai, auth, activities, invitations, dashboard, students, statistics, assignments, student_api, classes, quizzes, games, notifications
 from app.database import engine, Base
 
 
@@ -44,6 +44,7 @@ app.include_router(students.router, prefix=f"{settings.API_V1_STR}/students", ta
 app.include_router(statistics.router, prefix=f"{settings.API_V1_STR}/statistics", tags=["statistics"])
 app.include_router(assignments.router, prefix=f"{settings.API_V1_STR}/assignments", tags=["assignments"])
 app.include_router(student_api.router, prefix=f"{settings.API_V1_STR}/student", tags=["student"])
+app.include_router(notifications.router, prefix=f"{settings.API_V1_STR}/notifications", tags=["notifications"])
 # Remove the duplicate /upload prefix one, OR keep it if needed but point to student_api
 # Since we fixed routes to be /avatar and /profile, we only need /student prefix to get /api/student/avatar.
 # If frontend uses /api/student/avatar (which I updated it to do), then we don't need /upload prefix anymore.

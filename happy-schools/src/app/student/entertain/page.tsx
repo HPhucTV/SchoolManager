@@ -50,7 +50,7 @@ export default function GameCenterPage() {
                     <Link href="/student" style={{
                         display: 'inline-flex', alignItems: 'center', gap: '8px',
                         color: 'white', textDecoration: 'none', fontWeight: 600,
-                        marginBottom: '24px', backgroundColor: 'rgba(255,255,255,0.2)',
+                        marginBottom: '24px', backgroundColor: 'rgba(255,255,255,0.1)',
                         padding: '8px 16px', borderRadius: '12px',
                         backdropFilter: 'blur(4px)',
                         transition: 'all 0.2s ease'
@@ -82,7 +82,7 @@ export default function GameCenterPage() {
                             style={{ textDecoration: 'none' }}
                         >
                             <div style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#1e293b',
                                 borderRadius: '24px',
                                 overflow: 'hidden',
                                 boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
@@ -126,10 +126,10 @@ export default function GameCenterPage() {
                                     textAlign: 'center',
                                     flex: 1
                                 }}>
-                                    <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#111827', marginBottom: '8px' }}>
+                                    <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#e2e8f0', marginBottom: '8px' }}>
                                         {game.title}
                                     </h3>
-                                    <p style={{ fontSize: '15px', color: '#4b5563', lineHeight: '1.6' }}>
+                                    <p style={{ fontSize: '15px', color: '#94a3b8', lineHeight: '1.6' }}>
                                         {game.description}
                                     </p>
 
@@ -137,8 +137,8 @@ export default function GameCenterPage() {
                                         <span style={{
                                             marginTop: '16px',
                                             padding: '6px 16px',
-                                            backgroundColor: '#f3f4f6',
-                                            color: '#6b7280',
+                                            backgroundColor: '#0f172a',
+                                            color: '#94a3b8',
                                             borderRadius: '20px',
                                             fontSize: '12px',
                                             fontWeight: 600,

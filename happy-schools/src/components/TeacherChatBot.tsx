@@ -111,7 +111,7 @@ export default function TeacherChatBot() {
                     right: '24px',
                     width: '400px',
                     height: '600px',
-                    backgroundColor: 'white',
+                    backgroundColor: '#1e293b',
                     borderRadius: '20px',
                     boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
                     display: 'flex',
@@ -133,7 +133,7 @@ export default function TeacherChatBot() {
                             width: '40px',
                             height: '40px',
                             borderRadius: '12px',
-                            backgroundColor: 'rgba(255,255,255,0.2)',
+                            backgroundColor: 'rgba(255,255,255,0.1)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center'
@@ -153,7 +153,7 @@ export default function TeacherChatBot() {
                         flex: 1,
                         padding: '20px',
                         overflowY: 'auto',
-                        backgroundColor: '#f8fafc',
+                        backgroundColor: '#0f172a',
                     }}>
                         {messages.map((msg, idx) => (
                             <div
@@ -186,7 +186,7 @@ export default function TeacherChatBot() {
                                 <div style={{
                                     padding: '16px',
                                     borderRadius: '20px 20px 20px 4px',
-                                    backgroundColor: 'white',
+                                    backgroundColor: '#1e293b',
                                     boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
                                 }}>
                                     <div style={{ display: 'flex', gap: '4px' }}>
@@ -204,7 +204,7 @@ export default function TeacherChatBot() {
                     <div style={{
                         padding: '16px 20px',
                         borderTop: '1px solid #e2e8f0',
-                        backgroundColor: 'white',
+                        backgroundColor: '#1e293b',
                         display: 'flex',
                         gap: '12px',
                     }}>

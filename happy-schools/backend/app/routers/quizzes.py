@@ -131,7 +131,24 @@ async def create_quiz(quiz_data: QuizCreate, db: Session = Depends(get_db), curr
         db.add(db_q)
         
     db.commit()
+        
+    db.commit()
     db.refresh(new_quiz)
+    
+    # --- Create Notification for Students ---
+    try:
+        from app.routers.notifications import create_notification_for_class
+        create_notification_for_class(
+            db=db,
+            class_id=new_quiz.class_id,
+            title=f"Bài kiểm tra mới: {new_quiz.title}",
+            message=f"Môn {new_quiz.subject} - {new_quiz.topic}. Hạn nộp: {new_quiz.deadline}.",
+            notif_type="quiz",
+            action_url=f"/student/quiz/{new_quiz.id}"
+        )
+    except Exception as e:
+        print(f"Failed to create notification: {e}")
+        
     return new_quiz
 
 @router.put("/{quiz_id}", response_model=QuizResponse)
@@ -150,15 +167,112 @@ async def update_quiz(quiz_id: int, quiz_data: QuizUpdate, db: Session = Depends
     db.refresh(quiz)
     return quiz
 
-@router.delete("/{quiz_id}")
-async def delete_quiz(quiz_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    db.delete(quiz)
+    db.commit()
+    return {"message": "Deleted successfully"}
+
+# --- Student Endpoints ---
+
+@router.get("/{quiz_id}", response_model=QuizResponse)
+async def get_quiz_details(quiz_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    # Student can view if active and in their class
+    # Teacher can view their own
     quiz = db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
         
-    if quiz.teacher_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    if current_user.role == "student":
+        if quiz.class_id != current_user.class_id:
+             raise HTTPException(status_code=403, detail="Not authorized for this class")
+        # if quiz.status != "active":
+        #      raise HTTPException(status_code=403, detail="Quiz is not active")
+        # Allow viewing if attempting (status might be active)
+    elif current_user.role == "teacher":
+        if quiz.teacher_id != current_user.id:
+             raise HTTPException(status_code=403, detail="Not authorized")
+             
+    return quiz
+
+@router.get("/{quiz_id}/my-result")
+async def get_my_result(quiz_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if current_user.role != "student":
+        return {"attempted": False}
         
-    db.delete(quiz)
+    result = db.query(models.QuizResult).filter(
+        models.QuizResult.quiz_id == quiz_id,
+        models.QuizResult.student_id == current_user.id
+    ).first()
+    
+    if result:
+        return {
+            "attempted": True,
+            "score": result.score,
+            "total_questions": result.total_questions,
+            "percentage": result.percentage,
+            "completed_at": result.completed_at
+        }
+    return {"attempted": False}
+
+class QuizSubmit(BaseModel):
+    answers: dict[int, str] # question_id -> option (A, B, C, D)
+
+@router.post("/{quiz_id}/submit")
+async def submit_quiz(quiz_id: int, submit_data: QuizSubmit, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only students can submit quizzes")
+        
+    quiz = db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+        
+    # Check if already submitted
+    existing = db.query(models.QuizResult).filter(
+        models.QuizResult.quiz_id == quiz_id,
+        models.QuizResult.student_id == current_user.id
+    ).first()
+    
+    # Check retake policy (mocked check, currently if exists reject unless we impl retake logic)
+    if existing and not quiz.allow_retake:
+         raise HTTPException(status_code=400, detail="You have already submitted this quiz")
+         
+    # Calculate Score
+    score = 0
+    total = len(quiz.questions)
+    
+    # Create result
+    import json
+    
+    # Basic scoring logic
+    for q in quiz.questions:
+        user_ans = submit_data.answers.get(q.id)
+        if user_ans and user_ans == q.correct_answer:
+            score += 1
+            
+    percentage = round((score / total) * 100, 1) if total > 0 else 0
+    
+    new_result = models.QuizResult(
+        quiz_id=quiz_id,
+        student_id=current_user.id,
+        score=score,
+        total_questions=total,
+        percentage=percentage,
+        answers=json.dumps(submit_data.answers),
+        completed_at=datetime.now().isoformat()
+    )
+    
+    # If retake is allowed, maybe we update existing or creating new?
+    # For now, if existing, we delete it (overwrite) or just add new? 
+    # Let's overwrite for simplicity if allow_retake is True
+    if existing:
+        db.delete(existing)
+        
+    db.add(new_result)
     db.commit()
-    return {"message": "Deleted successfully"}
+    db.refresh(new_result)
+    
+    return {
+        "score": score,
+        "total_questions": total,
+        "percentage": percentage,
+        "completed_at": new_result.completed_at
+    }

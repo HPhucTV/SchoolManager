@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth';
 
 declare global {
     interface Window {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         JitsiMeetExternalAPI: any;
     }
 }
@@ -25,6 +26,7 @@ export default function MeetingPage() {
     const [scriptLoaded, setScriptLoaded] = useState(false);
 
     const jitsiContainerRef = useRef<HTMLDivElement>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const jitsiApiRef = useRef<any>(null);
     const initAttemptRef = useRef(false);
 
@@ -126,6 +128,7 @@ export default function MeetingPage() {
                 router.push('/dashboard');
             });
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             jitsiApiRef.current.addEventListener('conferenceError', (error: any) => {
                 console.error('Conference error:', error);
                 setError(`Lỗi hội nghị: ${error.error}`);

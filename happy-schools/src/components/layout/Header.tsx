@@ -21,7 +21,7 @@ const navItems = [
     { href: '/teacher/lop-hoc', label: 'Lớp học', icon: School },
     { href: '/teacher/thong-ke', label: 'Thống kê', icon: BarChart3 },
     { href: '/teacher/hoat-dong', label: 'Hoạt động', icon: Activity },
-    // { href: '/teacher/kiem-tra', label: 'Bài kiểm tra', icon: BookOpen },
+    { href: '/teacher/bai-kiem-tra', label: 'Bài kiểm tra', icon: BookOpen },
     { href: '/teacher/bai-tap', label: 'Bài tập', icon: FileText },
     { href: '/teacher/hoc-sinh', label: 'Học sinh', icon: Users },
     { href: '/teacher/thi-dua', label: 'Thi đua', icon: Trophy },
@@ -38,8 +38,8 @@ export default function Header() {
             top: 0,
             zIndex: 50,
             width: '100%',
-            borderBottom: '1px solid #e5e7eb',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            borderBottom: '1px solid #334155',
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
             backdropFilter: 'blur(12px)',
         }}>
             <div style={{
@@ -60,14 +60,14 @@ export default function Header() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
-                        boxShadow: '0 2px 8px rgba(251, 191, 36, 0.4)',
+                        background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
+                        boxShadow: '0 2px 8px rgba(20, 184, 166, 0.4)',
                     }}>
                         <School style={{ height: '20px', width: '20px', color: 'white' }} />
                     </div>
                     <div>
-                        <h1 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0 }}>Happy Schools</h1>
-                        <p style={{ fontSize: '10px', color: '#6b7280', margin: 0 }}>Quản lý học sinh trong Giáo dục</p>
+                        <h1 style={{ fontSize: '16px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>Happy Schools</h1>
+                        <p style={{ fontSize: '10px', color: '#94a3b8', margin: 0 }}>Quản lý học sinh trong Giáo dục</p>
                     </div>
                 </Link>
 
@@ -92,9 +92,9 @@ export default function Header() {
                                         fontWeight: 500,
                                         textDecoration: 'none',
                                         transition: 'all 0.2s ease',
-                                        background: isActive ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' : 'transparent',
-                                        color: isActive ? 'white' : '#4b5563',
-                                        boxShadow: isActive ? '0 2px 8px rgba(34, 197, 94, 0.3)' : 'none',
+                                        background: isActive ? 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)' : 'transparent',
+                                        color: isActive ? 'white' : '#94a3b8',
+                                        boxShadow: isActive ? '0 2px 8px rgba(20, 184, 166, 0.3)' : 'none',
                                     }}
                                 >
                                     <Icon style={{ height: '16px', width: '16px' }} />
@@ -104,7 +104,7 @@ export default function Header() {
                         })}
                     </nav>
 
-                    <div style={{ width: '1px', height: '24px', backgroundColor: '#e5e7eb' }}></div>
+                    <div style={{ width: '1px', height: '24px', backgroundColor: '#334155' }}></div>
 
                     <button
                         onClick={logout}
@@ -117,8 +117,8 @@ export default function Header() {
                             fontSize: '13px',
                             fontWeight: 600,
                             border: 'none',
-                            backgroundColor: '#fee2e2',
-                            color: '#dc2626',
+                            backgroundColor: 'rgba(248, 113, 113, 0.15)',
+                            color: '#f87171',
                             cursor: 'pointer',
                             transition: 'all 0.2s ease',
                         }}

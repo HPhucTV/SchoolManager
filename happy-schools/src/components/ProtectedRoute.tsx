@@ -42,7 +42,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
                 alignItems: 'center',
                 justifyContent: 'center',
                 minHeight: '100vh',
-                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
             }}>
                 <div style={{
                     width: '48px',

@@ -36,6 +36,7 @@ export default function QuizPage() {
     const [creationMode, setCreationMode] = useState<'ai' | 'upload'>('ai');
     const [uploadFile, setUploadFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [parsedQuestions, setParsedQuestions] = useState<any[]>([]);
 
     // Form Data
@@ -148,6 +149,7 @@ export default function QuizPage() {
             const deadlineToSend = formData.deadline || null;
 
             // Prepare payload
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const payload: any = {
                 ...formData,
                 deadline: deadlineToSend
@@ -222,8 +224,8 @@ export default function QuizPage() {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'active': return { bg: '#dcfce7', text: '#16a34a', label: 'Đang mở' };
-            case 'closed': return { bg: '#fee2e2', text: '#dc2626', label: 'Đã đóng' };
+            case 'active': return { bg: 'rgba(52, 211, 153, 0.15)', text: '#16a34a', label: 'Đang mở' };
+            case 'closed': return { bg: 'rgba(248, 113, 113, 0.15)', text: '#dc2626', label: 'Đã đóng' };
             default: return { bg: '#f3f4f6', text: '#6b7280', label: 'Nháp' };
         }
     };
@@ -258,7 +260,7 @@ export default function QuizPage() {
                     style={{
                         display: 'flex', alignItems: 'center', gap: '8px',
                         padding: '14px 24px', borderRadius: '14px',
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
                         color: 'white', fontWeight: 600, fontSize: '14px', border: 'none', cursor: 'pointer',
                         boxShadow: '0 4px 14px rgba(139, 92, 246, 0.4)',
                     }}
@@ -272,35 +274,35 @@ export default function QuizPage() {
             <div style={{ display: 'grid', gap: '16px' }}>
                 {quizzes.length === 0 ? (
                     <div style={{
-                        backgroundColor: 'white', borderRadius: '20px', padding: '60px',
-                        textAlign: 'center', color: '#6b7280', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+                        backgroundColor: '#1e293b', borderRadius: '20px', padding: '60px',
+                        textAlign: 'center', color: '#94a3b8', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
                     }}>
                         <Brain size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
                         <p style={{ fontSize: '16px' }}>Chưa có bài kiểm tra nào.</p>
-                        <p style={{ fontSize: '14px' }}>Bấm nút "Tạo đề mới" để AI giúp bạn soạn đề nhé!</p>
+                        <p style={{ fontSize: '14px' }}>Bấm nút &quot;Tạo đề mới&quot; để AI giúp bạn soạn đề nhé!</p>
                     </div>
                 ) : (
                     quizzes.map(quiz => {
                         const statusColor = getStatusColor(quiz.status);
                         return (
                             <div key={quiz.id} style={{
-                                backgroundColor: 'white', borderRadius: '16px', padding: '24px',
+                                backgroundColor: '#1e293b', borderRadius: '16px', padding: '24px',
                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                 boxShadow: '0 4px 6px rgba(0,0,0,0.02)', transition: 'transform 0.2s, box-shadow 0.2s',
                             }}>
                                 <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                                     <div style={{
                                         width: '56px', height: '56px', borderRadius: '14px',
-                                        backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        color: '#4b5563'
+                                        backgroundColor: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        color: '#94a3b8'
                                     }}>
                                         <FileText size={28} />
                                     </div>
                                     <div>
-                                        <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', margin: '0 0 4px 0' }}>
+                                        <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#e2e8f0', margin: '0 0 4px 0' }}>
                                             {quiz.title}
                                         </h3>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '14px', color: '#6b7280' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '14px', color: '#94a3b8' }}>
                                             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                 <Brain size={14} />
                                                 {quiz.subject} - {quiz.topic}
@@ -329,7 +331,7 @@ export default function QuizPage() {
                                     <div style={{ width: '1px', height: '24px', backgroundColor: '#e5e7eb', margin: '0 8px' }}></div>
 
                                     <a href={`/kiem-tra/${quiz.id}`} style={{
-                                        padding: '8px', borderRadius: '10px', color: '#6b7280',
+                                        padding: '8px', borderRadius: '10px', color: '#94a3b8',
                                         border: 'none', backgroundColor: 'transparent', cursor: 'pointer',
                                         display: 'flex', alignItems: 'center'
                                     }}>
@@ -338,7 +340,7 @@ export default function QuizPage() {
                                     <button
                                         onClick={() => handleDelete(quiz.id)}
                                         style={{
-                                            padding: '8px', borderRadius: '10px', color: '#ef4444',
+                                            padding: '8px', borderRadius: '10px', color: '#f87171',
                                             border: 'none', backgroundColor: 'transparent', cursor: 'pointer',
                                             display: 'flex', alignItems: 'center', gap: '4px'
                                         }}
@@ -361,31 +363,31 @@ export default function QuizPage() {
                     padding: '20px',
                 }}>
                     <div style={{
-                        backgroundColor: 'white', borderRadius: '24px', width: '100%', maxWidth: '800px',
+                        backgroundColor: '#1e293b', borderRadius: '24px', width: '100%', maxWidth: '800px',
                         maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
                         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
                     }}>
                         {/* Modal Header */}
                         <div style={{
-                            padding: '24px', borderBottom: '1px solid #e5e7eb',
+                            padding: '24px', borderBottom: '1px solid #334155',
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             background: 'linear-gradient(to right, #f9fafb, white)'
                         }}>
                             <div>
-                                <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: 0 }}>
+                                <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>
                                     Tạo bài kiểm tra
                                 </h2>
-                                <p style={{ fontSize: '14px', color: '#6b7280', margin: '2px 0 0 0' }}>
+                                <p style={{ fontSize: '14px', color: '#94a3b8', margin: '2px 0 0 0' }}>
                                     {creationMode === 'ai' ? 'Nhập chủ đề và AI sẽ tạo câu hỏi cho bạn' : 'Tải lên file Word (.docx) chứa câu hỏi'}
                                 </p>
                             </div>
-                            <button onClick={() => setShowCreateModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}>
+                            <button onClick={() => setShowCreateModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
                                 <X size={24} />
                             </button>
                         </div>
 
                         {/* Tabs */}
-                        <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb' }}>
+                        <div style={{ display: 'flex', borderBottom: '1px solid #334155' }}>
                             <button
                                 onClick={() => setCreationMode('ai')}
                                 style={{
@@ -419,27 +421,27 @@ export default function QuizPage() {
                                 {/* Common Fields: Title & Subject */}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
-                                            Tên bài kiểm tra <span style={{ color: '#ef4444' }}>*</span>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
+                                            Tên bài kiểm tra <span style={{ color: '#f87171' }}>*</span>
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.title}
                                             onChange={e => setFormData({ ...formData, title: e.target.value })}
                                             placeholder="VD: Kiểm tra 15 phút"
-                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e5e7eb', fontSize: '14px' }}
+                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px' }}
                                         />
                                     </div>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
-                                            Môn học <span style={{ color: '#ef4444' }}>*</span>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
+                                            Môn học <span style={{ color: '#f87171' }}>*</span>
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.subject}
                                             onChange={e => setFormData({ ...formData, subject: e.target.value })}
                                             placeholder="VD: Vật Lý"
-                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e5e7eb', fontSize: '14px' }}
+                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px' }}
                                         />
                                     </div>
                                 </div>
@@ -447,13 +449,13 @@ export default function QuizPage() {
                                 {/* Common Fields: Class & Deadline */}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
-                                            Dành cho lớp <span style={{ color: '#ef4444' }}>*</span>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
+                                            Dành cho lớp <span style={{ color: '#f87171' }}>*</span>
                                         </label>
                                         <select
                                             value={formData.class_id}
                                             onChange={e => setFormData({ ...formData, class_id: parseInt(e.target.value) })}
-                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e5e7eb', fontSize: '14px', backgroundColor: 'white' }}
+                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px', backgroundColor: '#1e293b' }}
                                         >
                                             <option value={0}>Chọn lớp học</option>
                                             {classes.map(c => (
@@ -462,14 +464,14 @@ export default function QuizPage() {
                                         </select>
                                     </div>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
                                             Hạn chót (Tùy chọn)
                                         </label>
                                         <input
                                             type="datetime-local"
                                             value={formData.deadline}
                                             onChange={e => setFormData({ ...formData, deadline: e.target.value })}
-                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e5e7eb', fontSize: '14px' }}
+                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px' }}
                                         />
                                     </div>
                                 </div>
@@ -478,8 +480,8 @@ export default function QuizPage() {
                                     <>
                                         {/* Topic for AI */}
                                         <div>
-                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
-                                                Chủ đề / Nội dung <span style={{ color: '#ef4444' }}>*</span>
+                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
+                                                Chủ đề / Nội dung <span style={{ color: '#f87171' }}>*</span>
                                             </label>
                                             <div style={{ position: 'relative' }}>
                                                 <div style={{ position: 'absolute', top: '12px', left: '12px', color: '#8b5cf6' }}>
@@ -493,14 +495,14 @@ export default function QuizPage() {
                                                     style={{ width: '100%', padding: '12px 12px 12px 44px', borderRadius: '10px', border: '2px solid #e5e7eb', fontSize: '14px' }}
                                                 />
                                             </div>
-                                            <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
+                                            <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>
                                                 AI sẽ dựa vào chủ đề này để sinh câu hỏi tự động.
                                             </p>
                                         </div>
 
                                         {/* Question Counts */}
                                         <div>
-                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '12px' }}>
+                                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '12px' }}>
                                                 Cấu trúc đề ({formData.easy_count + formData.medium_count + formData.hard_count} câu)
                                             </label>
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
@@ -514,24 +516,24 @@ export default function QuizPage() {
                                                         style={{ width: '100%', padding: '6px', borderRadius: '6px', border: '1px solid #10b981', fontSize: '16px', fontWeight: 'bold', color: '#059669' }}
                                                     />
                                                 </div>
-                                                <div style={{ backgroundColor: '#fef3c7', padding: '12px', borderRadius: '10px', border: '1px solid #fde68a' }}>
-                                                    <label style={{ display: 'block', fontSize: '12px', color: '#d97706', marginBottom: '4px', fontWeight: 600 }}>Trung bình</label>
+                                                <div style={{ backgroundColor: 'rgba(251, 191, 36, 0.15)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+                                                    <label style={{ display: 'block', fontSize: '12px', color: '#fbbf24', marginBottom: '4px', fontWeight: 600 }}>Trung bình</label>
                                                     <input
                                                         type="number"
                                                         min={0} max={20}
                                                         value={formData.medium_count}
                                                         onChange={e => setFormData({ ...formData, medium_count: parseInt(e.target.value) || 0 })}
-                                                        style={{ width: '100%', padding: '6px', borderRadius: '6px', border: '1px solid #f59e0b', fontSize: '16px', fontWeight: 'bold', color: '#d97706' }}
+                                                        style={{ width: '100%', padding: '6px', borderRadius: '6px', border: '1px solid #f59e0b', fontSize: '16px', fontWeight: 'bold', color: '#fbbf24' }}
                                                     />
                                                 </div>
-                                                <div style={{ backgroundColor: '#fee2e2', padding: '12px', borderRadius: '10px', border: '1px solid #fecaca' }}>
-                                                    <label style={{ display: 'block', fontSize: '12px', color: '#dc2626', marginBottom: '4px', fontWeight: 600 }}>Khó</label>
+                                                <div style={{ backgroundColor: 'rgba(248, 113, 113, 0.15)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(248, 113, 113, 0.3)' }}>
+                                                    <label style={{ display: 'block', fontSize: '12px', color: '#f87171', marginBottom: '4px', fontWeight: 600 }}>Khó</label>
                                                     <input
                                                         type="number"
                                                         min={0} max={20}
                                                         value={formData.hard_count}
                                                         onChange={e => setFormData({ ...formData, hard_count: parseInt(e.target.value) || 0 })}
-                                                        style={{ width: '100%', padding: '6px', borderRadius: '6px', border: '1px solid #ef4444', fontSize: '16px', fontWeight: 'bold', color: '#dc2626' }}
+                                                        style={{ width: '100%', padding: '6px', borderRadius: '6px', border: '1px solid #ef4444', fontSize: '16px', fontWeight: 'bold', color: '#f87171' }}
                                                     />
                                                 </div>
                                             </div>
@@ -545,7 +547,7 @@ export default function QuizPage() {
                                             borderRadius: '16px',
                                             padding: '32px',
                                             textAlign: 'center',
-                                            backgroundColor: '#f9fafb',
+                                            backgroundColor: '#0f172a',
                                             cursor: 'pointer'
                                         }}
                                             onClick={() => document.getElementById('file-upload')?.click()}
@@ -564,10 +566,10 @@ export default function QuizPage() {
                                             }}>
                                                 <Upload size={32} />
                                             </div>
-                                            <p style={{ fontSize: '16px', fontWeight: 600, color: '#374151', margin: '0 0 4px 0' }}>
+                                            <p style={{ fontSize: '16px', fontWeight: 600, color: '#cbd5e1', margin: '0 0 4px 0' }}>
                                                 {uploadFile ? uploadFile.name : 'Nhấn để chọn file Word (.docx)'}
                                             </p>
-                                            <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>
+                                            <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
                                                 Hệ thống sẽ tự động đọc câu hỏi và đáp án
                                             </p>
                                         </div>
@@ -586,7 +588,7 @@ export default function QuizPage() {
                                                 </h3>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '300px', overflowY: 'auto' }}>
                                                     {parsedQuestions.map((q, idx) => (
-                                                        <div key={idx} style={{ padding: '12px', border: '1px solid #e5e7eb', borderRadius: '12px', backgroundColor: 'white' }}>
+                                                        <div key={idx} style={{ padding: '12px', border: '1px solid #334155', borderRadius: '12px', backgroundColor: '#1e293b' }}>
                                                             <p style={{ fontWeight: 600, fontSize: '14px', margin: '0 0 8px 0' }}>
                                                                 Câu {idx + 1}: {q.question_text}
                                                             </p>
@@ -613,7 +615,7 @@ export default function QuizPage() {
                                         onChange={e => setFormData({ ...formData, allow_retake: e.target.checked })}
                                         style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                                     />
-                                    <label htmlFor="allow_retake" style={{ fontSize: '14px', color: '#374151', cursor: 'pointer' }}>
+                                    <label htmlFor="allow_retake" style={{ fontSize: '14px', color: '#cbd5e1', cursor: 'pointer' }}>
                                         Cho phép học sinh làm lại nhiều lần
                                     </label>
                                 </div>
@@ -625,14 +627,14 @@ export default function QuizPage() {
                         <div style={{
                             padding: '24px', borderTop: '1px solid #e5e7eb',
                             display: 'flex', justifyContent: 'flex-end', gap: '12px',
-                            backgroundColor: '#f9fafb'
+                            backgroundColor: '#0f172a'
                         }}>
                             <button
                                 onClick={() => setShowCreateModal(false)}
                                 style={{
                                     padding: '12px 20px', borderRadius: '10px',
-                                    border: '1px solid #e5e7eb', backgroundColor: 'white',
-                                    color: '#374151', fontWeight: 600, cursor: 'pointer'
+                                    border: '1px solid #334155', backgroundColor: '#1e293b',
+                                    color: '#cbd5e1', fontWeight: 600, cursor: 'pointer'
                                 }}
                             >
                                 Hủy bỏ
@@ -642,7 +644,7 @@ export default function QuizPage() {
                                 disabled={creating || (creationMode === 'upload' && parsedQuestions.length === 0)}
                                 style={{
                                     padding: '12px 24px', borderRadius: '10px',
-                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                                    background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
                                     color: 'white', fontWeight: 600, border: 'none', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', gap: '8px',
                                     opacity: creating || (creationMode === 'upload' && parsedQuestions.length === 0) ? 0.7 : 1,

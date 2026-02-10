@@ -131,10 +131,10 @@ export default function ClassListPage() {
                 marginBottom: '32px'
             }}>
                 <div>
-                    <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#111827', margin: 0 }}>
+                    <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>
                         Quản lý Lớp học
                     </h1>
-                    <p style={{ color: '#6b7280', marginTop: '4px' }}>
+                    <p style={{ color: '#94a3b8', marginTop: '4px' }}>
                         Danh sách các lớp học bạn đang phụ trách
                     </p>
                 </div>
@@ -145,7 +145,7 @@ export default function ClassListPage() {
                         alignItems: 'center',
                         gap: '8px',
                         padding: '12px 24px',
-                        backgroundColor: '#22c55e',
+                        backgroundColor: '#14b8a6',
                         color: 'white',
                         border: 'none',
                         borderRadius: '12px',
@@ -165,7 +165,7 @@ export default function ClassListPage() {
                 display: 'flex',
                 gap: '16px',
                 marginBottom: '24px',
-                backgroundColor: 'white',
+                backgroundColor: '#1e293b',
                 padding: '16px',
                 borderRadius: '16px',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
@@ -175,10 +175,10 @@ export default function ClassListPage() {
                     alignItems: 'center',
                     gap: '10px',
                     flex: 1,
-                    backgroundColor: '#f9fafb',
+                    backgroundColor: '#0f172a',
                     padding: '10px 16px',
                     borderRadius: '12px',
-                    border: '1px solid #e5e7eb'
+                    border: '1px solid #334155'
                 }}>
                     <Search size={20} color="#9ca3af" />
                     <input
@@ -209,11 +209,11 @@ export default function ClassListPage() {
                 }}>
                     {filteredClasses.map((cls) => (
                         <div key={cls.id} style={{
-                            backgroundColor: 'white',
+                            backgroundColor: '#1e293b',
                             borderRadius: '20px',
                             padding: '24px',
                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-                            border: '1px solid #f3f4f6',
+                            border: '1px solid #334155',
                             display: 'flex',
                             flexDirection: 'column',
                             justifyContent: 'space-between',
@@ -236,7 +236,7 @@ export default function ClassListPage() {
                                         width: '48px',
                                         height: '48px',
                                         borderRadius: '12px',
-                                        backgroundColor: '#dcfce7',
+                                        backgroundColor: 'rgba(52, 211, 153, 0.15)',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center'
@@ -248,18 +248,18 @@ export default function ClassListPage() {
                                         borderRadius: '20px',
                                         fontSize: '12px',
                                         fontWeight: 600,
-                                        backgroundColor: '#f3f4f6',
-                                        color: '#4b5563'
+                                        backgroundColor: '#0f172a',
+                                        color: '#94a3b8'
                                     }}>
                                         {cls.grade ? `Khối ${cls.grade}` : 'Chưa phân khối'}
                                     </div>
                                 </div>
 
-                                <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
+                                <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', marginBottom: '8px' }}>
                                     {cls.name}
                                 </h3>
 
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', color: '#6b7280', fontSize: '14px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', color: '#94a3b8', fontSize: '14px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <Users size={16} />
                                         <span>35 Học sinh</span> {/* Mock data if undefined */}
@@ -278,12 +278,12 @@ export default function ClassListPage() {
                                     ].map(stat => (
                                         <div key={stat.label} style={{
                                             flex: 1,
-                                            backgroundColor: '#f9fafb',
+                                            backgroundColor: '#0f172a',
                                             borderRadius: '8px',
                                             padding: '8px',
                                             textAlign: 'center'
                                         }}>
-                                            <div style={{ fontSize: '10px', color: '#6b7280', marginBottom: '2px' }}>{stat.label}</div>
+                                            <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '2px' }}>{stat.label}</div>
                                             <div style={{ fontSize: '14px', fontWeight: 700, color: stat.color }}>{Number(stat.value)}%</div>
                                         </div>
                                     ))}
@@ -297,14 +297,14 @@ export default function ClassListPage() {
                                 justifyContent: 'space-between',
                                 alignItems: 'center'
                             }}>
-                                <span style={{ fontSize: '13px', color: '#9ca3af' }}>
+                                <span style={{ fontSize: '13px', color: '#64748b' }}>
                                     Cập nhật 2 giờ trước
                                 </span>
                                 <span style={{
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '6px',
-                                    color: '#22c55e',
+                                    color: '#14b8a6',
                                     fontSize: '14px',
                                     fontWeight: 600
                                 }}>
@@ -332,7 +332,7 @@ export default function ClassListPage() {
                                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e0e7ff'}
                                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#eef2ff'}
                                         >
-                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22c55e' }}></div>
+                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#14b8a6' }}></div>
                                             Vào lớp học Online
                                         </a>
                                     </div>
@@ -345,14 +345,14 @@ export default function ClassListPage() {
                 <div style={{
                     textAlign: 'center',
                     padding: '60px 20px',
-                    backgroundColor: 'white',
+                    backgroundColor: '#1e293b',
                     borderRadius: '24px',
                     border: '2px dashed #e5e7eb'
                 }}>
                     <div style={{
                         width: '64px',
                         height: '64px',
-                        backgroundColor: '#f3f4f6',
+                        backgroundColor: '#0f172a',
                         borderRadius: '50%',
                         display: 'flex',
                         alignItems: 'center',
@@ -361,17 +361,17 @@ export default function ClassListPage() {
                     }}>
                         <BookOpen size={32} color="#9ca3af" />
                     </div>
-                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
                         Chưa có lớp học nào
                     </h3>
-                    <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+                    <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
                         Bắt đầu bằng cách tạo lớp học đầu tiên của bạn
                     </p>
                     <button
                         onClick={() => setShowCreateModal(true)}
                         style={{
                             padding: '10px 20px',
-                            backgroundColor: '#22c55e',
+                            backgroundColor: '#14b8a6',
                             color: 'white',
                             border: 'none',
                             borderRadius: '10px',
@@ -401,19 +401,19 @@ export default function ClassListPage() {
                         zIndex: 100
                     }}>
                         <div style={{
-                            backgroundColor: 'white',
+                            backgroundColor: '#1e293b',
                             borderRadius: '24px',
                             padding: '32px',
                             width: '100%',
                             maxWidth: '500px',
                             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
                         }}>
-                            <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px', color: '#111827' }}>
+                            <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px', color: '#e2e8f0' }}>
                                 Tạo lớp học mới
                             </h2>
                             <form onSubmit={handleCreateClass}>
                                 <div style={{ marginBottom: '20px' }}>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
                                         Tên lớp học
                                     </label>
                                     <input
@@ -434,7 +434,7 @@ export default function ClassListPage() {
                                     />
                                 </div>
                                 <div style={{ marginBottom: '32px' }}>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
                                         Khối lớp (Tùy chọn)
                                     </label>
                                     <select
@@ -447,7 +447,7 @@ export default function ClassListPage() {
                                             border: '1px solid #d1d5db',
                                             fontSize: '16px',
                                             outline: 'none',
-                                            backgroundColor: 'white'
+                                            backgroundColor: '#1e293b'
                                         }}
                                     >
                                         <option value="">Chọn khối...</option>
@@ -469,8 +469,8 @@ export default function ClassListPage() {
                                             padding: '12px 20px',
                                             borderRadius: '12px',
                                             border: '1px solid #d1d5db',
-                                            backgroundColor: 'white',
-                                            color: '#374151',
+                                            backgroundColor: '#1e293b',
+                                            color: '#cbd5e1',
                                             fontWeight: 600,
                                             cursor: 'pointer'
                                         }}
@@ -483,7 +483,7 @@ export default function ClassListPage() {
                                         style={{
                                             padding: '12px 24px',
                                             borderRadius: '12px',
-                                            backgroundColor: '#22c55e',
+                                            backgroundColor: '#14b8a6',
                                             color: 'white',
                                             fontWeight: 600,
                                             border: 'none',

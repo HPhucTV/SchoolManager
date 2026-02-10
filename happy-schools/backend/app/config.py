@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     SMTP_USER: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
     SMTP_FROM_EMAIL: str = "noreply@happyschools.vn"
+
+    # Database
+    DATABASE_URL: Optional[str] = None
+    DATABASE_URL_SYNC: Optional[str] = "sqlite:///./sql_app.db"
     
     class Config:
         env_file = ".env"

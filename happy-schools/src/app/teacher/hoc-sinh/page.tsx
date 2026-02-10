@@ -7,10 +7,10 @@ import { studentsApi, Student, StudentStats } from '@/lib/api';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
 
 const statusConfig = {
-    excellent: { label: 'Xuất sắc', bg: '#dcfce7', color: '#16a34a', Icon: Smile },
-    good: { label: 'Tốt', bg: '#dbeafe', color: '#2563eb', Icon: Smile },
-    attention: { label: 'Cần chú ý', bg: '#fef3c7', color: '#d97706', Icon: Meh },
-    warning: { label: 'Cảnh báo', bg: '#fee2e2', color: '#dc2626', Icon: Frown },
+    excellent: { label: 'Xuất sắc', bg: 'rgba(52, 211, 153, 0.15)', color: '#0d9488', Icon: Smile },
+    good: { label: 'Tốt', bg: 'rgba(96, 165, 250, 0.15)', color: '#60a5fa', Icon: Smile },
+    attention: { label: 'Cần chú ý', bg: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', Icon: Meh },
+    warning: { label: 'Cảnh báo', bg: 'rgba(248, 113, 113, 0.15)', color: '#f87171', Icon: Frown },
 };
 
 export default function HocSinhPage() {
@@ -66,6 +66,7 @@ export default function HocSinhPage() {
         fetchData();
     }, [page, search]);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [classes, setClasses] = useState<any[]>([]);
 
     const getInitials = (name: string) => {
@@ -118,6 +119,7 @@ export default function HocSinhPage() {
                 console.error('Invite failed:', data);
                 setInviteError(data.detail || `Lỗi server: ${response.status} ${response.statusText}`);
             }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             console.error('Failed to send invite:', err);
             setInviteError(`Lỗi kết nối đến ${API_URL}: ${err.message || 'Không thể kết nối'}`);
@@ -139,7 +141,7 @@ export default function HocSinhPage() {
                     style={{
                         display: 'flex', alignItems: 'center', gap: '8px',
                         padding: '14px 24px', borderRadius: '14px',
-                        background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                        background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
                         color: 'white', fontWeight: 600, fontSize: '14px',
                         border: 'none', cursor: 'pointer',
                         boxShadow: '0 4px 14px rgba(34, 197, 94, 0.4)',
@@ -153,18 +155,18 @@ export default function HocSinhPage() {
             {/* Stats Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
                 {[
-                    { icon: Users, label: 'Tổng số', value: stats?.total || 0, color: '#3b82f6', bg: '#dbeafe' },
-                    { icon: Smile, label: 'Sôi nổi', value: (stats?.excellent || 0) + (stats?.good || 0), color: '#22c55e', bg: '#dcfce7' },
-                    { icon: Meh, label: 'Cần chú ý', value: stats?.attention || 0, color: '#f59e0b', bg: '#fef3c7' },
-                    { icon: Frown, label: 'Cảnh báo', value: stats?.warning || 0, color: '#ef4444', bg: '#fee2e2' },
+                    { icon: Users, label: 'Tổng số', value: stats?.total || 0, color: '#3b82f6', bg: 'rgba(96, 165, 250, 0.15)' },
+                    { icon: Smile, label: 'Sôi nổi', value: (stats?.excellent || 0) + (stats?.good || 0), color: '#14b8a6', bg: 'rgba(52, 211, 153, 0.15)' },
+                    { icon: Meh, label: 'Cần chú ý', value: stats?.attention || 0, color: '#f59e0b', bg: 'rgba(251, 191, 36, 0.15)' },
+                    { icon: Frown, label: 'Cảnh báo', value: stats?.warning || 0, color: '#f87171', bg: 'rgba(248, 113, 113, 0.15)' },
                 ].map((stat) => (
-                    <div key={stat.label} style={{ backgroundColor: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
+                    <div key={stat.label} style={{ backgroundColor: '#1e293b', borderRadius: '16px', padding: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.4)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <div style={{ padding: '12px', borderRadius: '12px', backgroundColor: stat.bg }}>
                                 <stat.icon style={{ height: '24px', width: '24px', color: stat.color }} />
                             </div>
                             <div>
-                                <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>{stat.label}</p>
+                                <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>{stat.label}</p>
                                 <p style={{ fontSize: '24px', fontWeight: 700, color: stat.color, margin: 0 }}>{stat.value}</p>
                             </div>
                         </div>
@@ -173,33 +175,33 @@ export default function HocSinhPage() {
             </div>
 
             {/* Search */}
-            <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '16px', marginBottom: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
+            <div style={{ backgroundColor: '#1e293b', borderRadius: '16px', padding: '16px', marginBottom: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.4)' }}>
                 <div style={{ position: 'relative' }}>
-                    <Search style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', height: '20px', width: '20px', color: '#9ca3af' }} />
+                    <Search style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', height: '20px', width: '20px', color: '#64748b' }} />
                     <input
                         type="text"
                         placeholder="Tìm kiếm học sinh theo tên..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        style={{ width: '100%', paddingLeft: '48px', paddingRight: '16px', paddingTop: '14px', paddingBottom: '14px', borderRadius: '12px', border: '1px solid #e5e7eb', outline: 'none', fontSize: '14px' }}
+                        style={{ width: '100%', paddingLeft: '48px', paddingRight: '16px', paddingTop: '14px', paddingBottom: '14px', borderRadius: '12px', border: '1px solid #334155', outline: 'none', fontSize: '14px' }}
                     />
                 </div>
             </div>
 
             {/* Students Table */}
-            <div style={{ backgroundColor: 'white', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+            <div style={{ backgroundColor: '#1e293b', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.4)', overflow: 'hidden' }}>
                 {loading ? (
                     <div style={{ padding: '48px', textAlign: 'center' }}>
-                        <div style={{ width: '48px', height: '48px', margin: '0 auto', border: '4px solid #e5e7eb', borderTopColor: '#22c55e', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                        <div style={{ width: '48px', height: '48px', margin: '0 auto', border: '4px solid #e5e7eb', borderTopColor: '#14b8a6', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                         <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                     </div>
                 ) : students.length === 0 ? (
                     <div style={{ padding: '48px', textAlign: 'center' }}>
                         <Users style={{ width: '64px', height: '64px', color: '#d1d5db', margin: '0 auto 16px' }} />
-                        <p style={{ color: '#6b7280', fontSize: '16px', marginBottom: '16px' }}>Chưa có học sinh nào trong lớp</p>
+                        <p style={{ color: '#94a3b8', fontSize: '16px', marginBottom: '16px' }}>Chưa có học sinh nào trong lớp</p>
                         <button
                             onClick={() => setShowInviteModal(true)}
-                            style={{ padding: '12px 24px', borderRadius: '12px', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', color: 'white', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+                            style={{ padding: '12px 24px', borderRadius: '12px', background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)', color: 'white', fontWeight: 600, border: 'none', cursor: 'pointer' }}
                         >
                             Mời học sinh đầu tiên
                         </button>
@@ -208,13 +210,13 @@ export default function HocSinhPage() {
                     <>
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
-                                <tr style={{ backgroundColor: '#f9fafb' }}>
-                                    <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '14px', fontWeight: 600, color: '#6b7280' }}>Học sinh</th>
-                                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#6b7280' }}>Lớp</th>
-                                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#6b7280' }}>Sôi nổi</th>
-                                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#6b7280' }}>Gắn kết</th>
-                                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#6b7280' }}>Tinh thần</th>
-                                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#6b7280' }}>Trạng thái</th>
+                                <tr style={{ backgroundColor: '#0f172a' }}>
+                                    <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Học sinh</th>
+                                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Lớp</th>
+                                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Sôi nổi</th>
+                                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Gắn kết</th>
+                                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Tinh thần</th>
+                                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Trạng thái</th>
                                     <th style={{ width: '50px' }}></th>
                                 </tr>
                             </thead>
@@ -228,14 +230,14 @@ export default function HocSinhPage() {
                                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}>
                                             <td style={{ padding: '16px 24px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, fontSize: '14px' }}>
+                                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, fontSize: '14px' }}>
                                                         {getInitials(student.name)}
                                                     </div>
-                                                    <span style={{ fontWeight: 500, color: '#111827' }}>{student.name}</span>
+                                                    <span style={{ fontWeight: 500, color: '#e2e8f0' }}>{student.name}</span>
                                                 </div>
                                             </td>
                                             <td style={{ padding: '16px', textAlign: 'center' }}>
-                                                <span style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 500, borderRadius: '20px', backgroundColor: '#f3f4f6', color: '#374151' }}>
+                                                <span style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 500, borderRadius: '20px', backgroundColor: '#0f172a', color: '#cbd5e1' }}>
                                                     {student.class_id === 1 ? '10A' : student.class_id === 2 ? '10B' : student.class_id === 3 ? '11A' : student.class_id === 4 ? '11B' : '12A'}
                                                 </span>
                                             </td>
@@ -249,7 +251,7 @@ export default function HocSinhPage() {
                                             </td>
                                             <td style={{ padding: '16px', textAlign: 'center' }}>
                                                 <button style={{ padding: '8px', borderRadius: '8px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer' }}>
-                                                    <MoreVertical style={{ height: '16px', width: '16px', color: '#9ca3af' }} />
+                                                    <MoreVertical style={{ height: '16px', width: '16px', color: '#64748b' }} />
                                                 </button>
                                             </td>
                                         </tr>
@@ -260,15 +262,15 @@ export default function HocSinhPage() {
 
                         {/* Pagination */}
                         <div style={{ padding: '16px 24px', borderTop: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <p style={{ fontSize: '14px', color: '#6b7280' }}>Hiển thị {(page - 1) * 8 + 1}-{Math.min(page * 8, total)} của {total} học sinh</p>
+                            <p style={{ fontSize: '14px', color: '#94a3b8' }}>Hiển thị {(page - 1) * 8 + 1}-{Math.min(page * 8, total)} của {total} học sinh</p>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                                    style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 500, color: page === 1 ? '#d1d5db' : '#6b7280', backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>
+                                    style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 500, color: page === 1 ? '#d1d5db' : '#6b7280', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>
                                     Trước
                                 </button>
-                                <button style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 500, color: 'white', backgroundColor: '#22c55e', border: 'none', borderRadius: '8px' }}>{page}</button>
+                                <button style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 500, color: 'white', backgroundColor: '#14b8a6', border: 'none', borderRadius: '8px' }}>{page}</button>
                                 <button onClick={() => setPage(p => p + 1)} disabled={page * 8 >= total}
-                                    style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 500, color: page * 8 >= total ? '#d1d5db' : '#6b7280', backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', cursor: page * 8 >= total ? 'not-allowed' : 'pointer' }}>
+                                    style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 500, color: page * 8 >= total ? '#d1d5db' : '#6b7280', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', cursor: page * 8 >= total ? 'not-allowed' : 'pointer' }}>
                                     Sau
                                 </button>
                             </div>
@@ -280,44 +282,44 @@ export default function HocSinhPage() {
             {/* Invite Modal */}
             {showInviteModal && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div style={{ backgroundColor: 'white', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '480px', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)' }}>
+                    <div style={{ backgroundColor: '#1e293b', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '480px', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)' }}>
                         {/* Header */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ padding: '12px', borderRadius: '12px', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}>
+                                <div style={{ padding: '12px', borderRadius: '12px', background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)' }}>
                                     <Mail style={{ width: '24px', height: '24px', color: 'white' }} />
                                 </div>
-                                <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: 0 }}>Mời học sinh</h2>
+                                <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>Mời học sinh</h2>
                             </div>
-                            <button onClick={() => setShowInviteModal(false)} style={{ padding: '8px', borderRadius: '8px', border: 'none', backgroundColor: '#f3f4f6', cursor: 'pointer' }}>
-                                <X style={{ width: '20px', height: '20px', color: '#6b7280' }} />
+                            <button onClick={() => setShowInviteModal(false)} style={{ padding: '8px', borderRadius: '8px', border: 'none', backgroundColor: '#0f172a', cursor: 'pointer' }}>
+                                <X style={{ width: '20px', height: '20px', color: '#94a3b8' }} />
                             </button>
                         </div>
 
                         {inviteSuccess ? (
                             <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                                     <Check style={{ width: '32px', height: '32px', color: 'white' }} />
                                 </div>
-                                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: '8px' }}>Đã gửi lời mời!</h3>
-                                <p style={{ color: '#6b7280' }}>Link tham gia đã được gửi đến <strong>{inviteEmail}</strong></p>
+                                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#e2e8f0', marginBottom: '8px' }}>Đã gửi lời mời!</h3>
+                                <p style={{ color: '#94a3b8' }}>Link tham gia đã được gửi đến <strong>{inviteEmail}</strong></p>
                             </div>
                         ) : (
                             <form onSubmit={handleInvite}>
-                                <p style={{ color: '#6b7280', marginBottom: '24px', lineHeight: 1.6 }}>
+                                <p style={{ color: '#94a3b8', marginBottom: '24px', lineHeight: 1.6 }}>
                                     Nhập email của học sinh để gửi lời mời tham gia lớp học. Họ sẽ nhận được link để đăng ký tài khoản.
                                 </p>
 
                                 {inviteError && (
-                                    <div style={{ padding: '12px 16px', borderRadius: '12px', backgroundColor: '#fef2f2', color: '#dc2626', marginBottom: '20px', fontSize: '14px' }}>
+                                    <div style={{ padding: '12px 16px', borderRadius: '12px', backgroundColor: '#fef2f2', color: '#f87171', marginBottom: '20px', fontSize: '14px' }}>
                                         {inviteError}
                                     </div>
                                 )}
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
-                                            Email học sinh <span style={{ color: '#ef4444' }}>*</span>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
+                                            Email học sinh <span style={{ color: '#f87171' }}>*</span>
                                         </label>
                                         <input
                                             type="email"
@@ -330,8 +332,8 @@ export default function HocSinhPage() {
                                     </div>
 
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
-                                            Tên học sinh <span style={{ color: '#9ca3af', fontWeight: 400 }}>(tùy chọn)</span>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
+                                            Tên học sinh <span style={{ color: '#64748b', fontWeight: 400 }}>(tùy chọn)</span>
                                         </label>
                                         <input
                                             type="text"
@@ -343,7 +345,7 @@ export default function HocSinhPage() {
                                     </div>
 
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
                                             Lớp
                                         </label>
                                         <select
@@ -361,7 +363,7 @@ export default function HocSinhPage() {
 
                                 <div style={{ display: 'flex', gap: '12px', marginTop: '28px' }}>
                                     <button type="button" onClick={() => setShowInviteModal(false)}
-                                        style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #e5e7eb', backgroundColor: 'white', color: '#6b7280', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                                        style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #e5e7eb', backgroundColor: '#1e293b', color: '#94a3b8', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
                                         Hủy
                                     </button>
                                     <button type="submit" disabled={inviting || !inviteEmail.trim()}

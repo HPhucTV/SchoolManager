@@ -27,25 +27,25 @@ export default function MetricCard({
             position: 'relative',
             overflow: 'hidden',
             borderRadius: '16px',
-            backgroundColor: 'white',
+            backgroundColor: '#1e293b',
             padding: '16px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
             transition: 'all 0.3s ease',
             cursor: onClick ? 'pointer' : 'default',
         }}
             onClick={onClick}
             onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.12)';
+                e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.4)';
             }}
             onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
+                e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
             }}
         >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: '13px', fontWeight: 500, color: '#6b7280', marginBottom: '4px' }}>{title}</p>
+                    <p style={{ fontSize: '13px', fontWeight: 500, color: '#94a3b8', marginBottom: '4px' }}>{title}</p>
                     <p style={{
                         fontSize: '32px',
                         fontWeight: 700,
@@ -61,13 +61,13 @@ export default function MetricCard({
                             marginTop: '6px',
                             fontSize: '12px',
                             fontWeight: 500,
-                            color: changeType === 'positive' ? '#22c55e' : changeType === 'negative' ? '#ef4444' : '#6b7280',
+                            color: changeType === 'positive' ? '#34d399' : changeType === 'negative' ? '#f87171' : '#94a3b8',
                         }}>
                             {change}
                         </p>
                     )}
                     {subtitle && (
-                        <p style={{ marginTop: '4px', fontSize: '12px', color: '#6b7280' }}>{subtitle}</p>
+                        <p style={{ marginTop: '4px', fontSize: '12px', color: '#94a3b8' }}>{subtitle}</p>
                     )}
                 </div>
 

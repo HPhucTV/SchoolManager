@@ -6,19 +6,19 @@ import { activitiesApi, Activity } from '@/lib/api';
 
 const statusStyles = {
     completed: {
-        background: '#dcfce7',
-        color: '#16a34a',
-        border: '1px solid #bbf7d0',
+        background: 'rgba(52, 211, 153, 0.15)',
+        color: '#34d399',
+        border: '1px solid rgba(52, 211, 153, 0.3)',
     },
     'in-progress': {
-        background: '#fef3c7',
-        color: '#d97706',
-        border: '1px solid #fde68a',
+        background: 'rgba(251, 191, 36, 0.15)',
+        color: '#fbbf24',
+        border: '1px solid rgba(251, 191, 36, 0.3)',
     },
     scheduled: {
-        background: '#f3f4f6',
-        color: '#6b7280',
-        border: '1px solid #e5e7eb',
+        background: 'rgba(148, 163, 184, 0.15)',
+        color: '#94a3b8',
+        border: '1px solid rgba(148, 163, 184, 0.3)',
     },
 };
 
@@ -57,11 +57,11 @@ export default function RecentActivities() {
     return (
         <div style={{
             borderRadius: '16px',
-            backgroundColor: 'white',
+            backgroundColor: '#1e293b',
             padding: '16px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
         }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', marginBottom: '12px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#e2e8f0', marginBottom: '12px' }}>
                 Hoạt động Gần đây
             </h2>
 
@@ -72,7 +72,7 @@ export default function RecentActivities() {
                         height: '32px',
                         margin: '0 auto',
                         border: '3px solid #e5e7eb',
-                        borderTopColor: '#22c55e',
+                        borderTopColor: '#14b8a6',
                         borderRadius: '50%',
                         animation: 'spin 1s linear infinite'
                     }} />
@@ -90,25 +90,25 @@ export default function RecentActivities() {
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
                                     borderRadius: '10px',
-                                    border: '1px solid #f3f4f6',
+                                    border: '1px solid #334155',
                                     padding: '10px 12px',
                                     transition: 'all 0.2s ease',
                                     cursor: 'pointer',
                                 }}
                                 onMouseEnter={(e) => {
-                                    e.currentTarget.style.borderColor = '#e5e7eb';
-                                    e.currentTarget.style.backgroundColor = '#fafafa';
+                                    e.currentTarget.style.borderColor = '#475569';
+                                    e.currentTarget.style.backgroundColor = '#263248';
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = '#f3f4f6';
-                                    e.currentTarget.style.backgroundColor = 'white';
+                                    e.currentTarget.style.borderColor = '#334155';
+                                    e.currentTarget.style.backgroundColor = 'transparent';
                                 }}
                             >
                                 <div style={{ flex: 1 }}>
-                                    <h3 style={{ fontWeight: 600, color: '#111827', fontSize: '13px', margin: 0 }}>
+                                    <h3 style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '13px', margin: 0 }}>
                                         {activity.title}
                                     </h3>
-                                    <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>{activity.description}</p>
+                                    <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{activity.description}</p>
                                 </div>
 
                                 <span style={{
@@ -138,7 +138,7 @@ export default function RecentActivities() {
                         justifyContent: 'center',
                         gap: '6px',
                         borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                        background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
                         padding: '12px 14px',
                         fontSize: '13px',
                         fontWeight: 600,

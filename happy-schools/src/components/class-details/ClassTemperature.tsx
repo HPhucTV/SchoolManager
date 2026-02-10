@@ -16,7 +16,7 @@ export default function ClassTemperature({ score, label }: ClassTemperatureProps
 
     return (
         <div style={{
-            backgroundColor: 'white',
+            backgroundColor: '#1e293b',
             borderRadius: '24px',
             padding: '24px',
             boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
@@ -26,7 +26,7 @@ export default function ClassTemperature({ score, label }: ClassTemperatureProps
             justifyContent: 'center',
             height: '100%'
         }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#6b7280', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#94a3b8', marginBottom: '16px' }}>
                 {label}
             </h3>
 
@@ -70,7 +70,7 @@ export default function ClassTemperature({ score, label }: ClassTemperatureProps
                     textAlign: 'center'
                 }}>
                     <span style={{ fontSize: '36px', fontWeight: 800, color: color }}>{score}</span>
-                    <span style={{ fontSize: '14px', color: '#9ca3af', marginLeft: '2px' }}>%</span>
+                    <span style={{ fontSize: '14px', color: '#64748b', marginLeft: '2px' }}>%</span>
                 </div>
             </div>
 

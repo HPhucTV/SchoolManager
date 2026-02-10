@@ -5,11 +5,11 @@ export default function FeaturedClass() {
     return (
         <div style={{
             borderRadius: '16px',
-            backgroundColor: 'white',
+            backgroundColor: '#1e293b',
             padding: '16px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
         }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#e2e8f0', marginBottom: '16px' }}>
                 Lớp học Nổi bật
             </h2>
 
@@ -23,9 +23,9 @@ export default function FeaturedClass() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                        background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(253, 230, 138, 0.2) 100%)',
                     }}>
-                        <Trophy style={{ height: '28px', width: '28px', color: '#d97706' }} />
+                        <Trophy style={{ height: '28px', width: '28px', color: '#fbbf24' }} />
                     </div>
                     <div style={{
                         position: 'absolute',
@@ -48,10 +48,10 @@ export default function FeaturedClass() {
                 </div>
 
                 {/* Class Name */}
-                <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#22c55e', marginBottom: '4px' }}>
+                <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#14b8a6', marginBottom: '4px' }}>
                     Lớp 10A
                 </h3>
-                <p style={{ color: '#6b7280', marginBottom: '16px', fontSize: '13px' }}>Điểm sôi nổi: 95%</p>
+                <p style={{ color: '#94a3b8', marginBottom: '16px', fontSize: '13px' }}>Điểm sôi nổi: 95%</p>
 
                 {/* View Details Button */}
                 <Link
@@ -63,14 +63,14 @@ export default function FeaturedClass() {
                         justifyContent: 'center',
                         gap: '6px',
                         borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                        background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
                         padding: '10px 16px',
                         fontSize: '12px',
                         fontWeight: 600,
                         color: 'white',
                         border: 'none',
                         cursor: 'pointer',
-                        boxShadow: '0 2px 8px rgba(34, 197, 94, 0.3)',
+                        boxShadow: '0 2px 8px rgba(20, 184, 166, 0.3)',
                         transition: 'all 0.2s ease',
                         textDecoration: 'none'
                     }}>

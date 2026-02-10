@@ -46,7 +46,7 @@ export interface StudentStats {
     detailed_stats?: { name: string; prev: number; curr: number }[];
 }
 
-export interface Statistics extends StudentStats { }
+export type Statistics = StudentStats;
 
 export interface Question {
     id: number;
@@ -111,6 +111,7 @@ export const activitiesApi = {
             throw error;
         }
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createActivity: async (data: any) => {
         try {
             const response = await fetch(`${API_URL}/api/activities/`, {
@@ -125,6 +126,7 @@ export const activitiesApi = {
             throw error;
         }
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updateActivity: async (id: number, data: any) => {
         try {
             const response = await fetch(`${API_URL}/api/activities/${id}`, {
@@ -254,6 +256,7 @@ export const adminApi = {
             throw error;
         }
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createUser: async (userData: any) => {
         try {
             const response = await fetch(`${API_URL}/api/auth/users`, {
@@ -282,6 +285,7 @@ export const adminApi = {
             throw error;
         }
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createClass: async (classData: any) => {
         try {
             const response = await fetch(`${API_URL}/api/auth/classes`, {
@@ -296,6 +300,7 @@ export const adminApi = {
             throw error;
         }
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updateClass: async (id: number, classData: any) => {
         try {
             const response = await fetch(`${API_URL}/api/auth/classes/${id}`, {
@@ -310,6 +315,7 @@ export const adminApi = {
             throw error;
         }
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updateUser: async (id: number, userData: any) => {
         try {
             const response = await fetch(`${API_URL}/api/auth/users/${id}`, {
@@ -339,6 +345,7 @@ export const quizzesApi = {
             throw error;
         }
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createQuiz: async (data: any) => {
         try {
             const response = await fetch(`${API_URL}/api/quizzes`, {
@@ -356,6 +363,7 @@ export const quizzesApi = {
             throw error;
         }
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updateQuiz: async (id: number, data: any) => {
         try {
             const response = await fetch(`${API_URL}/api/quizzes/${id}`, {

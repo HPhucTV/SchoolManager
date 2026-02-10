@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ArrowLeft, Clock, Calendar, Users, BarChart2, CheckCircle, Brain, Download } from 'lucide-react';
@@ -23,21 +23,22 @@ interface QuizDetail {
     results: QuizResult[];
 }
 
-export default function QuizDetailPage({ params }: { params: { id: string } }) {
+export default function QuizDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const resolvedParams = use(params);
     const { token } = useAuth();
     const router = useRouter();
     const [data, setData] = useState<QuizDetail | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (token && params.id) {
+        if (token && resolvedParams.id) {
             fetchResults();
         }
-    }, [token, params.id]);
+    }, [token, resolvedParams.id]);
 
     const fetchResults = async () => {
         try {
-            const response = await fetch(`${API_URL}/api/quizzes/${params.id}/results`, {
+            const response = await fetch(`${API_URL}/api/quizzes/${resolvedParams.id}/results`, {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
             if (response.ok) {
@@ -102,45 +103,45 @@ export default function QuizDetailPage({ params }: { params: { id: string } }) {
 
             {/* Stats Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '32px' }}>
-                <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <div style={{ backgroundColor: '#1e293b', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <div style={{ padding: '12px', borderRadius: '12px', backgroundColor: '#e0e7ff', color: '#4338ca' }}>
                         <Users size={24} />
                     </div>
                     <div>
-                        <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 4px 0' }}>Số lượng nộp bài</p>
-                        <p style={{ fontSize: '24px', fontWeight: 700, color: '#111827', margin: 0 }}>{totalStudents}</p>
+                        <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0 0 4px 0' }}>Số lượng nộp bài</p>
+                        <p style={{ fontSize: '24px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>{totalStudents}</p>
                     </div>
                 </div>
 
-                <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <div style={{ padding: '12px', borderRadius: '12px', backgroundColor: '#dcfce7', color: '#15803d' }}>
+                <div style={{ backgroundColor: '#1e293b', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <div style={{ padding: '12px', borderRadius: '12px', backgroundColor: 'rgba(52, 211, 153, 0.15)', color: '#0d9488' }}>
                         <BarChart2 size={24} />
                     </div>
                     <div>
-                        <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 4px 0' }}>Điểm trung bình</p>
-                        <p style={{ fontSize: '24px', fontWeight: 700, color: '#111827', margin: 0 }}>{avgScore}%</p>
+                        <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0 0 4px 0' }}>Điểm trung bình</p>
+                        <p style={{ fontSize: '24px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>{avgScore}%</p>
                     </div>
                 </div>
 
-                <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <div style={{ padding: '12px', borderRadius: '12px', backgroundColor: '#fef3c7', color: '#b45309' }}>
+                <div style={{ backgroundColor: '#1e293b', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <div style={{ padding: '12px', borderRadius: '12px', backgroundColor: 'rgba(251, 191, 36, 0.15)', color: '#b45309' }}>
                         <CheckCircle size={24} />
                     </div>
                     <div>
-                        <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 4px 0' }}>Tỷ lệ đạt (&gt;50%)</p>
-                        <p style={{ fontSize: '24px', fontWeight: 700, color: '#111827', margin: 0 }}>{passRate}%</p>
+                        <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0 0 4px 0' }}>Tỷ lệ đạt (&gt;50%)</p>
+                        <p style={{ fontSize: '24px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>{passRate}%</p>
                     </div>
                 </div>
             </div>
 
             {/* Results Table */}
-            <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '24px' }}>
+            <div style={{ backgroundColor: '#1e293b', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '24px' }}>
                     Danh sách học sinh
                 </h3>
 
                 {data.results.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
                         <Brain size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
                         <p>Chưa có học sinh nào nộp bài.</p>
                     </div>
@@ -148,31 +149,31 @@ export default function QuizDetailPage({ params }: { params: { id: string } }) {
                     <div style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
-                                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-                                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', color: '#6b7280', fontWeight: 600 }}>TÊN HỌC SINH</th>
-                                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', color: '#6b7280', fontWeight: 600 }}>THỜI GIAN NỘP</th>
-                                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', color: '#6b7280', fontWeight: 600 }}>SỐ CÂU ĐÚNG</th>
-                                    <th style={{ padding: '16px', textAlign: 'right', fontSize: '13px', color: '#6b7280', fontWeight: 600 }}>ĐIỂM SỐ</th>
+                                <tr style={{ borderBottom: '1px solid #334155' }}>
+                                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', color: '#94a3b8', fontWeight: 600 }}>TÊN HỌC SINH</th>
+                                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', color: '#94a3b8', fontWeight: 600 }}>THỜI GIAN NỘP</th>
+                                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', color: '#94a3b8', fontWeight: 600 }}>SỐ CÂU ĐÚNG</th>
+                                    <th style={{ padding: '16px', textAlign: 'right', fontSize: '13px', color: '#94a3b8', fontWeight: 600 }}>ĐIỂM SỐ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {data.results.map((result) => (
-                                    <tr key={result.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                                    <tr key={result.id} style={{ borderBottom: '1px solid #334155' }}>
                                         <td style={{ padding: '16px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px', fontSize: '14px', fontWeight: 600, color: '#4b5563' }}>
+                                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px', fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>
                                                     {result.student_name.charAt(0)}
                                                 </div>
-                                                <span style={{ fontWeight: 500, color: '#111827' }}>{result.student_name}</span>
+                                                <span style={{ fontWeight: 500, color: '#e2e8f0' }}>{result.student_name}</span>
                                             </div>
                                         </td>
-                                        <td style={{ padding: '16px', color: '#6b7280', fontSize: '14px' }}>
+                                        <td style={{ padding: '16px', color: '#94a3b8', fontSize: '14px' }}>
                                             {new Date(result.submitted_at).toLocaleString('vi-VN')}
                                         </td>
                                         <td style={{ padding: '16px', textAlign: 'center' }}>
                                             <span style={{
                                                 display: 'inline-block', padding: '4px 10px', borderRadius: '12px',
-                                                backgroundColor: '#f3f4f6', color: '#374151', fontSize: '13px', fontWeight: 600
+                                                backgroundColor: '#0f172a', color: '#cbd5e1', fontSize: '13px', fontWeight: 600
                                             }}>
                                                 {result.score} / {result.total_questions}
                                             </span>

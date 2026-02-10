@@ -12,12 +12,12 @@ interface ClassData {
 }
 
 const MASCOTS = [
-    { icon: '🦉', color: '#8b5cf6', bg: '#f3e8ff' }, // Owl
-    { icon: '🐱', color: '#ec4899', bg: '#fce7f3' }, // Cat
-    { icon: '🐶', color: '#f59e0b', bg: '#fef3c7' }, // Dog
-    { icon: '🐰', color: '#22c55e', bg: '#dcfce7' }, // Rabbit
-    { icon: '🦊', color: '#ef4444', bg: '#fee2e2' }, // Fox
-    { icon: '🐼', color: '#3b82f6', bg: '#dbeafe' }, // Panda
+    { icon: '🦉', color: '#8b5cf6', bg: 'rgba(168, 139, 250, 0.15)' }, // Owl
+    { icon: '🐱', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.15)' }, // Cat
+    { icon: '🐶', color: '#f59e0b', bg: 'rgba(251, 191, 36, 0.15)' }, // Dog
+    { icon: '🐰', color: '#14b8a6', bg: 'rgba(52, 211, 153, 0.15)' }, // Rabbit
+    { icon: '🦊', color: '#f87171', bg: 'rgba(248, 113, 113, 0.15)' }, // Fox
+    { icon: '🐼', color: '#3b82f6', bg: 'rgba(96, 165, 250, 0.15)' }, // Panda
 ];
 
 export default function HappyRacePage() {
@@ -76,8 +76,8 @@ export default function HappyRacePage() {
 
             {/* Race Track Container */}
             <div style={{
-                backgroundColor: 'white', borderRadius: '24px', padding: '40px',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+                backgroundColor: '#1e293b', borderRadius: '24px', padding: '40px',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
                 position: 'relative', overflow: 'hidden'
             }}>
                 {/* Finish Line Marking */}
@@ -91,7 +91,7 @@ export default function HappyRacePage() {
                         display: 'flex', flexDirection: 'column', alignItems: 'center'
                     }}>
                         <Flag size={24} color="#111827" fill="#111827" />
-                        <span style={{ fontSize: '12px', fontWeight: 800, color: '#111827' }}>ĐÍCH</span>
+                        <span style={{ fontSize: '12px', fontWeight: 800, color: '#e2e8f0' }}>ĐÍCH</span>
                     </div>
                 </div>
 
@@ -106,7 +106,7 @@ export default function HappyRacePage() {
                                 {/* Label */}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px', paddingRight: '20px' }}>
                                     <span style={{
-                                        fontWeight: 700, fontSize: '16px', color: '#374151',
+                                        fontWeight: 700, fontSize: '16px', color: '#cbd5e1',
                                         display: 'flex', alignItems: 'center', gap: '8px'
                                     }}>
                                         {index + 1}. {cls.name}
@@ -119,7 +119,7 @@ export default function HappyRacePage() {
 
                                 {/* Track */}
                                 <div style={{
-                                    height: '48px', backgroundColor: '#f3f4f6', borderRadius: '24px',
+                                    height: '48px', backgroundColor: '#0f172a', borderRadius: '24px',
                                     position: 'relative', overflow: 'visible'
                                 }}>
                                     {/* Progress Bar */}
@@ -134,7 +134,7 @@ export default function HappyRacePage() {
                                         <div style={{
                                             position: 'absolute', right: '-20px', top: '50%', transform: 'translateY(-50%)',
                                             width: '48px', height: '48px', borderRadius: '50%',
-                                            backgroundColor: 'white',
+                                            backgroundColor: '#1e293b',
                                             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             fontSize: '28px', border: `3px solid ${mascot.color}`,
@@ -158,14 +158,14 @@ export default function HappyRacePage() {
 
                 {/* Winner Podium (Mini) */}
                 <div style={{ marginTop: '60px', padding: '20px', backgroundColor: '#fffbeb', borderRadius: '16px', border: '1px solid #fcd34d' }}>
-                    <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 700, color: '#92400e', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 700, color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         🏆 Bảng Vinh Danh
                     </h3>
                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                         {classes.slice(0, 3).map((cls, i) => (
                             <div key={cls.id} style={{
                                 display: 'flex', alignItems: 'center', gap: '12px',
-                                padding: '8px 16px', backgroundColor: 'white', borderRadius: '12px',
+                                padding: '8px 16px', backgroundColor: '#1e293b', borderRadius: '12px',
                                 boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                             }}>
                                 <span style={{
@@ -173,8 +173,8 @@ export default function HappyRacePage() {
                                     color: i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : '#b45309'
                                 }}>#{i + 1}</span>
                                 <div>
-                                    <div style={{ fontWeight: 600, fontSize: '14px', color: '#1f2937' }}>{cls.name}</div>
-                                    <div style={{ fontSize: '12px', color: '#6b7280' }}>{cls.happiness_score} điểm</div>
+                                    <div style={{ fontWeight: 600, fontSize: '14px', color: '#e2e8f0' }}>{cls.name}</div>
+                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{cls.happiness_score} điểm</div>
                                 </div>
                             </div>
                         ))}
