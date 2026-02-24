@@ -3,9 +3,8 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { API_URL } from '@/lib/api';
 import { ArrowLeft, Clock, Calendar, Users, BarChart2, CheckCircle, Brain, Download } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
 
 interface QuizResult {
     id: number;

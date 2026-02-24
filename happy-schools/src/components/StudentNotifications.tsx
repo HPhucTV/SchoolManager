@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Bell, BookOpen, Calendar, X, Check, ExternalLink } from 'lucide-react';
+import { API_URL } from '@/lib/api';
+import Link from 'next/link';
 
 interface Notification {
     id: string;
@@ -19,8 +21,6 @@ interface Props {
     token: string;
     apiUrl: string;
 }
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
 
 export default function StudentNotifications({ token, apiUrl }: Props) {
     const [isOpen, setIsOpen] = useState(false);
@@ -485,7 +485,7 @@ function NotificationItem({
 
                 {/* Action Button */}
                 {notification.actionUrl && (
-                    <a
+                    <Link
                         href={notification.actionUrl}
                         style={{
                             display: 'inline-block',
@@ -500,7 +500,7 @@ function NotificationItem({
                         }}
                     >
                         {notification.actionLabel || 'Xem chi tiết'}
-                    </a>
+                    </Link>
                 )}
             </div>
 

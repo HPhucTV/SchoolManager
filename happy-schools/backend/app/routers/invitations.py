@@ -62,7 +62,7 @@ async def send_invitation(invitation: InvitationRequest, db: Session = Depends(g
     invite_token = security.create_access_token(
         data={"sub": invitation.email, "type": "invite", "class_id": invitation.class_id}
     )
-    join_link = f"http://localhost:3000/join?token={invite_token}"
+    join_link = f"https://schoolmanager.id.vn/join?token={invite_token}"
     
     # Send Email with Rich HTML Template
     subject = f"Lời mời tham gia lớp {target_class.name} - Happy Schools"

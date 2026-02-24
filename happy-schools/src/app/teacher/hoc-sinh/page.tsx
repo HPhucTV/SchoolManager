@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Plus, MoreVertical, Smile, Meh, Frown, Users, Mail, X, Check, Send, UserPlus } from 'lucide-react';
-import { studentsApi, Student, StudentStats } from '@/lib/api';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+import { studentsApi, Student, StudentStats, API_URL } from '@/lib/api';
 
 const statusConfig = {
     excellent: { label: 'Xuất sắc', bg: 'rgba(52, 211, 153, 0.15)', color: '#0d9488', Icon: Smile },
@@ -119,7 +117,7 @@ export default function HocSinhPage() {
                 console.error('Invite failed:', data);
                 setInviteError(data.detail || `Lỗi server: ${response.status} ${response.statusText}`);
             }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             console.error('Failed to send invite:', err);
             setInviteError(`Lỗi kết nối đến ${API_URL}: ${err.message || 'Không thể kết nối'}`);
@@ -226,8 +224,8 @@ export default function HocSinhPage() {
                                     const StatusIcon = status.Icon;
                                     return (
                                         <tr key={student.id} style={{ borderTop: '1px solid #f3f4f6', transition: 'background 0.2s' }}
-                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
-                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}>
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#334155'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                                             <td style={{ padding: '16px 24px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, fontSize: '14px' }}>

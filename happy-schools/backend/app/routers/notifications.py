@@ -4,8 +4,102 @@ from datetime import datetime
 from ..database import get_db
 from app.routers.auth import get_current_user
 from ..models import Notification, User
+from typing import List, Optional
+from fastapi import Form, UploadFile, File, BackgroundTasks
+import shutil
+import os
+import uuid
+from app.services.email_service import send_bulk_notification_email
 
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
+
+
+@router.post("", status_code=201)
+async def create_notification(
+    background_tasks: BackgroundTasks,
+    title: str = Form(...),
+    message: str = Form(...),
+    type: str = Form("system"),
+    class_id: int = Form(...),
+    recipient_type: str = Form("class"), # "class" or "specific"
+    student_ids: Optional[str] = Form(None), # Comma separated IDs if specific
+    file: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "teacher" and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    # Handle file upload
+    file_url = None
+    file_name = None
+    if file:
+        file_name = file.filename
+        # Ensure directory exists
+        upload_dir = "static/notifications"
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Unique filename
+        unique_filename = f"{uuid.uuid4()}_{file_name}"
+        file_path = os.path.join(upload_dir, unique_filename)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        file_url = f"/static/notifications/{unique_filename}"
+
+    # Determine recipients
+    recipient_list = []
+    if recipient_type == "class":
+        students = db.query(User).filter(User.class_id == class_id, User.role == "student").all()
+        recipient_list = students
+    elif recipient_type == "specific" and student_ids:
+        try:
+            ids = [int(id.strip()) for id in student_ids.split(",") if id.strip()]
+            students = db.query(User).filter(User.id.in_(ids)).all()
+            recipient_list = students
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid student_ids format")
+    
+    if not recipient_list:
+        return {"message": "No recipients found", "count": 0}
+
+    # Create notifications and prepare emails
+    new_notifications = []
+    email_recipients = []
+    now = datetime.now().isoformat()
+    
+    for student in recipient_list:
+        notif = Notification(
+            user_id=student.id,
+            title=title,
+            message=message,
+            type=type,
+            created_at=now,
+            file_url=file_url,
+            file_name=file_name,
+            is_read=False
+        )
+        db.add(notif)
+        new_notifications.append(notif)
+        
+        if student.email and student.email_enabled:
+            email_recipients.append({"email": student.email, "name": student.name})
+
+    db.commit()
+
+    # Send emails in background
+    if email_recipients:
+        action_url = "/student/notifications" # Relative URL works better for both dev/prod
+        background_tasks.add_task(
+            send_bulk_notification_email,
+            recipients=email_recipients,
+            title=f"Thông báo mới: {title}",
+            message=message,
+            action_url=action_url
+        )
+
+    return {"message": "Notifications sent", "count": len(new_notifications)}
 
 
 @router.get("")

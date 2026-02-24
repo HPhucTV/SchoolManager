@@ -2,8 +2,7 @@
 
 import { User, Bell, Shield, Save, EyeOff, Eye, Camera, Check, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+import { API_URL } from '@/lib/api';
 
 export default function StudentSettingsPage() {
     const [activeTab, setActiveTab] = useState('profile');

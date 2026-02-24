@@ -1,7 +1,11 @@
 
+import sys
+import os
+sys.path.append(os.path.join(os.getcwd(), 'backend'))
+
 from sqlalchemy.orm import Session
 from app.database import SessionLocal, engine
-from app import models
+from app import models, security
 from datetime import datetime
 import random
 
@@ -37,19 +41,20 @@ def seed_data():
     )
     
     teacher = models.User(
-        email="teacher@happyschools.vn",
-        hashed_password="test123",
+        email="gv.10a@happyschools.vn",
+        hashed_password=security.get_password_hash("123456"), # Use hash
         name="Cô Giáo Thảo",
         role="teacher",
-        class_id=classes[0].id # Assign to 10A
+        class_id=classes[0].id, # Assign to 10A
+        phone_number="0987654321",
+        avatar_url="https://ui-avatars.com/api/?name=Co+Giao+Thao&background=0D8ABC&color=fff"
     )
-    classes[0].teacher_id = 2 # Assuming id 2 (1 will be admin) - wait, commit first to get IDs
 
     db.add(admin)
     db.add(teacher)
     db.commit()
     
-    # Refresh teacher to get ID
+    # Refresh teacher to get ID, then assign to class
     db.refresh(teacher)
     classes[0].teacher_id = teacher.id
     db.commit()
@@ -75,7 +80,7 @@ def seed_data():
             hashed_password="test123",
             name=name,
             role="student",
-            class_id=classes[0].id, # All in 10A
+            class_id=classes[0].id, # Assign ID directly
             status=status,
             happiness_score=random.randint(*score_range),
             engagement_score=random.randint(*score_range),
@@ -109,6 +114,20 @@ def seed_data():
     ]
     db.add_all(activities)
     db.commit()
+
+    # 5. Gamification: Badges
+    from app.routers.gamification import DEFAULT_BADGES, DEFAULT_SHOP_ITEMS
+    
+    for badge_data in DEFAULT_BADGES:
+        db.add(models.Badge(**badge_data))
+    db.commit()
+    print(f"  ✅ Seeded {len(DEFAULT_BADGES)} badges")
+
+    # 6. Gamification: Shop Items
+    for item_data in DEFAULT_SHOP_ITEMS:
+        db.add(models.ShopItem(**item_data))
+    db.commit()
+    print(f"  ✅ Seeded {len(DEFAULT_SHOP_ITEMS)} shop items")
 
     print("Seeding complete!")
     db.close()

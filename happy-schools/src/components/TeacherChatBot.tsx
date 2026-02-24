@@ -1,267 +1,221 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
-import { api } from '@/lib/api';
-
-interface Message {
-    role: 'user' | 'assistant';
-    content: string;
-}
+import { useState, useEffect, useRef } from 'react';
+import { BaseChatBot, Message } from './BaseChatBot';
+import { classesApi, reportApi, analyticsApi } from '@/lib/api';
 
 export default function TeacherChatBot() {
-    const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState<Message[]>([
-        { role: 'assistant', content: 'Chào bạn! Tôi là Trợ lý Giáo dục AI. Tôi đã xem qua số liệu các lớp của bạn. Bạn cần tư vấn gì hôm nay?' }
-    ]);
-    const [input, setInput] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [showReportForm, setShowReportForm] = useState(false);
+    const [classes, setClasses] = useState<any[]>([]);
+    const [selectedClass, setSelectedClass] = useState<number | null>(null);
+    const [reportType, setReportType] = useState('');
+    const [reportContent, setReportContent] = useState('');
+    const [reportLoading, setReportLoading] = useState(false);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
+    const appendRef = useRef<(msg: Message) => void>(() => {});
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        classesApi.getClasses()
+            .then(res => setClasses(Array.isArray(res) ? res : []))
+            .catch(e => console.error('Failed to load classes', e));
+    }, []);
 
-    const handleSend = async () => {
-        if (!input.trim() || isLoading) return;
+    useEffect(() => {
+        if (showReportForm && classes.length === 0) {
+            classesApi.getClasses()
+                .then(res => setClasses(Array.isArray(res) ? res : []))
+                .catch(e => console.error('Failed to load classes', e));
+        }
+    }, [showReportForm]);
 
-        const userMessage: Message = { role: 'user', content: input };
-        setMessages(prev => [...prev, userMessage]);
-        setInput('');
-        setIsLoading(true);
+    const handleReady = ({ appendMessage }: { appendMessage: (msg: Message) => void }) => {
+        appendRef.current = appendMessage;
+    };
 
+    const handleSubmitReport = async () => {
+        if (!selectedClass || !reportType.trim() || !reportContent.trim()) return;
+        setReportLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            // Use raw fetch for custom endpoint if api wrapper doesn't support it yet or for explicit control
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'}/api/ai/teacher-chat`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    messages: [...messages, userMessage].map(m => ({
-                        role: m.role,
-                        content: m.content
-                    })),
-                    persona: 'consultant', // Backend helper
-                }),
+            await reportApi.createTeacherReport({
+                class_id: selectedClass,
+                report_type: reportType,
+                content: reportContent,
             });
-
-            if (!response.ok) {
-                throw new Error('Lỗi kết nối');
-            }
-
-            const data = await response.json();
-            setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
-        } catch (err) {
-            console.error(err);
-            setMessages(prev => [...prev, {
-                role: 'assistant',
-                content: '⚠️ Xin lỗi, tôi đang gặp chút sự cố khi phân tích dữ liệu. Vui lòng thử lại sau.'
-            }]);
+            appendRef.current({ role: 'assistant', content: `✅ Báo cáo "${reportType}" cho lớp đã được lưu.` });
+            setShowReportForm(false);
+            setReportType('');
+            setReportContent('');
+        } catch (e) {
+            console.error(e);
+            appendRef.current({ role: 'assistant', content: '⚠️ Không thể lưu báo cáo. Vui lòng thử lại.' });
         } finally {
-            setIsLoading(false);
+            setReportLoading(false);
         }
     };
 
-    const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
+    const handleUserMessage = async (text: string, appendMessage: (m: Message) => void) => {
+        if (showReportForm) {
+            return true;
         }
+        const normalized = text.trim().toLowerCase();
+        const isHistoryQuery =
+            normalized.includes('lịch sử báo cáo') || normalized.includes('xem báo cáo');
+        if (isHistoryQuery) {
+            try {
+                const resp: any = await reportApi.listTeacherReports();
+                const list: any[] = resp.reports || [];
+                if (list.length === 0) {
+                    appendMessage({ role: 'assistant', content: 'Chưa có báo cáo nào được tạo.' });
+                } else {
+                    const lines = list
+                        .map(r => {
+                            const cls = classes.find(c => c.id === r.class_id);
+                            const name = cls ? cls.name : `#${r.class_id}`;
+                            return `• [${new Date(r.created_at).toLocaleDateString()}] ${r.report_type} (lớp ${name})`;
+                        })
+                        .join('\n');
+                    appendMessage({ role: 'assistant', content: `📁 Lịch sử báo cáo:\n${lines}` });
+                }
+            } catch (e) {
+                console.error('history fetch failed', e);
+                appendMessage({
+                    role: 'assistant',
+                    content: 'Không thể lấy lịch sử báo cáo.',
+                });
+            }
+            return true;
+        }
+
+        const isReportQuery = normalized.startsWith('báo cáo');
+        if (isReportQuery) {
+            try {
+                const targetClass =
+                    classes.find(c => c.id === selectedClass) || classes[0];
+                if (targetClass) {
+                    const report: any = await analyticsApi.getClassReport(targetClass.id);
+                    const summary = `📊 Báo cáo nhanh cho lớp ${report.class_name}: tổng ${report.total_students} học sinh, điểm kiểm tra trung bình ${report.avg_quiz_score}, tỉ lệ hạnh phúc ${report.avg_happiness}%, gắn kết ${report.avg_engagement}%.`;
+                    appendMessage({ role: 'assistant', content: summary });
+                    return true;
+                }
+            } catch (e) {
+                console.error('analytics fail', e);
+            }
+        }
+
+        return false;
     };
 
-    return (
-        <>
-            {/* Chat Bubble Button - Blue/Purple Gradient */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
+    const reportForm = showReportForm ? (
+        <div style={{
+            padding: '12px 20px',
+            backgroundColor: '#1e293b',
+            borderBottom: '1px solid #334155',
+        }}>
+            <h4 style={{ color: 'white', margin: 0, fontSize: '14px' }}>
+                Tạo báo cáo mới
+            </h4>
+            <div
                 style={{
-                    position: 'fixed',
-                    bottom: '24px',
-                    right: '24px',
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-                    border: 'none',
-                    boxShadow: '0 8px 32px rgba(59, 130, 246, 0.4)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    zIndex: 1000,
-                    transition: 'all 0.3s ease',
-                }}
-            >
-                {isOpen ? <X size={28} /> : <Sparkles size={28} />}
-            </button>
-
-            {/* Chat Window */}
-            {isOpen && (
-                <div style={{
-                    position: 'fixed',
-                    bottom: '100px',
-                    right: '24px',
-                    width: '400px',
-                    height: '600px',
-                    backgroundColor: '#1e293b',
-                    borderRadius: '20px',
-                    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
                     display: 'flex',
                     flexDirection: 'column',
-                    overflow: 'hidden',
-                    zIndex: 999,
-                    animation: 'slideUp 0.3s ease-out'
+                    gap: '8px',
+                    marginTop: '8px',
                 }}>
-                    {/* Header */}
-                    <div style={{
-                        padding: '20px',
-                        background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px'
-                    }}>
-                        <div style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '12px',
-                            backgroundColor: 'rgba(255,255,255,0.1)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
+                <select
+                    value={selectedClass ?? ''}
+                    onChange={e => setSelectedClass(Number(e.target.value))}
+                    style={{ padding: '8px', borderRadius: '4px' }}>
+                    <option value="" disabled>
+                        Chọn lớp
+                    </option>
+                    {classes.map(cls => (
+                        <option key={cls.id} value={cls.id}>
+                            {cls.name}
+                        </option>
+                    ))}
+                </select>
+                <input
+                    type="text"
+                    placeholder="Loại báo cáo (ví dụ: học lực, vắng mặt)"
+                    value={reportType}
+                    onChange={e => setReportType(e.target.value)}
+                    style={{ padding: '8px', borderRadius: '4px' }}
+                />
+                <textarea
+                    rows={3}
+                    placeholder="Nội dung báo cáo"
+                    value={reportContent}
+                    onChange={e => setReportContent(e.target.value)}
+                    style={{ padding: '8px', borderRadius: '4px' }}
+                />
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                        onClick={handleSubmitReport}
+                        disabled={
+                            reportLoading ||
+                            !selectedClass ||
+                            !reportType.trim() ||
+                            !reportContent.trim()
+                        }
+                        style={{
+                            background: reportLoading ? '#94a3b8' : '#3b82f6',
+                            color: 'white',
+                            padding: '6px 12px',
+                            borderRadius: '4px',
+                            border: 'none',
+                            cursor: reportLoading ? 'not-allowed' : 'pointer',
                         }}>
-                            <Sparkles size={20} />
-                        </div>
-                        <div>
-                            <div style={{ fontWeight: 700, fontSize: '16px' }}>Trợ lý Giáo dục AI</div>
-                            <div style={{ fontSize: '12px', opacity: 0.9 }}>
-                                Phân tích & Tư vấn chuyên sâu
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Messages Area */}
-                    <div style={{
-                        flex: 1,
-                        padding: '20px',
-                        overflowY: 'auto',
-                        backgroundColor: '#0f172a',
-                    }}>
-                        {messages.map((msg, idx) => (
-                            <div
-                                key={idx}
-                                style={{
-                                    display: 'flex',
-                                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                                    marginBottom: '16px',
-                                }}
-                            >
-                                <div style={{
-                                    maxWidth: '85%',
-                                    padding: '16px',
-                                    borderRadius: msg.role === 'user'
-                                        ? '20px 20px 4px 20px'
-                                        : '20px 20px 20px 4px',
-                                    backgroundColor: msg.role === 'user' ? '#3b82f6' : 'white',
-                                    color: msg.role === 'user' ? 'white' : '#1e293b',
-                                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-                                    fontSize: '14px',
-                                    lineHeight: 1.6,
-                                    whiteSpace: 'pre-wrap',
-                                }}>
-                                    {msg.content}
-                                </div>
-                            </div>
-                        ))}
-                        {isLoading && (
-                            <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
-                                <div style={{
-                                    padding: '16px',
-                                    borderRadius: '20px 20px 20px 4px',
-                                    backgroundColor: '#1e293b',
-                                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-                                }}>
-                                    <div style={{ display: 'flex', gap: '4px' }}>
-                                        <span style={{ animation: 'bounce 1s infinite', color: '#3b82f6' }}>●</span>
-                                        <span style={{ animation: 'bounce 1s infinite 0.2s', color: '#3b82f6' }}>●</span>
-                                        <span style={{ animation: 'bounce 1s infinite 0.4s', color: '#3b82f6' }}>●</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                        <div ref={messagesEndRef} />
-                    </div>
-
-                    {/* Input Area */}
-                    <div style={{
-                        padding: '16px 20px',
-                        borderTop: '1px solid #e2e8f0',
-                        backgroundColor: '#1e293b',
-                        display: 'flex',
-                        gap: '12px',
-                    }}>
-                        <input
-                            type="text"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyPress={handleKeyPress}
-                            placeholder="Hỏi về tình hình lớp học..."
-                            disabled={isLoading}
-                            style={{
-                                flex: 1,
-                                padding: '14px 20px',
-                                borderRadius: '28px',
-                                border: '2px solid #e2e8f0',
-                                outline: 'none',
-                                fontSize: '14px',
-                                transition: 'all 0.2s',
-                            }}
-                            onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                        />
-                        <button
-                            onClick={handleSend}
-                            disabled={isLoading || !input.trim()}
-                            style={{
-                                width: '48px',
-                                height: '48px',
-                                borderRadius: '50%',
-                                background: isLoading || !input.trim()
-                                    ? '#e2e8f0'
-                                    : 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-                                border: 'none',
-                                cursor: isLoading || !input.trim() ? 'not-allowed' : 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: 'white',
-                                boxShadow: isLoading || !input.trim() ? 'none' : '0 4px 12px rgba(59, 130, 246, 0.3)',
-                            }}
-                        >
-                            <Send size={20} />
-                        </button>
-                    </div>
+                        {reportLoading ? 'Đang gửi...' : 'Gửi'}
+                    </button>
+                    <button
+                        onClick={() => setShowReportForm(false)}
+                        style={{
+                            background: 'transparent',
+                            color: 'white',
+                            padding: '6px 12px',
+                            borderRadius: '4px',
+                            border: '1px solid white',
+                            cursor: 'pointer',
+                        }}>
+                        Hủy
+                    </button>
                 </div>
-            )}
+            </div>
+        </div>
+    ) : null;
 
-            <style jsx global>{`
-                @keyframes bounce {
-                    0%, 60%, 100% { transform: translateY(0); }
-                    30% { transform: translateY(-4px); }
-                }
-                @keyframes slideUp {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
-        </>
+    return (
+        <BaseChatBot
+            persona="consultant"
+            initialMessages={[
+                {
+                    role: 'assistant',
+                    content:
+                        'Chào bạn! Tôi là Trợ lý Giáo dục AI. Tôi đã xem qua số liệu các lớp của bạn. Bạn cần tư vấn gì hôm nay?',
+                },
+            ]}
+            onUserMessage={handleUserMessage}
+            disableInput={showReportForm}
+            headerTitle="Trợ lý Giáo dục AI"
+            headerSubtitle="Phân tích & Tư vấn chuyên sâu"
+            headerRight={
+                <button
+                    onClick={() => setShowReportForm(!showReportForm)}
+                    style={{
+                        background: 'transparent',
+                        border: '1px solid white',
+                        color: 'white',
+                        borderRadius: '4px',
+                        padding: '4px 8px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                    }}>
+                    📄 Báo cáo
+                </button>
+            }
+            extraContent={reportForm}
+            placeholder="Nhập câu hỏi hoặc gõ 'xem báo cáo'..."
+            onReady={handleReady}
+        />
     );
 }

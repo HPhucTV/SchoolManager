@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { Plus, Search, Filter, MoreVertical, FileText, Brain, Clock, Trash2, Eye, RefreshCw, X, Upload } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+import { API_URL } from '@/lib/api';
 
 interface Quiz {
     id: number;
@@ -33,11 +32,20 @@ export default function QuizPage() {
     const [classes, setClasses] = useState<Class[]>([]);
 
     // Creation State
-    const [creationMode, setCreationMode] = useState<'ai' | 'upload'>('ai');
+    const [creationMode, setCreationMode] = useState<'ai' | 'upload' | 'manual'>('ai');
     const [uploadFile, setUploadFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [parsedQuestions, setParsedQuestions] = useState<any[]>([]);
+
+    // Manual questions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [manualQuestions, setManualQuestions] = useState<any[]>([{
+        question_text: '',
+        difficulty: 'medium',
+        option_a: '', option_b: '', option_c: '', option_d: '',
+        correct_answer: 'A'
+    }]);
 
     // Form Data
     const [formData, setFormData] = useState({
@@ -127,40 +135,107 @@ export default function QuizPage() {
         }
     };
 
+    const handleAddManualQuestion = () => {
+        setManualQuestions([...manualQuestions, {
+            question_text: '',
+            difficulty: 'medium',
+            option_a: '', option_b: '', option_c: '', option_d: '',
+            correct_answer: 'A'
+        }]);
+    };
+
+    const handleUpdateManualQuestion = (index: number, field: string, value: string) => {
+        const newQs = [...manualQuestions];
+        newQs[index][field] = value;
+        setManualQuestions(newQs);
+    };
+
+    const handleRemoveManualQuestion = (index: number) => {
+        if (manualQuestions.length <= 1) return;
+        setManualQuestions(manualQuestions.filter((_, i) => i !== index));
+    };
+
     const handleCreate = async () => {
         if (!formData.title || !formData.class_id) {
             alert('Vui lòng điền đầy đủ thông tin bắt buộc (Tên, Lớp)');
             return;
         }
 
-        if (creationMode === 'ai' && (!formData.subject || !formData.topic)) {
-            alert('Vui lòng điền Môn học và Chủ đề để AI tạo câu hỏi');
-            return;
-        }
-
-        if (creationMode === 'upload' && parsedQuestions.length === 0) {
-            alert('Vui lòng tải lên file Word và đợi xử lý xong');
-            return;
+        if (creationMode === 'ai') {
+            const total = parseInt(String(formData.easy_count)) +
+                parseInt(String(formData.medium_count)) +
+                parseInt(String(formData.hard_count));
+            if (total <= 0) {
+                alert('Số lượng câu hỏi phải lớn hơn 0');
+                return;
+            }
+            if (!formData.subject || !formData.topic) {
+                alert('Vui lòng điền Môn học và Chủ đề để AI tạo câu hỏi');
+                return;
+            }
+        } else if (creationMode === 'upload') {
+            if (parsedQuestions.length === 0) {
+                alert('Vui lòng tải lên file chứa ít nhất 1 câu hỏi');
+                return;
+            }
+        } else if (creationMode === 'manual') {
+            if (manualQuestions.length === 0) {
+                alert('Vui lòng thêm ít nhất 1 câu hỏi');
+                return;
+            }
+            const hasEmpty = manualQuestions.some(q => !q.question_text || !q.option_a || !q.option_b || !q.option_c || !q.option_d);
+            if (hasEmpty) {
+                alert('Vui lòng điền đầy đủ nội dung các câu hỏi');
+                return;
+            }
         }
 
         setCreating(true);
         try {
-            // Send raw deadline string or null
-            const deadlineToSend = formData.deadline || null;
+            // Format datetime correctly for backend
+            let deadlineToSend = formData.deadline;
+            if (deadlineToSend) {
+                try {
+                    const localDate = new Date(deadlineToSend);
+                    if (!isNaN(localDate.getTime())) {
+                        deadlineToSend = localDate.toISOString();
+                    } else {
+                        deadlineToSend = '';
+                    }
+                } catch (e) {
+                    console.error("Invalid date format", e);
+                    deadlineToSend = '';
+                }
+            } else {
+                deadlineToSend = '';
+            }
 
             // Prepare payload
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const payload: any = {
-                ...formData,
-                deadline: deadlineToSend
+                title: formData.title,
+                subject: formData.subject || (creationMode !== 'ai' ? 'Tự chọn' : ''),
+                topic: formData.topic || (creationMode !== 'ai' ? 'Chủ đề tùy chọn' : ''),
+                class_id: formData.class_id,
+                deadline: deadlineToSend || null,
+                allow_retake: formData.allow_retake,
             };
 
-            if (creationMode === 'upload') {
+            if (creationMode === 'ai') {
+                payload.easy_count = parseInt(String(formData.easy_count));
+                payload.medium_count = parseInt(String(formData.medium_count));
+                payload.hard_count = parseInt(String(formData.hard_count));
+            } else if (creationMode === 'upload') {
                 payload.questions = parsedQuestions;
-                // Use placeholders for AI required fields if missing
-                if (!payload.subject) payload.subject = 'Tổng hợp';
-                if (!payload.topic) payload.topic = 'Đề tải lên từ file';
+                payload.easy_count = 0; payload.medium_count = 0; payload.hard_count = 0;
+            } else if (creationMode === 'manual') {
+                payload.questions = manualQuestions;
+                payload.easy_count = 0; payload.medium_count = 0; payload.hard_count = 0;
             }
+
+            // Fallback for empty subject/topic in non-ai modes
+            if (!payload.subject) payload.subject = 'Văn bản / Tự nhập';
+            if (!payload.topic) payload.topic = 'Tổng hợp';
 
             const response = await fetch(`${API_URL}/api/quizzes`, {
                 method: 'POST',
@@ -188,6 +263,11 @@ export default function QuizPage() {
                 });
                 setUploadFile(null);
                 setParsedQuestions([]);
+                setManualQuestions([{
+                    question_text: '', difficulty: 'medium',
+                    option_a: '', option_b: '', option_c: '', option_d: '',
+                    correct_answer: 'A'
+                }]);
                 setCreationMode('ai');
 
                 alert('Tạo bài kiểm tra thành công!');
@@ -401,6 +481,18 @@ export default function QuizPage() {
                                 ✨ Tạo tự động (AI)
                             </button>
                             <button
+                                onClick={() => setCreationMode('manual')}
+                                style={{
+                                    flex: 1, padding: '16px', border: 'none', background: 'none',
+                                    fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+                                    color: creationMode === 'manual' ? '#8b5cf6' : '#6b7280',
+                                    borderBottom: creationMode === 'manual' ? '2px solid #8b5cf6' : 'none',
+                                    backgroundColor: creationMode === 'manual' ? '#f5f3ff' : 'transparent'
+                                }}
+                            >
+                                ✍️ Nhập thủ công
+                            </button>
+                            <button
                                 onClick={() => setCreationMode('upload')}
                                 style={{
                                     flex: 1, padding: '16px', border: 'none', background: 'none',
@@ -429,19 +521,19 @@ export default function QuizPage() {
                                             value={formData.title}
                                             onChange={e => setFormData({ ...formData, title: e.target.value })}
                                             placeholder="VD: Kiểm tra 15 phút"
-                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px' }}
+                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', backgroundColor: '#0f172a', color: 'white', fontSize: '14px' }}
                                         />
                                     </div>
                                     <div>
                                         <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
-                                            Môn học <span style={{ color: '#f87171' }}>*</span>
+                                            Môn học {creationMode === 'ai' && <span style={{ color: '#f87171' }}>*</span>}
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.subject}
                                             onChange={e => setFormData({ ...formData, subject: e.target.value })}
                                             placeholder="VD: Vật Lý"
-                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px' }}
+                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', backgroundColor: '#0f172a', color: 'white', fontSize: '14px' }}
                                         />
                                     </div>
                                 </div>
@@ -455,7 +547,7 @@ export default function QuizPage() {
                                         <select
                                             value={formData.class_id}
                                             onChange={e => setFormData({ ...formData, class_id: parseInt(e.target.value) })}
-                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px', backgroundColor: '#1e293b' }}
+                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px', backgroundColor: '#0f172a', color: 'white' }}
                                         >
                                             <option value={0}>Chọn lớp học</option>
                                             {classes.map(c => (
@@ -471,7 +563,7 @@ export default function QuizPage() {
                                             type="datetime-local"
                                             value={formData.deadline}
                                             onChange={e => setFormData({ ...formData, deadline: e.target.value })}
-                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', fontSize: '14px' }}
+                                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', backgroundColor: '#0f172a', color: 'white', fontSize: '14px' }}
                                         />
                                     </div>
                                 </div>
@@ -492,7 +584,7 @@ export default function QuizPage() {
                                                     value={formData.topic}
                                                     onChange={e => setFormData({ ...formData, topic: e.target.value })}
                                                     placeholder="VD: Định luật Newton, Chuyển động thẳng đều..."
-                                                    style={{ width: '100%', padding: '12px 12px 12px 44px', borderRadius: '10px', border: '2px solid #e5e7eb', fontSize: '14px' }}
+                                                    style={{ width: '100%', padding: '12px 12px 12px 44px', borderRadius: '10px', backgroundColor: '#0f172a', color: 'white', border: '1px solid #334155', fontSize: '14px' }}
                                                 />
                                             </div>
                                             <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>
@@ -506,39 +598,96 @@ export default function QuizPage() {
                                                 Cấu trúc đề ({formData.easy_count + formData.medium_count + formData.hard_count} câu)
                                             </label>
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-                                                <div style={{ backgroundColor: '#ecfdf5', padding: '12px', borderRadius: '10px', border: '1px solid #d1fae5' }}>
-                                                    <label style={{ display: 'block', fontSize: '12px', color: '#059669', marginBottom: '4px', fontWeight: 600 }}>Dễ</label>
+                                                <div style={{ backgroundColor: '#064e3b', padding: '12px', borderRadius: '10px', border: '1px solid #059669' }}>
+                                                    <label style={{ display: 'block', fontSize: '12px', color: '#34d399', marginBottom: '4px', fontWeight: 600 }}>Dễ</label>
                                                     <input
                                                         type="number"
                                                         min={0} max={20}
                                                         value={formData.easy_count}
                                                         onChange={e => setFormData({ ...formData, easy_count: parseInt(e.target.value) || 0 })}
-                                                        style={{ width: '100%', padding: '6px', borderRadius: '6px', border: '1px solid #10b981', fontSize: '16px', fontWeight: 'bold', color: '#059669' }}
+                                                        style={{ width: '100%', padding: '6px', borderRadius: '6px', backgroundColor: '#022c22', border: '1px solid #10b981', fontSize: '16px', fontWeight: 'bold', color: '#34d399' }}
                                                     />
                                                 </div>
-                                                <div style={{ backgroundColor: 'rgba(251, 191, 36, 0.15)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+                                                <div style={{ backgroundColor: '#78350f', padding: '12px', borderRadius: '10px', border: '1px solid #d97706' }}>
                                                     <label style={{ display: 'block', fontSize: '12px', color: '#fbbf24', marginBottom: '4px', fontWeight: 600 }}>Trung bình</label>
                                                     <input
                                                         type="number"
                                                         min={0} max={20}
                                                         value={formData.medium_count}
                                                         onChange={e => setFormData({ ...formData, medium_count: parseInt(e.target.value) || 0 })}
-                                                        style={{ width: '100%', padding: '6px', borderRadius: '6px', border: '1px solid #f59e0b', fontSize: '16px', fontWeight: 'bold', color: '#fbbf24' }}
+                                                        style={{ width: '100%', padding: '6px', borderRadius: '6px', backgroundColor: '#451a03', border: '1px solid #f59e0b', fontSize: '16px', fontWeight: 'bold', color: '#fbbf24' }}
                                                     />
                                                 </div>
-                                                <div style={{ backgroundColor: 'rgba(248, 113, 113, 0.15)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(248, 113, 113, 0.3)' }}>
+                                                <div style={{ backgroundColor: '#7f1d1d', padding: '12px', borderRadius: '10px', border: '1px solid #dc2626' }}>
                                                     <label style={{ display: 'block', fontSize: '12px', color: '#f87171', marginBottom: '4px', fontWeight: 600 }}>Khó</label>
                                                     <input
                                                         type="number"
                                                         min={0} max={20}
                                                         value={formData.hard_count}
                                                         onChange={e => setFormData({ ...formData, hard_count: parseInt(e.target.value) || 0 })}
-                                                        style={{ width: '100%', padding: '6px', borderRadius: '6px', border: '1px solid #ef4444', fontSize: '16px', fontWeight: 'bold', color: '#f87171' }}
+                                                        style={{ width: '100%', padding: '6px', borderRadius: '6px', backgroundColor: '#450a0a', border: '1px solid #ef4444', fontSize: '16px', fontWeight: 'bold', color: '#f87171' }}
                                                     />
                                                 </div>
                                             </div>
                                         </div>
                                     </>
+                                ) : creationMode === 'manual' ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'white', margin: 0 }}>Danh sách câu hỏi</h3>
+                                            <button
+                                                onClick={handleAddManualQuestion}
+                                                style={{ padding: '6px 12px', borderRadius: '8px', backgroundColor: '#3b82f6', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 500 }}
+                                            >
+                                                <Plus size={16} />
+                                                Thêm câu hỏi
+                                            </button>
+                                        </div>
+
+                                        {manualQuestions.map((q, idx) => (
+                                            <div key={idx} style={{ backgroundColor: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                                    <span style={{ fontWeight: 600, color: '#cbd5e1' }}>Câu {idx + 1}</span>
+                                                    <button onClick={() => handleRemoveManualQuestion(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                                <textarea
+                                                    value={q.question_text}
+                                                    onChange={e => handleUpdateManualQuestion(idx, 'question_text', e.target.value)}
+                                                    placeholder="Nhập nội dung câu hỏi..."
+                                                    style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '10px 12px', color: 'white', minHeight: '80px', marginBottom: '12px' }}
+                                                />
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                                                    <input type="text" value={q.option_a} onChange={e => handleUpdateManualQuestion(idx, 'option_a', e.target.value)} placeholder="Đáp án A" style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '8px 12px', color: 'white' }} />
+                                                    <input type="text" value={q.option_b} onChange={e => handleUpdateManualQuestion(idx, 'option_b', e.target.value)} placeholder="Đáp án B" style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '8px 12px', color: 'white' }} />
+                                                    <input type="text" value={q.option_c} onChange={e => handleUpdateManualQuestion(idx, 'option_c', e.target.value)} placeholder="Đáp án C" style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '8px 12px', color: 'white' }} />
+                                                    <input type="text" value={q.option_d} onChange={e => handleUpdateManualQuestion(idx, 'option_d', e.target.value)} placeholder="Đáp án D" style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '8px 12px', color: 'white' }} />
+                                                </div>
+
+                                                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                                                    <div>
+                                                        <label style={{ fontSize: '13px', color: '#94a3b8', marginRight: '8px' }}>Đáp án đúng:</label>
+                                                        <select value={q.correct_answer} onChange={e => handleUpdateManualQuestion(idx, 'correct_answer', e.target.value)} style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '6px 10px', color: 'white' }}>
+                                                            <option value="A">A</option>
+                                                            <option value="B">B</option>
+                                                            <option value="C">C</option>
+                                                            <option value="D">D</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label style={{ fontSize: '13px', color: '#94a3b8', marginRight: '8px' }}>Độ khó:</label>
+                                                        <select value={q.difficulty} onChange={e => handleUpdateManualQuestion(idx, 'difficulty', e.target.value)} style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '6px 10px', color: 'white' }}>
+                                                            <option value="easy">Dễ</option>
+                                                            <option value="medium">Trung bình</option>
+                                                            <option value="hard">Khó</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 ) : (
                                     <>
                                         {/* Upload Mode */}

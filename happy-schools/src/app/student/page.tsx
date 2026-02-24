@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import Link from 'next/link'; // Keep Link for potential future use or if any part of the modals uses it
 import { useAuth } from '@/lib/auth';
-import { Smile, Heart, Brain, Calendar, CheckCircle, Clock, LogOut, User, Settings, Bell, BellOff, Save, X, Upload, Camera, FileText, ArrowRight, Gamepad2 as GamepadIcon, Video } from 'lucide-react';
-import ChatBot from '@/components/ChatBot';
+import { Smile, Heart, Brain, LogOut, User, Settings, Video, X, Upload, Camera, Bell, BellOff, Save, ArrowRight, Gamepad2 as GamepadIcon, Calendar, BookOpen } from 'lucide-react'; // Updated icons based on new usage and retained modals
+import ChatBot from '@/components/ChatBot'; // Keep if ChatBot is still used, though not explicitly in new snippet
 import StudentNotifications from '@/components/StudentNotifications';
+import SubjectCard from '@/components/student/SubjectCard'; // New import
 
 import { API_URL } from '@/lib/api';
 // const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8001').replace('localhost', '127.0.0.1');
@@ -18,34 +19,31 @@ interface StudentDashboardData {
         engagement_score: number;
         mental_health_score: number;
         status: string;
+        class_name?: string;
     };
     online_session?: {
         active: boolean;
         room_url: string | null;
     };
-    recent_activities: Array<{
-        id: number;
-        title: string;
-        type: string;
-        status: string;
-        scheduled_date: string;
-    }>;
-    pending_surveys: Array<{
-        id: number;
-        title: string;
-        completed: boolean;
-    }>;
+    // Keep stats but remove lists for now
+    // The original had recent_activities and pending_surveys, which are removed from this interface
+}
+
+interface Subject {
+    id: string;
+    name: string;
+    teacher: string;
+    task_count: number;
 }
 
 export default function StudentDashboard() {
     const { user, token, logout } = useAuth();
     const [data, setData] = useState<StudentDashboardData | null>(null);
+    const [subjects, setSubjects] = useState<Subject[]>([]);
     const [loading, setLoading] = useState(true);
 
 
-    // Survey State
-
-    // Survey State
+    // Survey State (retained from original)
     const [showSurveyModal, setShowSurveyModal] = useState(false);
     const [selectedSurveyId, setSelectedSurveyId] = useState<number | null>(null);
     const [submittingSurvey, setSubmittingSurvey] = useState(false);
@@ -56,7 +54,7 @@ export default function StudentDashboard() {
         feedback: ''
     });
 
-    // Settings State
+    // Settings State (retained from original, with some initial values from new snippet)
     const [showSettingsModal, setShowSettingsModal] = useState(false);
     const [settingsTab, setSettingsTab] = useState<'profile' | 'notifications'>('profile');
     const [savingSettings, setSavingSettings] = useState(false);
@@ -69,6 +67,11 @@ export default function StudentDashboard() {
         phone: '',
         avatar_url: '',
     });
+
+    // Join Class State
+    const [showJoinClassModal, setShowJoinClassModal] = useState(false);
+    const [joinClassCode, setJoinClassCode] = useState('');
+    const [joiningClass, setJoiningClass] = useState(false);
     const [notificationSettings, setNotificationSettings] = useState({
         quiz_notifications: true,
         activity_notifications: true,
@@ -76,20 +79,24 @@ export default function StudentDashboard() {
         email_notifications: false,
     });
 
-    // Load profile data when modal opens
+    // Load profile data when modal opens (retained from original)
     useEffect(() => {
         if (showSettingsModal && data?.student) {
-            setProfileData({
+            setProfileData(prev => ({
+                ...prev,
                 name: data?.student?.name || '',
                 email: user?.email || '',
-                phone: '',
-                avatar_url: '',
-            });
-            // Fetch current avatar
-            fetchProfile();
+                phone: '', // Phone is not in data.student, so it remains empty unless fetched
+                avatar_url: profileData.avatar_url, // Keep existing avatar_url if available
+            }));
+            // fetchProfile is now part of the main fetchDashboard, but we need to ensure avatarPreview is set
+            if (profileData.avatar_url) {
+                setAvatarPreview(`${API_URL}${profileData.avatar_url}`);
+            }
         }
-    }, [showSettingsModal, data?.student, user]);
+    }, [showSettingsModal, data?.student, user, profileData.avatar_url]); // Added profileData.avatar_url to dependencies
 
+    // fetchProfile function (retained from original, slightly modified to avoid re-fetching if already done by main dashboard fetch)
     const fetchProfile = async () => {
         try {
             const response = await fetch(`${API_URL}/api/student/profile`, {
@@ -253,27 +260,75 @@ export default function StudentDashboard() {
         }
     };
 
+    const handleJoinClass = async () => {
+        if (!joinClassCode.trim()) {
+            alert('Vui lòng nhập mã lớp học');
+            return;
+        }
 
-    // Quiz & Assignment State
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [assignments, setAssignments] = useState<any[]>([]);
-    const [assignmentTab, setAssignmentTab] = useState<'active' | 'history'>('active');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [quizzes, setQuizzes] = useState<any[]>([]);
+        setJoiningClass(true);
+        try {
+            const response = await fetch(`${API_URL}/api/student/join-class`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ class_code: joinClassCode })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert(`🎉 ${result.message}`);
+                setShowJoinClassModal(false);
+                setJoinClassCode('');
+                // Refresh dashboard to show new class info/subjects
+                window.location.reload();
+            } else {
+                alert(`❌ ${result.detail || 'Không thể tham gia lớp học'}`);
+            }
+        } catch (err) {
+            console.error('Join class error:', err);
+            alert('❌ Lỗi kết nối đến server');
+        } finally {
+            setJoiningClass(false);
+        }
+    };
 
     useEffect(() => {
         const fetchDashboard = async () => {
             try {
+                // Fetch Dashboard Stats
                 const response = await fetch(`${API_URL}/api/student/dashboard`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
+                    headers: { 'Authorization': `Bearer ${token}` },
                 });
-
                 if (response.ok) {
                     const dashboardData = await response.json();
                     setData(dashboardData);
                 }
+
+                // Fetch Subjects
+                const subjectRes = await fetch(`${API_URL}/api/student/subjects`, {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+                if (subjectRes.ok) {
+                    const subjectData = await subjectRes.json();
+                    setSubjects(subjectData);
+                }
+
+                // Fetch Profile
+                const profileRes = await fetch(`${API_URL}/api/student/profile`, {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+                if (profileRes.ok) {
+                    const profile = await profileRes.json();
+                    setProfileData(prev => ({ ...prev, ...profile }));
+                    if (profile.avatar_url) {
+                        setAvatarPreview(`${API_URL}${profile.avatar_url}`);
+                    }
+                }
+
             } catch (err) {
                 console.error('Failed to fetch dashboard:', err);
             } finally {
@@ -281,39 +336,8 @@ export default function StudentDashboard() {
             }
         };
 
-        const fetchAssignments = async () => {
-            try {
-                const response = await fetch(`${API_URL}/api/student/assignments`, {
-                    headers: { 'Authorization': `Bearer ${token}` },
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setAssignments(data);
-                }
-            } catch (err) {
-                console.error('Failed to fetch assignments:', err);
-            }
-        };
-
-        const fetchQuizzes = async () => {
-            try {
-                const response = await fetch(`${API_URL}/api/student/upcoming-quizzes`, {
-                    headers: { 'Authorization': `Bearer ${token}` },
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setQuizzes(data);
-                }
-            } catch (err) {
-                console.error('Failed to fetch quizzes:', err);
-            }
-        };
-
         if (token) {
             fetchDashboard();
-            fetchProfile();
-            fetchAssignments();
-            fetchQuizzes();
         }
     }, [token]);
 
@@ -338,20 +362,10 @@ export default function StudentDashboard() {
         return (
             <div style={{
                 minHeight: '100vh',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
             }}>
-                <div style={{
-                    width: '48px',
-                    height: '48px',
-                    border: '4px solid rgba(255,255,255,0.3)',
-                    borderTopColor: 'white',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite'
-                }} />
-                <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
             </div>
         );
     }
@@ -364,26 +378,35 @@ export default function StudentDashboard() {
             background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
             padding: '24px',
         }}>
-            <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                 {/* Header */}
                 <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '32px',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px',
                 }}>
                     <div>
                         <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'white', margin: 0 }}>
                             Xin chào, {data?.student?.name || user?.name}! 👋
                         </h1>
                         <p style={{ color: 'rgba(255,255,255,0.8)', marginTop: '4px' }}>
-                            Chúc em một ngày học tập vui vẻ
+                            Chúc em một ngày học tập hiệu quả
                         </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {/* Notifications */}
                         {token && <StudentNotifications token={token} apiUrl={API_URL} />}
 
+                        {/* Join Class Button */}
+                        <button
+                            onClick={() => setShowJoinClassModal(true)}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px',
+                                borderRadius: '12px',
+                                background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+                                color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600,
+                                boxShadow: '0 4px 12px rgba(236, 72, 153, 0.3)'
+                            }}
+                        >
+                            <User size={18} /> Vào lớp ngay
+                        </button>
                         {/* Settings Button */}
                         <button
                             onClick={() => setShowSettingsModal(true)}
@@ -402,25 +425,12 @@ export default function StudentDashboard() {
                         >
                             <Settings size={22} color="white" />
                         </button>
-
-                        <button
-                            onClick={logout}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                padding: '12px 20px',
-                                borderRadius: '12px',
-                                backgroundColor: 'rgba(255,255,255,0.1)',
-                                color: 'white',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontSize: '14px',
-                                fontWeight: 500,
-                            }}
-                        >
-                            <LogOut size={18} />
-                            Đăng xuất
+                        <button onClick={logout} style={{
+                            display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px',
+                            borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white',
+                            border: 'none', cursor: 'pointer', fontWeight: 500
+                        }}>
+                            <LogOut size={18} /> Đăng xuất
                         </button>
                     </div>
                 </div>
@@ -484,30 +494,18 @@ export default function StudentDashboard() {
 
                 {/* Status Card */}
                 <div style={{
-                    backgroundColor: '#1e293b',
-                    borderRadius: '24px',
-                    padding: '24px',
-                    marginBottom: '24px',
+                    backgroundColor: '#1e293b', borderRadius: '24px', padding: '24px', marginBottom: '32px',
                     boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <div style={{
-                                width: '64px',
-                                height: '64px',
-                                borderRadius: '50%',
+                                width: '64px', height: '64px', borderRadius: '50%',
                                 background: profileData.avatar_url ? 'transparent' : 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                overflow: 'hidden',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
                             }}>
                                 {profileData.avatar_url ? (
-                                    <img
-                                        src={`${API_URL}${profileData.avatar_url}`}
-                                        alt="Avatar"
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    />
+                                    <img src={`${API_URL}${profileData.avatar_url}`} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : (
                                     <User size={32} color="white" />
                                 )}
@@ -520,18 +518,13 @@ export default function StudentDashboard() {
                             </div>
                         </div>
                         <span style={{
-                            padding: '8px 16px',
-                            borderRadius: '20px',
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            backgroundColor: statusInfo.bg,
-                            color: statusInfo.color,
+                            padding: '8px 16px', borderRadius: '20px', fontSize: '14px', fontWeight: 600,
+                            backgroundColor: statusInfo.bg, color: statusInfo.color,
                         }}>
                             {statusInfo.label}
                         </span>
                     </div>
 
-                    {/* Scores */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                         {[
                             { icon: Smile, label: 'Sôi nổi', score: data?.student?.happiness_score || 0, color: '#fbbf24' },
@@ -539,30 +532,17 @@ export default function StudentDashboard() {
                             { icon: Brain, label: 'Tinh thần', score: data?.student?.mental_health_score || 0, color: '#f97316' },
                         ].map((item) => (
                             <div key={item.label} style={{
-                                backgroundColor: '#0f172a',
-                                borderRadius: '16px',
-                                padding: '20px',
-                                textAlign: 'center',
+                                backgroundColor: '#0f172a', borderRadius: '16px', padding: '20px', textAlign: 'center',
                             }}>
                                 <div style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    width: '48px',
-                                    height: '48px',
-                                    borderRadius: '12px',
-                                    backgroundColor: `${item.color}20`,
-                                    marginBottom: '12px',
+                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                    width: '48px', height: '48px', borderRadius: '12px',
+                                    backgroundColor: `${item.color}20`, marginBottom: '12px',
                                 }}>
                                     <item.icon size={24} color={item.color} />
                                 </div>
                                 <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0 0 4px 0' }}>{item.label}</p>
-                                <p style={{
-                                    fontSize: '32px',
-                                    fontWeight: 800,
-                                    color: getScoreColor(item.score),
-                                    margin: 0,
-                                }}>
+                                <p style={{ fontSize: '32px', fontWeight: 800, color: getScoreColor(item.score), margin: 0 }}>
                                     {item.score}%
                                 </p>
                             </div>
@@ -570,371 +550,181 @@ export default function StudentDashboard() {
                     </div>
                 </div>
 
-                {/* Content Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-
-                    {/* Game Center - NEW */}
-                    <div style={{
-                        backgroundColor: '#1e293b',
-                        borderRadius: '20px',
-                        padding: '24px',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
-                        background: 'linear-gradient(135deg, rgba(236,72,153,0.1) 0%, rgba(248,113,113,0.1) 100%)',
-                        border: '2px solid rgba(236, 72, 153, 0.3)',
-                        gridColumn: 'span 2' // Make it span full width to emphasize
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div>
-                                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#f472b6', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <GamepadIcon size={24} />
-                                    Góc Giải Trí
-                                </h3>
-                                <p style={{ color: '#f9a8d4', marginBottom: '0', maxWidth: '600px' }}>
-                                    Thư giãn sau giờ học với các trò chơi thú vị: <b>Lật hình</b>, <b>Giải đố</b>, <b>Nối từ</b> và <b>Ô chữ bí mật</b>!
-                                </p>
-                            </div>
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <Link href="/student/entertain" style={{
-                                    padding: '10px 24px',
-                                    borderRadius: '12px',
-                                    backgroundColor: '#be185d',
-                                    color: 'white',
-                                    textDecoration: 'none',
-                                    fontWeight: 700,
-                                    boxShadow: '0 4px 12px rgba(190, 24, 93, 0.3)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px'
-                                }}>
-                                    <span style={{ fontSize: '18px' }}>Play</span>
-                                    <ArrowRight size={20} />
-                                </Link>
-                                <Link href="/student/games/crossword" style={{
-                                    padding: '10px 24px',
-                                    borderRadius: '12px',
-                                    backgroundColor: '#f59e0b',
-                                    color: 'white',
-                                    textDecoration: 'none',
-                                    fontWeight: 700,
-                                    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px'
-                                }}>
-                                    <span style={{ fontSize: '18px' }}>Ô chữ</span>
-                                    <ArrowRight size={20} />
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    {/* Quizzes */}
-                    <div style={{
-                        backgroundColor: '#1e293b',
-                        borderRadius: '20px',
-                        padding: '24px',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
-                    }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ padding: '6px', borderRadius: '8px', background: 'rgba(168, 139, 250, 0.15)' }}>
-                                <Brain size={20} color="#9333ea" />
-                            </div>
-                            Bài kiểm tra
-                        </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {quizzes.length > 0 ? (
-                                quizzes.map((quiz) => (
-                                    <div key={quiz.id} style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        gap: '12px',
-                                        padding: '12px',
-                                        borderRadius: '12px',
-                                        backgroundColor: 'rgba(168, 139, 250, 0.1)',
-                                        border: '1px solid rgba(168, 139, 250, 0.3)',
-                                    }}>
-                                        <div>
-                                            <p style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>
-                                                {quiz.title}
-                                            </p>
-                                            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0 0' }}>
-                                                {quiz.subject} • {quiz.total_questions} câu
-                                            </p>
-                                        </div>
-                                        {quiz.has_attempted ? (
-                                            <span style={{
-                                                fontSize: '12px', fontWeight: 600, color: '#0d9488',
-                                                backgroundColor: 'rgba(52, 211, 153, 0.15)', padding: '4px 8px', borderRadius: '6px'
-                                            }}>
-                                                Đã làm
-                                            </span>
-                                        ) : (
-                                            <a
-                                                href={`/student/quiz/${quiz.id}`}
-                                                style={{
-                                                    padding: '8px 16px',
-                                                    borderRadius: '8px',
-                                                    fontSize: '13px',
-                                                    fontWeight: 600,
-                                                    color: 'white',
-                                                    background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 100%)',
-                                                    textDecoration: 'none',
-                                                    border: 'none',
-                                                    cursor: 'pointer',
-                                                }}
-                                            >
-                                                Làm bài
-                                            </a>
-                                        )}
-                                    </div>
-                                ))
-                            ) : (
-                                <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>
-                                    Không có bài kiểm tra nào
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-
-                    {/* Assignments */}
-                    <div style={{
-                        backgroundColor: '#1e293b',
-                        borderRadius: '20px',
-                        padding: '24px',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <div style={{ padding: '6px', borderRadius: '8px', background: 'rgba(96, 165, 250, 0.15)' }}>
-                                    <FileText size={20} color="#2563eb" />
-                                </div>
-                                Bài tập
+                {/* Game Center - NEW */}
+                <div style={{
+                    backgroundColor: '#1e293b',
+                    borderRadius: '20px',
+                    padding: '24px',
+                    marginBottom: '32px',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+                    background: 'linear-gradient(135deg, rgba(236,72,153,0.1) 0%, rgba(248,113,113,0.1) 100%)',
+                    border: '2px solid rgba(236, 72, 153, 0.3)',
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div>
+                            <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#f472b6', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <GamepadIcon size={24} />
+                                Góc Giải Trí
                             </h3>
-
-                            <div style={{ display: 'flex', backgroundColor: '#0f172a', padding: '4px', borderRadius: '12px' }}>
-                                <button
-                                    onClick={() => setAssignmentTab('active')}
-                                    style={{
-                                        padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer',
-                                        backgroundColor: assignmentTab === 'active' ? 'white' : 'transparent',
-                                        color: assignmentTab === 'active' ? '#111827' : '#6b7280',
-                                        boxShadow: assignmentTab === 'active' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
-                                    }}
-                                >
-                                    Đang diễn ra
-                                </button>
-                                <button
-                                    onClick={() => setAssignmentTab('history')}
-                                    style={{
-                                        padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer',
-                                        backgroundColor: assignmentTab === 'history' ? 'white' : 'transparent',
-                                        color: assignmentTab === 'history' ? '#111827' : '#6b7280',
-                                        boxShadow: assignmentTab === 'history' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
-                                    }}
-                                >
-                                    Lịch sử
-                                </button>
-                            </div>
+                            <p style={{ color: '#f9a8d4', marginBottom: '0', maxWidth: '600px' }}>
+                                Thư giãn sau giờ học với các trò chơi thú vị: <b>Lật hình</b>, <b>Giải đố</b>, <b>Nối từ</b> và <b>Ô chữ bí mật</b>!
+                            </p>
                         </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {(assignmentTab === 'active'
-                                ? assignments.filter(a => !a.submitted && !a.deadline_passed)
-                                : assignments.filter(a => a.submitted || a.deadline_passed)
-                            ).length > 0 ? (
-                                (assignmentTab === 'active'
-                                    ? assignments.filter(a => !a.submitted && !a.deadline_passed)
-                                    : assignments.filter(a => a.submitted || a.deadline_passed)
-                                ).map((assignment) => (
-                                    <div key={assignment.id} style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '12px',
-                                        borderRadius: '12px',
-                                        backgroundColor: '#0f172a',
-                                        border: assignment.submitted ? '1px solid #dcfce7' : (assignment.deadline_passed ? '1px solid #fee2e2' : '1px solid #e5e7eb'),
-                                        opacity: assignment.deadline_passed && !assignment.submitted ? 0.7 : 1
-                                    }}>
-                                        <div style={{ flex: 1 }}>
-                                            <p style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>
-                                                {assignment.title}
-                                            </p>
-                                            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0 0' }}>
-                                                Hạn nộp: {assignment.deadline ? new Date(assignment.deadline).toLocaleString('vi-VN') : 'Không giới hạn'}
-                                            </p>
-                                        </div>
-                                        {assignment.submitted ? (
-                                            <div style={{ textAlign: 'right' }}>
-                                                <span style={{
-                                                    display: 'inline-block',
-                                                    padding: '4px 8px',
-                                                    borderRadius: '6px',
-                                                    fontSize: '12px',
-                                                    backgroundColor: 'rgba(52, 211, 153, 0.15)',
-                                                    color: '#0d9488',
-                                                    marginBottom: '4px'
-                                                }}>
-                                                    Đã nộp
-                                                </span>
-                                                {assignment.graded && (
-                                                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#0d9488' }}>
-                                                        {assignment.score} điểm
-                                                    </p>
-                                                )}
-                                            </div>
-                                        ) : assignment.deadline_passed ? (
-                                            <span style={{
-                                                padding: '6px 12px',
-                                                borderRadius: '8px',
-                                                fontSize: '12px',
-                                                fontWeight: 600,
-                                                backgroundColor: 'rgba(248, 113, 113, 0.15)',
-                                                color: '#f87171',
-                                            }}>
-                                                Quá hạn
-                                            </span>
-                                        ) : (
-                                            <a
-                                                href={`/student/assignment/${assignment.id}`}
-                                                style={{
-                                                    padding: '8px 16px',
-                                                    borderRadius: '8px',
-                                                    fontSize: '13px',
-                                                    fontWeight: 600,
-                                                    color: 'white',
-                                                    background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                                                    textDecoration: 'none',
-                                                    border: 'none',
-                                                    cursor: 'pointer',
-                                                }}
-                                            >
-                                                Làm bài
-                                            </a>
-                                        )}
-                                    </div>
-                                ))
-                            ) : (
-                                <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>
-                                    {assignmentTab === 'active' ? 'Không có bài tập cần làm' : 'Chưa có lịch sử bài tập'}
-                                </p>
-                            )}
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <Link href="/student/entertain" style={{
+                                padding: '10px 24px',
+                                borderRadius: '12px',
+                                backgroundColor: '#be185d',
+                                color: 'white',
+                                textDecoration: 'none',
+                                fontWeight: 700,
+                                boxShadow: '0 4px 12px rgba(190, 24, 93, 0.3)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}>
+                                <span style={{ fontSize: '18px' }}>Play</span>
+                                <ArrowRight size={20} />
+                            </Link>
+                            <Link href="/student/games/crossword" style={{
+                                padding: '10px 24px',
+                                borderRadius: '12px',
+                                backgroundColor: '#f59e0b',
+                                color: 'white',
+                                textDecoration: 'none',
+                                fontWeight: 700,
+                                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}>
+                                <span style={{ fontSize: '18px' }}>Ô chữ</span>
+                                <ArrowRight size={20} />
+                            </Link>
                         </div>
                     </div>
+                </div>
 
-                    {/* Recent Activities */}
-                    <div style={{
-                        backgroundColor: '#1e293b',
-                        borderRadius: '20px',
-                        padding: '24px',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
-                    }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '16px' }}>
-                            📅 Hoạt động sắp tới
-                        </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {data?.recent_activities.slice(0, 4).map((activity) => (
-                                <div key={activity.id} style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '12px',
-                                    padding: '12px',
-                                    borderRadius: '12px',
-                                    backgroundColor: '#0f172a',
-                                }}>
+                {/* ✨ New Features Hub */}
+                <div style={{
+                    display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px',
+                    marginBottom: '32px',
+                }}>
+                    {[
+                        { href: '/student/mood-journal', icon: '💚', label: 'Nhật ký cảm xúc', desc: 'Ghi lại tâm trạng mỗi ngày', gradient: 'linear-gradient(135deg, #8b5cf6, #6d28d9)' },
+                        { href: '/student/ai-tutor', icon: '🤖', label: 'AI Gia sư', desc: 'Gợi ý & lộ trình cá nhân', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' },
+                        { href: '/student/achievements', icon: '🏆', label: 'Thành tích', desc: 'Huy hiệu, streak & cửa hàng', gradient: 'linear-gradient(135deg, #f59e0b, #d97706)' },
+                        { href: '/student/quiz-battle', icon: '⚔️', label: 'Quiz Battle', desc: 'Thi đấu kiến thức real-time', gradient: 'linear-gradient(135deg, #ef4444, #dc2626)' },
+                    ].map(item => (
+                        <Link key={item.href} href={item.href} style={{
+                            background: item.gradient, borderRadius: '16px', padding: '20px',
+                            color: 'white', textDecoration: 'none',
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                            transition: 'transform 0.2s', display: 'block',
+                        }}>
+                            <div style={{ fontSize: '32px', marginBottom: '8px' }}>{item.icon}</div>
+                            <div style={{ fontWeight: 700, fontSize: '15px', marginBottom: '4px' }}>{item.label}</div>
+                            <div style={{ fontSize: '12px', opacity: 0.85 }}>{item.desc}</div>
+                        </Link>
+                    ))}
+                </div>
+
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                        <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'white', margin: 0 }}>
+                            Góc học tập
+                        </h2>
+                        <Link href="/student/thoi-khoa-bieu" style={{
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            padding: '8px 16px', borderRadius: '12px',
+                            backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa',
+                            textDecoration: 'none', fontWeight: 600, fontSize: '14px',
+                            border: '1px solid rgba(59, 130, 246, 0.3)'
+                        }}>
+                            <Calendar size={16} /> Thời khóa biểu
+                        </Link>
+                    </div>
+
+                    {(data?.student?.class_name || user?.class_name) ? (
+                        <div style={{
+                            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                            borderRadius: '24px',
+                            padding: '32px',
+                            color: 'white',
+                            boxShadow: '0 20px 60px rgba(79, 70, 229, 0.3)',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}>
+                            <div style={{ position: 'absolute', top: 0, right: 0, width: '300px', height: '300px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%', transform: 'translate(30%, -30%)' }}></div>
+                            <div style={{ position: 'absolute', bottom: 0, left: 0, width: '200px', height: '200px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', transform: 'translate(-30%, 30%)' }}></div>
+
+                            <div style={{ position: 'relative', zIndex: 10 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
                                     <div style={{
-                                        padding: '8px',
-                                        borderRadius: '8px',
-                                        backgroundColor: activity.status === 'completed' ? '#dcfce7' : '#fef3c7',
+                                        width: '64px', height: '64px', borderRadius: '16px',
+                                        backgroundColor: 'rgba(255,255,255,0.2)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
                                     }}>
-                                        {activity.status === 'completed' ? (
-                                            <CheckCircle size={20} color="#16a34a" />
-                                        ) : (
-                                            <Clock size={20} color="#d97706" />
-                                        )}
+                                        <BookOpen size={32} color="white" />
                                     </div>
-                                    <div style={{ flex: 1 }}>
-                                        <p style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>
-                                            {activity.title}
-                                        </p>
-                                        <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>
-                                            {activity.type} • {activity.scheduled_date}
-                                        </p>
+                                    <div>
+                                        <p style={{ margin: 0, fontSize: '16px', opacity: 0.9 }}>Lớp học của bạn</p>
+                                        <h3 style={{ margin: 0, fontSize: '32px', fontWeight: 800 }}>{data?.student?.class_name || user?.class_name}</h3>
                                     </div>
                                 </div>
-                            )) || (
-                                    <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>
-                                        Chưa có hoạt động nào
-                                    </p>
-                                )}
-                        </div>
-                    </div>
 
-                    {/* Pending Surveys */}
-                    <div style={{
-                        backgroundColor: '#1e293b',
-                        borderRadius: '20px',
-                        padding: '24px',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
-                    }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '16px' }}>
-                            📝 Khảo sát
-                        </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {data?.pending_surveys.length ? (
-                                data.pending_surveys.map((survey) => (
-                                    <div key={survey.id} style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        padding: '12px',
-                                        borderRadius: '12px',
-                                        backgroundColor: '#0f172a',
-                                    }}>
-                                        <p style={{ fontSize: '14px', fontWeight: 500, color: '#e2e8f0', margin: 0 }}>
-                                            {survey.title}
+                                <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                                    <div>
+                                        <p style={{ margin: '0 0 4px 0', fontSize: '14px', opacity: 0.7 }}>Giáo viên chủ nhiệm</p>
+                                        <p style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>
+                                            {subjects.length > 0 && subjects[0].teacher ? subjects[0].teacher : "Giáo viên"}
                                         </p>
-                                        {survey.completed ? (
-                                            <span style={{
-                                                padding: '4px 12px',
-                                                borderRadius: '20px',
-                                                fontSize: '12px',
-                                                backgroundColor: 'rgba(52, 211, 153, 0.15)',
-                                                color: '#0d9488',
-                                            }}>
-                                                Đã làm
-                                            </span>
-                                        ) : (
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedSurveyId(survey.id);
-                                                    setShowSurveyModal(true);
-                                                }}
-                                                style={{
-                                                    padding: '6px 14px',
-                                                    borderRadius: '8px',
-                                                    fontSize: '13px',
-                                                    fontWeight: 600,
-                                                    color: 'white',
-                                                    background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
-                                                    border: 'none',
-                                                    cursor: 'pointer',
-                                                }}>
-                                                Làm ngay
-                                            </button>
-                                        )}
                                     </div>
-                                ))
-                            ) : (
-                                <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>
-                                    Chưa có khảo sát nào
-                                </p>
-                            )}
+                                    <div>
+                                        <p style={{ margin: '0 0 4px 0', fontSize: '14px', opacity: 0.7 }}>Sĩ số</p>
+                                        <p style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>-- học sinh</p>
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: '32px' }}>
+                                    <Link href={`/student/lop-hoc`} style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                        padding: '12px 24px', borderRadius: '12px',
+                                        backgroundColor: 'white', color: '#4f46e5',
+                                        textDecoration: 'none', fontWeight: 700,
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                    }}>
+                                        Xem chi tiết lớp học <ArrowRight size={18} />
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div style={{
+                            textAlign: 'center', padding: '60px 20px', backgroundColor: '#1e293b', borderRadius: '24px', color: '#94a3b8',
+                            border: '2px dashed #334155'
+                        }}>
+                            <div style={{
+                                width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#0f172a',
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px'
+                            }}>
+                                <User size={40} color="#64748b" />
+                            </div>
+                            <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', marginBottom: '8px' }}>Chưa tham gia lớp học nào</h3>
+                            <p style={{ maxWidth: '400px', margin: '0 auto 24px auto' }}>Bạn cần mã lớp từ giáo viên để tham gia vào lớp học và bắt đầu các hoạt động.</p>
+                            <button
+                                onClick={() => setShowJoinClassModal(true)}
+                                style={{
+                                    padding: '12px 24px', borderRadius: '12px',
+                                    background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+                                    color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600,
+                                    fontSize: '16px'
+                                }}
+                            >
+                                Tham gia lớp ngay
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -1140,6 +930,10 @@ export default function StudentDashboard() {
                                 </button>
                             </div>
 
+
+
+
+
                             {/* Content */}
                             <div style={{ padding: '24px' }}>
                                 {settingsTab === 'profile' ? (
@@ -1283,6 +1077,95 @@ export default function StudentDashboard() {
                                 >
                                     <Save size={16} />
                                     {savingSettings ? 'Đang lưu...' : 'Lưu cài đặt'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Join Class Modal */}
+            {
+                showJoinClassModal && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.6)',
+                        backdropFilter: 'blur(4px)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 2000
+                    }}>
+                        <div style={{
+                            backgroundColor: '#1e293b',
+                            borderRadius: '24px',
+                            padding: '32px',
+                            width: '90%',
+                            maxWidth: '400px',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                            border: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                <h2 style={{ fontSize: '22px', fontWeight: 700, color: 'white', margin: 0 }}>
+                                    Tham gia lớp học
+                                </h2>
+                                <button
+                                    onClick={() => setShowJoinClassModal(false)}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            <p style={{ color: '#cbd5e1', marginBottom: '20px' }}>
+                                Nhập mã lớp học do giáo viên cung cấp để tham gia vào lớp.
+                            </p>
+
+                            <input
+                                type="text"
+                                placeholder="Nhập mã lớp (Ví dụ: XC92KA)"
+                                value={joinClassCode}
+                                onChange={(e) => setJoinClassCode(e.target.value.toUpperCase())}
+                                style={{
+                                    width: '100%',
+                                    padding: '16px',
+                                    borderRadius: '12px',
+                                    backgroundColor: '#0f172a',
+                                    border: '2px solid #334155',
+                                    color: 'white',
+                                    fontSize: '16px',
+                                    fontWeight: 600,
+                                    marginBottom: '24px',
+                                    textAlign: 'center',
+                                    letterSpacing: '1px'
+                                }}
+                            />
+
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button
+                                    onClick={() => setShowJoinClassModal(false)}
+                                    style={{
+                                        flex: 1, padding: '14px',
+                                        borderRadius: '12px',
+                                        backgroundColor: '#334155',
+                                        color: '#cbd5e1',
+                                        border: 'none', fontWeight: 600, cursor: 'pointer'
+                                    }}
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={handleJoinClass}
+                                    disabled={joiningClass || !joinClassCode}
+                                    style={{
+                                        flex: 1, padding: '14px',
+                                        borderRadius: '12px',
+                                        background: joiningClass ? '#94a3b8' : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                        color: 'white',
+                                        border: 'none', fontWeight: 600, cursor: joiningClass ? 'not-allowed' : 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                                    }}
+                                >
+                                    {joiningClass ? 'Đang xử lý...' : 'Tham gia'}
+                                    {!joiningClass && <ArrowRight size={18} />}
                                 </button>
                             </div>
                         </div>

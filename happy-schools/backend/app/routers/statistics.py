@@ -7,7 +7,7 @@ from app import models
 
 router = APIRouter()
 
-@router.get("/")
+@router.get("")
 async def get_statistics(db: Session = Depends(get_db)):
     # Reuse student stats logic or extend
     total = db.query(models.User).filter(models.User.role == "student").count()

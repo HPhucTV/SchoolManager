@@ -2,41 +2,60 @@
 
 import { useState, useEffect } from 'react';
 import { adminApi } from '@/lib/api';
-import { Plus, Edit2, X } from 'lucide-react';
+import {
+    Plus, Search, Edit2, Trash2, X, Filter,
+    BookOpen, User, Users, GraduationCap
+} from 'lucide-react';
+import styles from '../admin.module.css';
 
 interface ClassData {
     id: number;
     name: string;
     grade: string;
-    teacher_id?: number;
-    teacher_name?: string;
+    teacher_id?: number | null;
+    teacher_name?: string | null;
     student_count: number;
 }
 
 interface Teacher {
     id: number;
     name: string;
+    email: string;
 }
 
 export default function ClassesManagement() {
     const [classes, setClasses] = useState<ClassData[]>([]);
     const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [showModal, setShowModal] = useState(false);
     const [editingClass, setEditingClass] = useState<ClassData | null>(null);
+
+    // Form data
     const [formData, setFormData] = useState({ name: '', grade: '', teacher_id: '' });
+
+    // Toast & Confirm
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    // Note: Delete class is not explicitly in api.ts or auth.py yet?
+    // Let's check api.ts. It has createClass, updateClass, getClasses.
+    // It does NOT have deleteClass.
+    // So we won't implement delete for now, or just leave it out.
+    // The requirement didn't explicitly ask for delete class, just "manage".
+    // I'll skip delete for now to be safe.
 
     const fetchData = async () => {
         try {
-            const [classesRes, teachersRes] = await Promise.all([
+            const [classesData, teachersData] = await Promise.all([
                 adminApi.getClasses(),
-                adminApi.getUsers('teacher'),
+                adminApi.getUsers('teacher')
             ]);
-
-            setClasses(classesRes);
-            setTeachers(teachersRes);
+            setClasses(classesData);
+            setTeachers(teachersData);
         } catch (err) {
-            console.error('Failed to fetch:', err);
+            console.error(err);
+            showToast('Lỗi tải dữ liệu', 'error');
         } finally {
             setLoading(false);
         }
@@ -46,40 +65,36 @@ export default function ClassesManagement() {
         fetchData();
     }, []);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const showToast = (message: string, type: 'success' | 'error') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
 
+    const handleCreateOrUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
         try {
-            const data = {
+            const payload = {
                 name: formData.name,
                 grade: formData.grade,
                 teacher_id: formData.teacher_id ? parseInt(formData.teacher_id) : null,
             };
 
             if (editingClass) {
-                await adminApi.updateClass(editingClass.id, data);
+                // Update
+                await adminApi.updateClass(editingClass.id, payload);
+                showToast('Cập nhật lớp học thành công!', 'success');
             } else {
-                await adminApi.createClass(data);
+                // Create
+                await adminApi.createClass(payload);
+                showToast('Tạo lớp học thành công!', 'success');
             }
-
             setShowModal(false);
             setEditingClass(null);
             setFormData({ name: '', grade: '', teacher_id: '' });
             fetchData();
         } catch (err) {
-            console.error('Failed to save:', err);
-            alert('Lưu lớp học thất bại');
+            showToast('Có lỗi xảy ra', 'error');
         }
-    };
-
-    const openEditModal = (cls: ClassData) => {
-        setEditingClass(cls);
-        setFormData({
-            name: cls.name,
-            grade: cls.grade,
-            teacher_id: cls.teacher_id?.toString() || '',
-        });
-        setShowModal(true);
     };
 
     const openCreateModal = () => {
@@ -88,191 +103,161 @@ export default function ClassesManagement() {
         setShowModal(true);
     };
 
+    const openEditModal = (cls: ClassData) => {
+        setEditingClass(cls);
+        setFormData({
+            name: cls.name,
+            grade: cls.grade,
+            teacher_id: cls.teacher_id ? cls.teacher_id.toString() : ''
+        });
+        setShowModal(true);
+    };
+
+    // Filter
+    const filteredClasses = classes.filter(c =>
+        c.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827' }}>Quản lý Lớp học</h1>
-                <button
-                    onClick={openCreateModal}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '12px 20px',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                        color: 'white',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontWeight: 600,
-                    }}
-                >
-                    <Plus size={20} />
-                    Tạo Lớp mới
+            {/* Toast */}
+            {toast && (
+                <div className={styles.toastContainer}>
+                    <div className={toast.type === 'success' ? styles.toastSuccess : styles.toastError}>
+                        {toast.message}
+                    </div>
+                </div>
+            )}
+
+            {/* Header */}
+            <div className={styles.pageHeader}>
+                <div>
+                    <h1 className={styles.pageTitle}>Quản lý Lớp học</h1>
+                    <p className={styles.pageSubtitle}>{classes.length} lớp học đang hoạt động</p>
+                </div>
+                <button className={styles.btnPrimary} onClick={openCreateModal}>
+                    <Plus size={18} /> Tạo Lớp học
                 </button>
             </div>
 
-            {/* Cards Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-                {loading ? (
-                    <p style={{ color: '#6b7280' }}>Đang tải...</p>
-                ) : classes.length === 0 ? (
-                    <p style={{ color: '#6b7280' }}>Chưa có lớp học nào</p>
-                ) : (
-                    classes.map((cls) => (
-                        <div key={cls.id} style={{
-                            backgroundColor: 'white',
-                            borderRadius: '16px',
-                            padding: '24px',
-                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                        }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '16px' }}>
-                                <div>
-                                    <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: 0 }}>
-                                        {cls.name}
-                                    </h3>
-                                    <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
-                                        Khối {cls.grade}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => openEditModal(cls)}
-                                    style={{
-                                        padding: '8px',
-                                        borderRadius: '8px',
-                                        backgroundColor: '#f3f4f6',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                    }}
-                                >
-                                    <Edit2 size={16} color="#6b7280" />
-                                </button>
-                            </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
-                                <div>
-                                    <p style={{ fontSize: '12px', color: '#9ca3af' }}>Giáo viên</p>
-                                    <p style={{ fontSize: '14px', fontWeight: 500, color: '#374151' }}>
-                                        {cls.teacher_name || 'Chưa phân công'}
-                                    </p>
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <p style={{ fontSize: '12px', color: '#9ca3af' }}>Học sinh</p>
-                                    <p style={{ fontSize: '14px', fontWeight: 500, color: '#374151' }}>
-                                        {cls.student_count} em
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    ))
-                )}
+            {/* Toolbar */}
+            <div className={styles.toolbar}>
+                <div className={styles.searchWrapper}>
+                    <Search className={styles.searchIcon} size={18} />
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm lớp học..."
+                        className={styles.searchInput}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <div className={styles.searchWrapper} style={{ maxWidth: '140px', marginLeft: 'auto' }}>
+                    {/* View switch placeholder if needed */}
+                </div>
             </div>
 
-            {/* Modal */}
+            {/* Content */}
+            {loading ? (
+                <div className={styles.adminWrapper}><p style={{ padding: '20px', color: '#94a3b8' }}>Đang tải...</p></div>
+            ) : filteredClasses.length === 0 ? (
+                <div className={styles.emptyState}>
+                    <div className={styles.emptyIcon}><BookOpen /></div>
+                    <p className={styles.emptyTitle}>Không tìm thấy lớp học nào</p>
+                    <p className={styles.emptyMessage}>Hãy tạo lớp học mới để bắt đầu</p>
+                </div>
+            ) : (
+                <div className={styles.statsGrid} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+                    {filteredClasses.map((cls) => (
+                        <div key={cls.id} className={styles.classCard} onClick={() => openEditModal(cls)}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                                <div>
+                                    <span className={styles.badgePurple} style={{ marginBottom: '8px' }}>Khối {cls.grade}</span>
+                                    <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', margin: '8px 0 0' }}>{cls.name}</h3>
+                                </div>
+                                <div className={styles.statIconCyan} style={{ width: '40px', height: '40px' }}>
+                                    <BookOpen size={20} />
+                                </div>
+                            </div>
+
+                            <div style={{ borderTop: '1px solid rgba(148, 163, 184, 0.1)', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div className={styles.avatarBlue} style={{ width: '28px', height: '28px', fontSize: '12px' }}>
+                                        {cls.teacher_name ? cls.teacher_name[0].toUpperCase() : '?'}
+                                    </div>
+                                    <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+                                        {cls.teacher_name || 'Chưa có GV'}
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#94a3b8' }}>
+                                    <GraduationCap size={16} /> {cls.student_count} HS
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Modal Create/Edit */}
             {showModal && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 50,
-                }}>
-                    <div style={{
-                        backgroundColor: 'white',
-                        borderRadius: '20px',
-                        padding: '32px',
-                        width: '400px',
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827' }}>
-                                {editingClass ? 'Sửa Lớp học' : 'Tạo Lớp mới'}
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h2 className={styles.modalTitle}>
+                                {editingClass ? 'Cập nhật Lớp học' : 'Tạo Lớp học mới'}
                             </h2>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                                <X size={24} color="#6b7280" />
+                            <button className={styles.btnIcon} onClick={() => setShowModal(false)}>
+                                <X size={20} />
                             </button>
                         </div>
-
-                        <form onSubmit={handleSubmit}>
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
-                                    Tên lớp
-                                </label>
+                        <form onSubmit={handleCreateOrUpdate}>
+                            <div className={styles.formGroup}>
+                                <label className={styles.formLabel}>Tên lớp</label>
                                 <input
                                     type="text"
                                     required
-                                    placeholder="Ví dụ: Lớp 10A"
+                                    className={styles.formInput}
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        borderRadius: '10px',
-                                        border: '1px solid #e5e7eb',
-                                        fontSize: '14px',
-                                    }}
+                                    placeholder="Ví dụ: 10A1"
                                 />
                             </div>
-
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
-                                    Khối
-                                </label>
-                                <input
-                                    type="text"
+                            <div className={styles.formGroup}>
+                                <label className={styles.formLabel}>Khối lớp</label>
+                                <select
+                                    className={styles.formSelect}
                                     required
-                                    placeholder="Ví dụ: 10"
                                     value={formData.grade}
                                     onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        borderRadius: '10px',
-                                        border: '1px solid #e5e7eb',
-                                        fontSize: '14px',
-                                    }}
-                                />
+                                >
+                                    <option value="">-- Chọn khối --</option>
+                                    <option value="10">Khối 10</option>
+                                    <option value="11">Khối 11</option>
+                                    <option value="12">Khối 12</option>
+                                </select>
                             </div>
-
-                            <div style={{ marginBottom: '24px' }}>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
-                                    Giáo viên phụ trách
-                                </label>
+                            <div className={styles.formGroup}>
+                                <label className={styles.formLabel}>Giáo viên chủ nhiệm</label>
                                 <select
+                                    className={styles.formSelect}
                                     value={formData.teacher_id}
                                     onChange={(e) => setFormData({ ...formData, teacher_id: e.target.value })}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        borderRadius: '10px',
-                                        border: '1px solid #e5e7eb',
-                                        fontSize: '14px',
-                                    }}
                                 >
                                     <option value="">-- Chọn giáo viên --</option>
-                                    {teachers.map((t) => (
+                                    {teachers.map(t => (
                                         <option key={t.id} value={t.id}>{t.name}</option>
                                     ))}
                                 </select>
                             </div>
 
-                            <button
-                                type="submit"
-                                style={{
-                                    width: '100%',
-                                    padding: '14px',
-                                    borderRadius: '10px',
-                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                                    color: 'white',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    fontWeight: 600,
-                                    fontSize: '14px',
-                                }}
-                            >
-                                {editingClass ? 'Cập nhật' : 'Tạo Lớp'}
-                            </button>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
+                                <button type="button" className={styles.btnSecondary} onClick={() => setShowModal(false)}>
+                                    Hủy
+                                </button>
+                                <button type="submit" className={styles.btnPrimary}>
+                                    {editingClass ? 'Lưu thay đổi' : 'Tạo lớp học'}
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>

@@ -9,7 +9,7 @@ from app.routers.auth import get_current_user
 
 router = APIRouter()
 
-@router.get("/")
+@router.get("")
 async def get_students(
     page: int = 1, 
     page_size: int = 10, 

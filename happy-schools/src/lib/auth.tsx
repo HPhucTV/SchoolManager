@@ -17,6 +17,7 @@ interface AuthContextType {
     token: string | null;
     isLoading: boolean;
     login: (email: string, password: string) => Promise<void>;
+    register: (name: string, email: string, password: string, role: string) => Promise<void>;
     logout: () => void;
     isTeacher: boolean;
     isStudent: boolean;
@@ -66,6 +67,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('user', JSON.stringify(data.user));
     };
 
+    const register = async (name: string, email: string, password: string, role: string) => {
+        const response = await fetch(`${API_URL}/api/auth/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password, role }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Đăng ký thất bại');
+        }
+
+        // Auto login after register
+        await login(email, password);
+    };
+
     const router = useRouter();
 
     const logout = () => {
@@ -81,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         isLoading,
         login,
+        register,
         logout,
         isTeacher: user?.role === 'teacher' || user?.role === 'admin',
         isStudent: user?.role === 'student',

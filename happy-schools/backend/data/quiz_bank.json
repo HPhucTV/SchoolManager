@@ -1,0 +1,1642 @@
+{
+  "Toán": {
+    "easy": [
+      {
+        "question_text": "3 + 5 × 2 = ?",
+        "option_a": "16",
+        "option_b": "13",
+        "option_c": "11",
+        "option_d": "10",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Số nguyên tố nhỏ nhất là số nào?",
+        "option_a": "0",
+        "option_b": "1",
+        "option_c": "2",
+        "option_d": "3",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Diện tích hình chữ nhật có chiều dài 5cm, chiều rộng 3cm là bao nhiêu?",
+        "option_a": "8 cm²",
+        "option_b": "15 cm²",
+        "option_c": "16 cm²",
+        "option_d": "30 cm²",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "1/2 + 1/4 = ?",
+        "option_a": "1/6",
+        "option_b": "2/6",
+        "option_c": "3/4",
+        "option_d": "1/3",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Chu vi hình vuông cạnh 6cm là?",
+        "option_a": "12 cm",
+        "option_b": "24 cm",
+        "option_c": "36 cm",
+        "option_d": "18 cm",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Số nào chia hết cho cả 2 và 5?",
+        "option_a": "15",
+        "option_b": "20",
+        "option_c": "25",
+        "option_d": "12",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Kết quả của 7² là?",
+        "option_a": "14",
+        "option_b": "21",
+        "option_c": "49",
+        "option_d": "56",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "√144 = ?",
+        "option_a": "11",
+        "option_b": "12",
+        "option_c": "13",
+        "option_d": "14",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Một tam giác có 3 góc bằng nhau, mỗi góc bằng bao nhiêu độ?",
+        "option_a": "45°",
+        "option_b": "60°",
+        "option_c": "90°",
+        "option_d": "120°",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "15% của 200 là bao nhiêu?",
+        "option_a": "15",
+        "option_b": "20",
+        "option_c": "25",
+        "option_d": "30",
+        "correct_answer": "D"
+      },
+      {
+        "question_text": "Tổng các góc trong một tam giác bằng?",
+        "option_a": "90°",
+        "option_b": "180°",
+        "option_c": "270°",
+        "option_d": "360°",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "ƯCLN của 12 và 18 là?",
+        "option_a": "2",
+        "option_b": "3",
+        "option_c": "6",
+        "option_d": "9",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Số La Mã IX có giá trị bằng?",
+        "option_a": "4",
+        "option_b": "6",
+        "option_c": "9",
+        "option_d": "11",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "2³ = ?",
+        "option_a": "6",
+        "option_b": "8",
+        "option_c": "9",
+        "option_d": "16",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Hình tròn có bao nhiêu trục đối xứng?",
+        "option_a": "1",
+        "option_b": "2",
+        "option_c": "4",
+        "option_d": "Vô số",
+        "correct_answer": "D"
+      }
+    ],
+    "medium": [
+      {
+        "question_text": "Giải phương trình: 2x + 5 = 15",
+        "option_a": "x = 3",
+        "option_b": "x = 5",
+        "option_c": "x = 7",
+        "option_d": "x = 10",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Diện tích hình tròn bán kính 7cm (lấy π ≈ 22/7) là?",
+        "option_a": "44 cm²",
+        "option_b": "154 cm²",
+        "option_c": "308 cm²",
+        "option_d": "616 cm²",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Giá trị của biểu thức |−5| + |3| là?",
+        "option_a": "−2",
+        "option_b": "2",
+        "option_c": "8",
+        "option_d": "−8",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Nghiệm của phương trình x² = 25 là?",
+        "option_a": "x = 5",
+        "option_b": "x = −5",
+        "option_c": "x = ±5",
+        "option_d": "x = 25",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "BCNN của 4 và 6 là?",
+        "option_a": "2",
+        "option_b": "6",
+        "option_c": "12",
+        "option_d": "24",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Tam giác ABC có AB = 3, BC = 4, AC = 5. Tam giác này là?",
+        "option_a": "Tam giác đều",
+        "option_b": "Tam giác cân",
+        "option_c": "Tam giác vuông",
+        "option_d": "Tam giác tù",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Đạo hàm của f(x) = 3x² + 2x là?",
+        "option_a": "6x + 2",
+        "option_b": "3x + 2",
+        "option_c": "6x² + 2",
+        "option_d": "6x",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Tập nghiệm của bất phương trình 2x - 1 > 5 là?",
+        "option_a": "x > 2",
+        "option_b": "x > 3",
+        "option_c": "x < 3",
+        "option_d": "x > 6",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "log₂(8) = ?",
+        "option_a": "2",
+        "option_b": "3",
+        "option_c": "4",
+        "option_d": "8",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Sin 30° = ?",
+        "option_a": "0",
+        "option_b": "1/2",
+        "option_c": "√2/2",
+        "option_d": "√3/2",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Thể tích hình hộp chữ nhật 3×4×5 cm là?",
+        "option_a": "12 cm³",
+        "option_b": "30 cm³",
+        "option_c": "60 cm³",
+        "option_d": "120 cm³",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Số hạng thứ 10 của dãy số: 2, 5, 8, 11, ... là?",
+        "option_a": "26",
+        "option_b": "29",
+        "option_c": "32",
+        "option_d": "35",
+        "correct_answer": "B"
+      }
+    ],
+    "hard": [
+      {
+        "question_text": "Tích phân ∫₀¹ 2x dx = ?",
+        "option_a": "0",
+        "option_b": "1",
+        "option_c": "2",
+        "option_d": "4",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Giới hạn lim(x→0) sin(x)/x = ?",
+        "option_a": "0",
+        "option_b": "1",
+        "option_c": "∞",
+        "option_d": "Không tồn tại",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Ma trận 2×2: [[1,2],[3,4]] có định thức bằng?",
+        "option_a": "−2",
+        "option_b": "2",
+        "option_c": "−4",
+        "option_d": "10",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Số phức z = 3 + 4i có mô-đun bằng?",
+        "option_a": "1",
+        "option_b": "5",
+        "option_c": "7",
+        "option_d": "25",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Phương trình x³ - 6x² + 11x - 6 = 0 có bao nhiêu nghiệm thực?",
+        "option_a": "0",
+        "option_b": "1",
+        "option_c": "2",
+        "option_d": "3",
+        "correct_answer": "D"
+      },
+      {
+        "question_text": "Cấp số nhân: 2, 6, 18, ... Số hạng thứ 5 là?",
+        "option_a": "54",
+        "option_b": "108",
+        "option_c": "162",
+        "option_d": "486",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Giá trị lớn nhất của f(x) = -x² + 4x + 1 là?",
+        "option_a": "1",
+        "option_b": "3",
+        "option_c": "5",
+        "option_d": "7",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Tổ hợp C(10,3) = ?",
+        "option_a": "30",
+        "option_b": "60",
+        "option_c": "120",
+        "option_d": "720",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Cos(π/3) = ?",
+        "option_a": "0",
+        "option_b": "1/2",
+        "option_c": "√2/2",
+        "option_d": "√3/2",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Xác suất tung 2 xúc xắc được tổng = 7 là?",
+        "option_a": "1/6",
+        "option_b": "5/36",
+        "option_c": "6/36",
+        "option_d": "7/36",
+        "correct_answer": "C"
+      }
+    ]
+  },
+  "Lý": {
+    "easy": [
+      {
+        "question_text": "Đơn vị đo cường độ dòng điện là gì?",
+        "option_a": "Vôn (V)",
+        "option_b": "Ampe (A)",
+        "option_c": "Ôm (Ω)",
+        "option_d": "Oát (W)",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Ánh sáng truyền trong chân không với vận tốc xấp xỉ?",
+        "option_a": "300 km/s",
+        "option_b": "3.000 km/s",
+        "option_c": "300.000 km/s",
+        "option_d": "3.000.000 km/s",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Nước sôi ở nhiệt độ bao nhiêu (áp suất 1 atm)?",
+        "option_a": "90°C",
+        "option_b": "100°C",
+        "option_c": "110°C",
+        "option_d": "120°C",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Đơn vị đo lực trong hệ SI là?",
+        "option_a": "Joule",
+        "option_b": "Watt",
+        "option_c": "Newton",
+        "option_d": "Pascal",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Gia tốc trọng trường g ≈ ?",
+        "option_a": "8.9 m/s²",
+        "option_b": "9.8 m/s²",
+        "option_c": "10.8 m/s²",
+        "option_d": "11.9 m/s²",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Dòng điện trong kim loại là dòng chuyển dời có hướng của?",
+        "option_a": "Proton",
+        "option_b": "Neutron",
+        "option_c": "Electron tự do",
+        "option_d": "Ion dương",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Sóng âm không truyền được trong?",
+        "option_a": "Chất rắn",
+        "option_b": "Chất lỏng",
+        "option_c": "Chất khí",
+        "option_d": "Chân không",
+        "correct_answer": "D"
+      },
+      {
+        "question_text": "Công thức tính vận tốc đều là?",
+        "option_a": "v = s/t",
+        "option_b": "v = s×t",
+        "option_c": "v = t/s",
+        "option_d": "v = s²/t",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "1 kWh = ? Joule",
+        "option_a": "1.000 J",
+        "option_b": "36.000 J",
+        "option_c": "360.000 J",
+        "option_d": "3.600.000 J",
+        "correct_answer": "D"
+      },
+      {
+        "question_text": "Lực đẩy Ác-si-mét phụ thuộc vào?",
+        "option_a": "Khối lượng vật",
+        "option_b": "Hình dạng vật",
+        "option_c": "Thể tích phần chìm",
+        "option_d": "Màu sắc vật",
+        "correct_answer": "C"
+      }
+    ],
+    "medium": [
+      {
+        "question_text": "Một vật có m = 2kg, gia tốc a = 3m/s². Lực tác dụng lên vật là?",
+        "option_a": "1.5 N",
+        "option_b": "5 N",
+        "option_c": "6 N",
+        "option_d": "9 N",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Điện trở R = 10Ω, U = 20V. Cường độ dòng điện I = ?",
+        "option_a": "0.5 A",
+        "option_b": "2 A",
+        "option_c": "10 A",
+        "option_d": "200 A",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Công suất P = 100W trong 1 phút tiêu thụ năng lượng bao nhiêu?",
+        "option_a": "100 J",
+        "option_b": "600 J",
+        "option_c": "6000 J",
+        "option_d": "60000 J",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Bước sóng λ = 0.5μm thuộc vùng ánh sáng nào?",
+        "option_a": "Đỏ",
+        "option_b": "Vàng",
+        "option_c": "Xanh lục",
+        "option_d": "Tím",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Hiện tượng khúc xạ ánh sáng xảy ra khi?",
+        "option_a": "Ánh sáng gặp gương phẳng",
+        "option_b": "Ánh sáng truyền qua mặt phân cách 2 môi trường",
+        "option_c": "Ánh sáng bị hấp thụ",
+        "option_d": "Ánh sáng đi trong chân không",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Động năng của vật m = 4kg, v = 5m/s là?",
+        "option_a": "10 J",
+        "option_b": "20 J",
+        "option_c": "50 J",
+        "option_d": "100 J",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Sóng điện từ có tần số f = 100 MHz có bước sóng λ = ?",
+        "option_a": "0.3 m",
+        "option_b": "3 m",
+        "option_c": "30 m",
+        "option_d": "300 m",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Hai điện trở R₁ = 6Ω, R₂ = 3Ω mắc song song có điện trở tương đương?",
+        "option_a": "1Ω",
+        "option_b": "2Ω",
+        "option_c": "3Ω",
+        "option_d": "9Ω",
+        "correct_answer": "B"
+      }
+    ],
+    "hard": [
+      {
+        "question_text": "Electron có năng lượng E = -13.6/n² eV. Ở trạng thái n=2, E = ?",
+        "option_a": "-13.6 eV",
+        "option_b": "-6.8 eV",
+        "option_c": "-3.4 eV",
+        "option_d": "-1.5 eV",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Hiện tượng quang điện xảy ra khi bước sóng ánh sáng?",
+        "option_a": "λ > λ₀",
+        "option_b": "λ ≤ λ₀",
+        "option_c": "λ = 2λ₀",
+        "option_d": "Bất kỳ",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Chu kỳ bán rã của ¹⁴C là 5730 năm. Sau 11460 năm còn bao nhiêu %?",
+        "option_a": "50%",
+        "option_b": "25%",
+        "option_c": "12.5%",
+        "option_d": "6.25%",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Công thức E = mc² thuộc lý thuyết nào?",
+        "option_a": "Cơ học Newton",
+        "option_b": "Thuyết tương đối hẹp",
+        "option_c": "Cơ học lượng tử",
+        "option_d": "Điện từ học",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Con lắc đơn có T = 2π√(l/g). Khi l tăng 4 lần, T?",
+        "option_a": "Tăng 2 lần",
+        "option_b": "Tăng 4 lần",
+        "option_c": "Giảm 2 lần",
+        "option_d": "Không đổi",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Hiện tượng giao thoa ánh sáng chứng tỏ ánh sáng có tính chất?",
+        "option_a": "Hạt",
+        "option_b": "Sóng",
+        "option_c": "Hạt và sóng",
+        "option_d": "Không xác định",
+        "correct_answer": "B"
+      }
+    ]
+  },
+  "Hóa": {
+    "easy": [
+      {
+        "question_text": "Ký hiệu hóa học của nước là?",
+        "option_a": "H₂O",
+        "option_b": "CO₂",
+        "option_c": "NaCl",
+        "option_d": "O₂",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Nguyên tố nào có ký hiệu Fe?",
+        "option_a": "Flo",
+        "option_b": "Sắt",
+        "option_c": "Phốt pho",
+        "option_d": "Franxi",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Khí nào cần cho sự cháy?",
+        "option_a": "Nitơ",
+        "option_b": "Cacbon đioxit",
+        "option_c": "Oxi",
+        "option_d": "Hiđrô",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "pH = 7 là dung dịch?",
+        "option_a": "Axit",
+        "option_b": "Bazơ",
+        "option_c": "Trung tính",
+        "option_d": "Muối",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Công thức hóa học của muối ăn là?",
+        "option_a": "NaOH",
+        "option_b": "NaCl",
+        "option_c": "HCl",
+        "option_d": "Na₂CO₃",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Nguyên tử gồm có?",
+        "option_a": "Chỉ proton",
+        "option_b": "Hạt nhân và vỏ electron",
+        "option_c": "Chỉ neutron",
+        "option_d": "Chỉ electron",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Số hiệu nguyên tử cho biết số?",
+        "option_a": "Neutron",
+        "option_b": "Proton",
+        "option_c": "Electron hóa trị",
+        "option_d": "Khối lượng",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Khí CO₂ còn được gọi là?",
+        "option_a": "Khí cacbon monoxit",
+        "option_b": "Khí cacbonic",
+        "option_c": "Khí metan",
+        "option_d": "Khí ozon",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Axit clohiđric có công thức?",
+        "option_a": "HNO₃",
+        "option_b": "H₂SO₄",
+        "option_c": "HCl",
+        "option_d": "H₃PO₄",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Lớp electron ngoài cùng tối đa chứa?",
+        "option_a": "2 electron",
+        "option_b": "6 electron",
+        "option_c": "8 electron",
+        "option_d": "18 electron",
+        "correct_answer": "C"
+      }
+    ],
+    "medium": [
+      {
+        "question_text": "Phản ứng: 2H₂ + O₂ → 2H₂O là phản ứng?",
+        "option_a": "Phân hủy",
+        "option_b": "Hóa hợp",
+        "option_c": "Thế",
+        "option_d": "Trao đổi",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Nồng độ mol của dd chứa 0.5 mol NaCl trong 500ml là?",
+        "option_a": "0.5M",
+        "option_b": "1M",
+        "option_c": "1.5M",
+        "option_d": "2M",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Na + H₂O → ? + H₂↑",
+        "option_a": "Na₂O",
+        "option_b": "NaOH",
+        "option_c": "NaCl",
+        "option_d": "Na₂CO₃",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Cấu hình electron của Na (Z=11) là?",
+        "option_a": "1s²2s²2p⁶3s¹",
+        "option_b": "1s²2s²2p⁶3s²",
+        "option_c": "1s²2s²2p⁷",
+        "option_d": "1s²2s²2p⁶",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Liên kết ion được hình thành giữa?",
+        "option_a": "2 phi kim",
+        "option_b": "2 kim loại",
+        "option_c": "Kim loại và phi kim",
+        "option_d": "2 khí hiếm",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Phản ứng tỏa nhiệt là phản ứng có ΔH?",
+        "option_a": "< 0",
+        "option_b": "> 0",
+        "option_c": "= 0",
+        "option_d": "Không xác định",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Ancol etylic (C₂H₅OH) thuộc loại hợp chất?",
+        "option_a": "Hiđrocacbon",
+        "option_b": "Hữu cơ có nhóm -OH",
+        "option_c": "Axit",
+        "option_d": "Este",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Số oxi hóa của Mn trong KMnO₄ là?",
+        "option_a": "+2",
+        "option_b": "+4",
+        "option_c": "+6",
+        "option_d": "+7",
+        "correct_answer": "D"
+      }
+    ],
+    "hard": [
+      {
+        "question_text": "Hằng số Avogadro N_A ≈ ?",
+        "option_a": "6.022 × 10²³",
+        "option_b": "6.022 × 10²²",
+        "option_c": "6.626 × 10⁻³⁴",
+        "option_d": "1.602 × 10⁻¹⁹",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Điện phân dd CuSO₄ với điện cực trơ, ở catot thu được?",
+        "option_a": "O₂",
+        "option_b": "Cu",
+        "option_c": "SO₂",
+        "option_d": "H₂",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Phản ứng este hóa giữa CH₃COOH và C₂H₅OH tạo ra?",
+        "option_a": "CH₃COOC₂H₅",
+        "option_b": "C₂H₅COOCH₃",
+        "option_c": "CH₃OC₂H₅",
+        "option_d": "CH₃CHO",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Polime nào được tổng hợp bằng phản ứng trùng ngưng?",
+        "option_a": "Polietilen",
+        "option_b": "PVC",
+        "option_c": "Nylon-6,6",
+        "option_d": "Cao su buna",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Amino axit có tính chất lưỡng tính vì?",
+        "option_a": "Có nhóm -NH₂ và -COOH",
+        "option_b": "Tan trong nước",
+        "option_c": "Tạo liên kết peptit",
+        "option_d": "Có mạch cacbon",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Phương trình Nernst dùng để tính?",
+        "option_a": "Tốc độ phản ứng",
+        "option_b": "Thế điện cực",
+        "option_c": "Nhiệt phản ứng",
+        "option_d": "Áp suất",
+        "correct_answer": "B"
+      }
+    ]
+  },
+  "Sinh": {
+    "easy": [
+      {
+        "question_text": "ADN là viết tắt của?",
+        "option_a": "Axit đêôxiribônuclêic",
+        "option_b": "Axit ribônuclêic",
+        "option_c": "Adenin đinuclêotit",
+        "option_d": "Axit amin",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Quang hợp diễn ra chủ yếu ở cơ quan nào?",
+        "option_a": "Rễ",
+        "option_b": "Thân",
+        "option_c": "Lá",
+        "option_d": "Hoa",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Con người có bao nhiêu đôi nhiễm sắc thể?",
+        "option_a": "22",
+        "option_b": "23",
+        "option_c": "24",
+        "option_d": "46",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Tế bào thực vật khác tế bào động vật ở điểm nào?",
+        "option_a": "Có nhân",
+        "option_b": "Có thành xenlulozo",
+        "option_c": "Có ADN",
+        "option_d": "Có ribosome",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Hô hấp tế bào tạo ra sản phẩm chính là?",
+        "option_a": "O₂ và glucose",
+        "option_b": "CO₂ và H₂O",
+        "option_c": "CO₂ và O₂",
+        "option_d": "Glucose và H₂O",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Máu có mấy nhóm chính (theo hệ ABO)?",
+        "option_a": "2",
+        "option_b": "3",
+        "option_c": "4",
+        "option_d": "6",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Ti thể là nơi diễn ra quá trình?",
+        "option_a": "Quang hợp",
+        "option_b": "Hô hấp tế bào",
+        "option_c": "Tổng hợp protein",
+        "option_d": "Phân bào",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Enzyme có bản chất hóa học là?",
+        "option_a": "Lipit",
+        "option_b": "Protein",
+        "option_c": "Cacbohidrat",
+        "option_d": "Axit nucleic",
+        "correct_answer": "B"
+      }
+    ],
+    "medium": [
+      {
+        "question_text": "Bộ ba mở đầu trên mARN là?",
+        "option_a": "UAA",
+        "option_b": "UAG",
+        "option_c": "AUG",
+        "option_d": "UGA",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Quy luật phân li của Mendel phát biểu về?",
+        "option_a": "Sự phân li của các alen trong giảm phân",
+        "option_b": "Sự tổ hợp tự do",
+        "option_c": "Hoán vị gen",
+        "option_d": "Tương tác gen",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Pha sáng của quang hợp diễn ra ở?",
+        "option_a": "Chất nền lục lạp",
+        "option_b": "Màng thylakoid",
+        "option_c": "Tế bào chất",
+        "option_d": "Nhân tế bào",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Chuỗi thức ăn bắt đầu bằng?",
+        "option_a": "Động vật ăn thịt",
+        "option_b": "Sinh vật phân giải",
+        "option_c": "Sinh vật sản xuất",
+        "option_d": "Động vật ăn tạp",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Đột biến gen là sự thay đổi ở?",
+        "option_a": "Số lượng NST",
+        "option_b": "Cấu trúc NST",
+        "option_c": "1 hoặc vài cặp nucleotit",
+        "option_d": "Bộ NST",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Chọn lọc tự nhiên có vai trò?",
+        "option_a": "Tạo ra biến dị",
+        "option_b": "Định hướng tiến hóa",
+        "option_c": "Tạo ra đột biến",
+        "option_d": "Tăng số lượng cá thể",
+        "correct_answer": "B"
+      }
+    ],
+    "hard": [
+      {
+        "question_text": "Operon Lac ở E.coli được điều hòa theo cơ chế?",
+        "option_a": "Điều hòa dương",
+        "option_b": "Điều hòa âm",
+        "option_c": "Cả dương và âm",
+        "option_d": "Không điều hòa",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Gen A quy định hoa đỏ trội hoàn toàn so gen a hoa trắng. P: Aa × Aa, F1 có tỉ lệ kiểu hình?",
+        "option_a": "100% đỏ",
+        "option_b": "3 đỏ : 1 trắng",
+        "option_c": "1 đỏ : 1 trắng",
+        "option_d": "1 đỏ : 2 hồng : 1 trắng",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Công nghệ PCR dùng enzyme?",
+        "option_a": "Ligase",
+        "option_b": "Restrictase",
+        "option_c": "Taq polymerase",
+        "option_d": "Helicase",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Trong hệ sinh thái, năng lượng truyền qua các bậc dinh dưỡng theo quy tắc?",
+        "option_a": "100%",
+        "option_b": "50%",
+        "option_c": "Khoảng 10%",
+        "option_d": "Khoảng 1%",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Hardy-Weinberg mô tả quần thể?",
+        "option_a": "Đang tiến hóa",
+        "option_b": "Cân bằng di truyền",
+        "option_c": "Đang chọn lọc",
+        "option_d": "Đang đột biến",
+        "correct_answer": "B"
+      }
+    ]
+  },
+  "Sử": {
+    "easy": [
+      {
+        "question_text": "Cách mạng tháng Tám thành công năm nào?",
+        "option_a": "1930",
+        "option_b": "1945",
+        "option_c": "1954",
+        "option_d": "1975",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Ai đọc bản Tuyên ngôn Độc lập ngày 2/9/1945?",
+        "option_a": "Võ Nguyên Giáp",
+        "option_b": "Hồ Chí Minh",
+        "option_c": "Phạm Văn Đồng",
+        "option_d": "Trường Chinh",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Chiến thắng Điện Biên Phủ diễn ra năm?",
+        "option_a": "1950",
+        "option_b": "1953",
+        "option_c": "1954",
+        "option_d": "1955",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Nhà nước Văn Lang do ai đứng đầu?",
+        "option_a": "An Dương Vương",
+        "option_b": "Hùng Vương",
+        "option_c": "Trưng Nữ Vương",
+        "option_d": "Lý Nam Đế",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Cuộc kháng chiến chống Mỹ kết thúc năm?",
+        "option_a": "1973",
+        "option_b": "1975",
+        "option_c": "1976",
+        "option_d": "1979",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Hiệp định Giơ-ne-vơ được ký năm?",
+        "option_a": "1945",
+        "option_b": "1950",
+        "option_c": "1954",
+        "option_d": "1960",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Trận Bạch Đằng năm 938 do ai chỉ huy?",
+        "option_a": "Lý Thường Kiệt",
+        "option_b": "Ngô Quyền",
+        "option_c": "Trần Hưng Đạo",
+        "option_d": "Lê Lợi",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Bác Hồ ra đi tìm đường cứu nước năm?",
+        "option_a": "1911",
+        "option_b": "1920",
+        "option_c": "1925",
+        "option_d": "1930",
+        "correct_answer": "A"
+      }
+    ],
+    "medium": [
+      {
+        "question_text": "Đảng Cộng sản Việt Nam được thành lập ngày?",
+        "option_a": "3/2/1930",
+        "option_b": "19/5/1930",
+        "option_c": "2/9/1930",
+        "option_d": "22/12/1930",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Cuộc Cách mạng công nghiệp lần thứ nhất bắt đầu ở?",
+        "option_a": "Pháp",
+        "option_b": "Đức",
+        "option_c": "Anh",
+        "option_d": "Mỹ",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Hiến pháp đầu tiên của Việt Nam được ban hành năm?",
+        "option_a": "1945",
+        "option_b": "1946",
+        "option_c": "1954",
+        "option_d": "1959",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Chiến dịch Hồ Chí Minh diễn ra vào ngày?",
+        "option_a": "30/4/1975",
+        "option_b": "7/5/1975",
+        "option_c": "2/9/1975",
+        "option_d": "26/4/1975",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Trận Đống Đa năm 1789 do ai chỉ huy đánh quân xâm lược?",
+        "option_a": "Nguyễn Huệ",
+        "option_b": "Nguyễn Nhạc",
+        "option_c": "Nguyễn Lữ",
+        "option_d": "Lê Chiêu Thống",
+        "correct_answer": "A"
+      }
+    ],
+    "hard": [
+      {
+        "question_text": "Hiệp ước Nhâm Tuất (1862) Pháp chiếm những tỉnh nào?",
+        "option_a": "3 tỉnh miền Tây Nam Kỳ",
+        "option_b": "3 tỉnh miền Đông Nam Kỳ",
+        "option_c": "6 tỉnh Nam Kỳ",
+        "option_d": "Toàn bộ Bắc Kỳ",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Phong trào Đông Du do ai khởi xướng?",
+        "option_a": "Phan Châu Trinh",
+        "option_b": "Phan Bội Châu",
+        "option_c": "Lương Văn Can",
+        "option_d": "Nguyễn Thái Học",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Khối NATO được thành lập năm nào?",
+        "option_a": "1945",
+        "option_b": "1947",
+        "option_c": "1949",
+        "option_d": "1955",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Cuộc Cách mạng tháng Mười Nga diễn ra năm?",
+        "option_a": "1905",
+        "option_b": "1914",
+        "option_c": "1917",
+        "option_d": "1921",
+        "correct_answer": "C"
+      }
+    ]
+  },
+  "Văn": {
+    "easy": [
+      {
+        "question_text": "Truyện Kiều là tác phẩm của?",
+        "option_a": "Nguyễn Trãi",
+        "option_b": "Nguyễn Du",
+        "option_c": "Hồ Xuân Hương",
+        "option_d": "Nguyễn Đình Chiểu",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Bài thơ 'Tây Tiến' do ai sáng tác?",
+        "option_a": "Tố Hữu",
+        "option_b": "Xuân Diệu",
+        "option_c": "Quang Dũng",
+        "option_d": "Hữu Thỉnh",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Tác phẩm 'Tắt đèn' của ai?",
+        "option_a": "Nam Cao",
+        "option_b": "Ngô Tất Tố",
+        "option_c": "Vũ Trọng Phụng",
+        "option_d": "Nguyên Hồng",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Thể thơ lục bát mỗi cặp có bao nhiêu câu?",
+        "option_a": "1",
+        "option_b": "2",
+        "option_c": "3",
+        "option_d": "4",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Nhân vật Chí Phèo trong tác phẩm cùng tên của ai?",
+        "option_a": "Nam Cao",
+        "option_b": "Ngô Tất Tố",
+        "option_c": "Kim Lân",
+        "option_d": "Tô Hoài",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "'Bình Ngô đại cáo' do ai viết?",
+        "option_a": "Lê Lợi",
+        "option_b": "Nguyễn Trãi",
+        "option_c": "Trần Hưng Đạo",
+        "option_d": "Lý Thường Kiệt",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Văn nghị luận nhằm mục đích gì?",
+        "option_a": "Kể chuyện",
+        "option_b": "Miêu tả",
+        "option_c": "Thuyết phục người đọc",
+        "option_d": "Biểu cảm",
+        "correct_answer": "C"
+      }
+    ],
+    "medium": [
+      {
+        "question_text": "Biện pháp tu từ trong câu 'Đầu tường lửa lựu lập lòe đâm bông' là?",
+        "option_a": "So sánh",
+        "option_b": "Nhân hóa",
+        "option_c": "Ẩn dụ",
+        "option_d": "Điệp âm",
+        "correct_answer": "D"
+      },
+      {
+        "question_text": "Tác phẩm nào thuộc văn học hiện thực phê phán?",
+        "option_a": "Tây Tiến",
+        "option_b": "Số đỏ",
+        "option_c": "Đất nước",
+        "option_d": "Việt Bắc",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Trong Truyện Kiều, Kim Trọng là?",
+        "option_a": "Người yêu của Kiều",
+        "option_b": "Cha của Kiều",
+        "option_c": "Anh trai Kiều",
+        "option_d": "Kẻ thù của Kiều",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Phép đối trong thơ Đường luật yêu cầu đối ở?",
+        "option_a": "Câu 1-2",
+        "option_b": "Câu 3-4 và 5-6",
+        "option_c": "Câu 7-8",
+        "option_d": "Tất cả các câu",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Tác phẩm 'Vợ nhặt' của Kim Lân lấy bối cảnh nạn đói năm?",
+        "option_a": "1943",
+        "option_b": "1944",
+        "option_c": "1945",
+        "option_d": "1946",
+        "correct_answer": "C"
+      }
+    ],
+    "hard": [
+      {
+        "question_text": "Chủ nghĩa nhân đạo trong Truyện Kiều thể hiện qua?",
+        "option_a": "Ca ngợi thiên nhiên",
+        "option_b": "Đồng cảm với số phận người phụ nữ",
+        "option_c": "Phê phán xã hội phong kiến",
+        "option_d": "Cả B và C",
+        "correct_answer": "D"
+      },
+      {
+        "question_text": "Phong cách nghệ thuật thơ Tố Hữu được đánh giá là?",
+        "option_a": "Trữ tình chính trị",
+        "option_b": "Siêu thực",
+        "option_c": "Tượng trưng",
+        "option_d": "Hiện thực phê phán",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Bút pháp chủ đạo của Nam Cao trong 'Chí Phèo' là?",
+        "option_a": "Lãng mạn",
+        "option_b": "Hiện thực",
+        "option_c": "Siêu thực",
+        "option_d": "Tự nhiên chủ nghĩa",
+        "correct_answer": "B"
+      }
+    ]
+  },
+  "Địa": {
+    "easy": [
+      {
+        "question_text": "Thủ đô của Việt Nam là?",
+        "option_a": "TP Hồ Chí Minh",
+        "option_b": "Hà Nội",
+        "option_c": "Đà Nẵng",
+        "option_d": "Huế",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Đại dương lớn nhất thế giới?",
+        "option_a": "Đại Tây Dương",
+        "option_b": "Ấn Độ Dương",
+        "option_c": "Thái Bình Dương",
+        "option_d": "Bắc Băng Dương",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Quốc gia có diện tích lớn nhất thế giới?",
+        "option_a": "Trung Quốc",
+        "option_b": "Mỹ",
+        "option_c": "Canada",
+        "option_d": "Nga",
+        "correct_answer": "D"
+      },
+      {
+        "question_text": "Sông nào dài nhất Việt Nam?",
+        "option_a": "Sông Hồng",
+        "option_b": "Sông Mê Kông",
+        "option_c": "Sông Đà",
+        "option_d": "Sông Đồng Nai",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Châu lục nào có diện tích nhỏ nhất?",
+        "option_a": "Châu Âu",
+        "option_b": "Châu Đại Dương",
+        "option_c": "Châu Nam Cực",
+        "option_d": "Châu Úc",
+        "correct_answer": "D"
+      },
+      {
+        "question_text": "Việt Nam thuộc múi giờ số mấy?",
+        "option_a": "GMT+5",
+        "option_b": "GMT+6",
+        "option_c": "GMT+7",
+        "option_d": "GMT+8",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Đỉnh núi cao nhất Việt Nam?",
+        "option_a": "Phanxipăng",
+        "option_b": "Ngọc Linh",
+        "option_c": "Bà Đen",
+        "option_d": "Langbiang",
+        "correct_answer": "A"
+      }
+    ],
+    "medium": [
+      {
+        "question_text": "Hiện tượng El Niño là?",
+        "option_a": "Dòng biển lạnh",
+        "option_b": "Hiện tượng nóng lên của nước biển Thái Bình Dương",
+        "option_c": "Bão nhiệt đới",
+        "option_d": "Sóng thần",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Đồng bằng sông Cửu Long có đặc điểm?",
+        "option_a": "Địa hình trũng, thấp",
+        "option_b": "Địa hình đồi núi",
+        "option_c": "Khí hậu ôn đới",
+        "option_d": "Ít sông ngòi",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Tây Nguyên nổi tiếng với cây công nghiệp nào?",
+        "option_a": "Lúa gạo",
+        "option_b": "Cà phê",
+        "option_c": "Cao su",
+        "option_d": "Chè",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Dãy Hoàng Liên Sơn nằm ở vùng nào?",
+        "option_a": "Tây Bắc",
+        "option_b": "Đông Bắc",
+        "option_c": "Bắc Trung Bộ",
+        "option_d": "Tây Nguyên",
+        "correct_answer": "A"
+      }
+    ],
+    "hard": [
+      {
+        "question_text": "Nguyên nhân chính gây biến đổi khí hậu toàn cầu?",
+        "option_a": "Tăng O₂",
+        "option_b": "Tăng khí nhà kính (CO₂, CH₄)",
+        "option_c": "Giảm dân số",
+        "option_d": "Tăng diện tích rừng",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Cơ cấu GDP Việt Nam hiện nay, ngành nào chiếm tỷ trọng cao nhất?",
+        "option_a": "Nông nghiệp",
+        "option_b": "Công nghiệp",
+        "option_c": "Dịch vụ",
+        "option_d": "Lâm nghiệp",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Hiệu ứng nhà kính là gì?",
+        "option_a": "Trái Đất nóng lên do khí nhà kính giữ nhiệt",
+        "option_b": "Trái Đất lạnh đi",
+        "option_c": "Tầng ozon dày lên",
+        "option_d": "Mưa axit",
+        "correct_answer": "A"
+      }
+    ]
+  },
+  "Anh văn": {
+    "easy": [
+      {
+        "question_text": "'Book' means _____ in Vietnamese.",
+        "option_a": "Bút",
+        "option_b": "Sách",
+        "option_c": "Bàn",
+        "option_d": "Ghế",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "She _____ a student.",
+        "option_a": "am",
+        "option_b": "is",
+        "option_c": "are",
+        "option_d": "be",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "What color is the sky? - It's _____.",
+        "option_a": "red",
+        "option_b": "green",
+        "option_c": "blue",
+        "option_d": "yellow",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "I _____ to school every day.",
+        "option_a": "goes",
+        "option_b": "go",
+        "option_c": "going",
+        "option_d": "gone",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "The opposite of 'hot' is _____.",
+        "option_a": "warm",
+        "option_b": "cool",
+        "option_c": "cold",
+        "option_d": "wet",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "There _____ two cats in the garden.",
+        "option_a": "is",
+        "option_b": "are",
+        "option_c": "am",
+        "option_d": "be",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "My mother _____ cooking dinner now.",
+        "option_a": "is",
+        "option_b": "are",
+        "option_c": "am",
+        "option_d": "was",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "How _____ are you? - I'm 15.",
+        "option_a": "old",
+        "option_b": "tall",
+        "option_c": "much",
+        "option_d": "many",
+        "correct_answer": "A"
+      }
+    ],
+    "medium": [
+      {
+        "question_text": "If I _____ rich, I would travel the world.",
+        "option_a": "am",
+        "option_b": "was",
+        "option_c": "were",
+        "option_d": "be",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "She has lived here _____ 2010.",
+        "option_a": "for",
+        "option_b": "since",
+        "option_c": "from",
+        "option_d": "during",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "The book _____ by J.K. Rowling is very famous.",
+        "option_a": "writing",
+        "option_b": "wrote",
+        "option_c": "written",
+        "option_d": "writes",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "He suggested _____ to the cinema.",
+        "option_a": "go",
+        "option_b": "to go",
+        "option_c": "going",
+        "option_d": "went",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Neither Tom nor his friends _____ at the party.",
+        "option_a": "was",
+        "option_b": "were",
+        "option_c": "is",
+        "option_d": "has been",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "_____ you ever been to Japan?",
+        "option_a": "Did",
+        "option_b": "Do",
+        "option_c": "Have",
+        "option_d": "Are",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "I wish I _____ speak French fluently.",
+        "option_a": "can",
+        "option_b": "could",
+        "option_c": "will",
+        "option_d": "may",
+        "correct_answer": "B"
+      }
+    ],
+    "hard": [
+      {
+        "question_text": "Not until he arrived _____ the truth.",
+        "option_a": "did I know",
+        "option_b": "I knew",
+        "option_c": "I did know",
+        "option_d": "knew I",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Had I known about the meeting, I _____ earlier.",
+        "option_a": "would come",
+        "option_b": "would have come",
+        "option_c": "came",
+        "option_d": "had come",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "The more you practice, _____ you become.",
+        "option_a": "good",
+        "option_b": "the better",
+        "option_c": "the best",
+        "option_d": "better",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "It's high time we _____ action on climate change.",
+        "option_a": "take",
+        "option_b": "took",
+        "option_c": "taken",
+        "option_d": "taking",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "_____ the weather was bad, we went out.",
+        "option_a": "Although",
+        "option_b": "Because",
+        "option_c": "Since",
+        "option_d": "Unless",
+        "correct_answer": "A"
+      }
+    ]
+  },
+  "Tin học": {
+    "easy": [
+      {
+        "question_text": "CPU là viết tắt của?",
+        "option_a": "Central Processing Unit",
+        "option_b": "Computer Personal Unit",
+        "option_c": "Central Program Unit",
+        "option_d": "Computer Processing Unit",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "RAM là bộ nhớ loại nào?",
+        "option_a": "Bộ nhớ chỉ đọc",
+        "option_b": "Bộ nhớ truy cập ngẫu nhiên",
+        "option_c": "Bộ nhớ ngoài",
+        "option_d": "Bộ nhớ ảo",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Phần mềm nào dùng soạn thảo văn bản?",
+        "option_a": "Excel",
+        "option_b": "PowerPoint",
+        "option_c": "Word",
+        "option_d": "Access",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "1 byte = ? bit",
+        "option_a": "4",
+        "option_b": "8",
+        "option_c": "16",
+        "option_d": "32",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Hệ đếm nhị phân sử dụng bao nhiêu ký tự?",
+        "option_a": "2",
+        "option_b": "8",
+        "option_c": "10",
+        "option_d": "16",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "WWW là viết tắt của?",
+        "option_a": "World Wide Web",
+        "option_b": "World Wire Web",
+        "option_c": "Wide World Web",
+        "option_d": "Web World Wide",
+        "correct_answer": "A"
+      }
+    ],
+    "medium": [
+      {
+        "question_text": "Trong Python, kiểu dữ liệu nào lưu số thực?",
+        "option_a": "int",
+        "option_b": "str",
+        "option_c": "float",
+        "option_d": "bool",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Thuật toán sắp xếp nào có độ phức tạp trung bình O(n log n)?",
+        "option_a": "Bubble Sort",
+        "option_b": "Selection Sort",
+        "option_c": "Quick Sort",
+        "option_d": "Insertion Sort",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "SQL dùng lệnh nào để lấy dữ liệu?",
+        "option_a": "INSERT",
+        "option_b": "UPDATE",
+        "option_c": "SELECT",
+        "option_d": "DELETE",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "IP address phiên bản 4 có bao nhiêu bit?",
+        "option_a": "8",
+        "option_b": "16",
+        "option_c": "32",
+        "option_d": "64",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "HTML là ngôn ngữ?",
+        "option_a": "Lập trình",
+        "option_b": "Đánh dấu siêu văn bản",
+        "option_c": "Truy vấn dữ liệu",
+        "option_d": "Hệ điều hành",
+        "correct_answer": "B"
+      }
+    ],
+    "hard": [
+      {
+        "question_text": "Big-O của tìm kiếm nhị phân là?",
+        "option_a": "O(1)",
+        "option_b": "O(n)",
+        "option_c": "O(log n)",
+        "option_d": "O(n²)",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Giao thức HTTPS mặc định sử dụng cổng?",
+        "option_a": "80",
+        "option_b": "443",
+        "option_c": "8080",
+        "option_d": "3000",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Stack (ngăn xếp) hoạt động theo nguyên tắc?",
+        "option_a": "FIFO",
+        "option_b": "LIFO",
+        "option_c": "Random",
+        "option_d": "Priority",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Thuật toán Dijkstra dùng để?",
+        "option_a": "Sắp xếp",
+        "option_b": "Tìm đường đi ngắn nhất",
+        "option_c": "Tìm kiếm chuỗi",
+        "option_d": "Mã hóa",
+        "correct_answer": "B"
+      }
+    ]
+  },
+  "GDCD": {
+    "easy": [
+      {
+        "question_text": "Hiến pháp là?",
+        "option_a": "Luật cơ bản của nhà nước",
+        "option_b": "Nghị định chính phủ",
+        "option_c": "Thông tư bộ",
+        "option_d": "Quyết định UBND",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Quyền bầu cử ở Việt Nam bắt đầu từ mấy tuổi?",
+        "option_a": "16",
+        "option_b": "18",
+        "option_c": "20",
+        "option_d": "21",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Đạo đức là?",
+        "option_a": "Pháp luật",
+        "option_b": "Hệ thống quy tắc ứng xử",
+        "option_c": "Tôn giáo",
+        "option_d": "Phong tục",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Trẻ em có quyền gì theo Công ước LHQ?",
+        "option_a": "Quyền được bảo vệ",
+        "option_b": "Quyền lái xe",
+        "option_c": "Quyền bầu cử",
+        "option_d": "Quyền kết hôn",
+        "correct_answer": "A"
+      },
+      {
+        "question_text": "Tự do ngôn luận có nghĩa là?",
+        "option_a": "Nói bất cứ điều gì",
+        "option_b": "Được bày tỏ ý kiến trong khuôn khổ pháp luật",
+        "option_c": "Không cần chịu trách nhiệm",
+        "option_d": "Chỉ nói điều tốt",
+        "correct_answer": "B"
+      }
+    ],
+    "medium": [
+      {
+        "question_text": "Nguồn gốc của pháp luật là từ?",
+        "option_a": "Tôn giáo",
+        "option_b": "Nhà nước",
+        "option_c": "Cá nhân",
+        "option_d": "Phong tục",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Vi phạm pháp luật có mấy loại?",
+        "option_a": "2",
+        "option_b": "3",
+        "option_c": "4",
+        "option_d": "5",
+        "correct_answer": "C"
+      },
+      {
+        "question_text": "Quyền bất khả xâm phạm về thân thể có nghĩa?",
+        "option_a": "Không ai được bắt giữ trái pháp luật",
+        "option_b": "Được tự do đi lại",
+        "option_c": "Có quyền bầu cử",
+        "option_d": "Được tự do ngôn luận",
+        "correct_answer": "A"
+      }
+    ],
+    "hard": [
+      {
+        "question_text": "Nhà nước pháp quyền XHCN Việt Nam có đặc điểm?",
+        "option_a": "Quyền lực tập trung vào 1 người",
+        "option_b": "Quyền lực thuộc về nhân dân",
+        "option_c": "Không có hiến pháp",
+        "option_d": "Không có quốc hội",
+        "correct_answer": "B"
+      },
+      {
+        "question_text": "Nguyên tắc 'pháp luật là tối thượng' có nghĩa?",
+        "option_a": "Pháp luật do nhân dân tạo ra",
+        "option_b": "Mọi chủ thể đều bình đẳng trước pháp luật",
+        "option_c": "Chỉ công dân phải tuân thủ",
+        "option_d": "Pháp luật không thay đổi",
+        "correct_answer": "B"
+      }
+    ]
+  }
+}

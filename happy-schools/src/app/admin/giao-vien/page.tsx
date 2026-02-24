@@ -1,8 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { adminApi } from '@/lib/api';
-import { Plus, Trash2, X } from 'lucide-react';
+import { adminApi, classesApi } from '@/lib/api';
+import {
+    Plus, Search, Edit2, Trash2, X, Filter,
+    Mail, User, BookOpen, Users
+} from 'lucide-react';
+import styles from '../admin.module.css';
 
 interface User {
     id: number;
@@ -20,22 +24,25 @@ interface ClassData {
 
 export default function TeachersManagement() {
     const [teachers, setTeachers] = useState<User[]>([]);
-    const [classes, setClasses] = useState<ClassData[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+
+    // Form data
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+
+    // Toast & Confirm
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    const [showConfirm, setShowConfirm] = useState<{ id: number; name: string } | null>(null);
 
     const fetchData = async () => {
         try {
-            const [usersRes, classesRes] = await Promise.all([
-                adminApi.getUsers('teacher'),
-                adminApi.getClasses(),
-            ]);
-
-            setTeachers(usersRes);
-            setClasses(classesRes);
+            const data = await adminApi.getUsers('teacher');
+            setTeachers(data);
         } catch (err) {
-            console.error('Failed to fetch:', err);
+            console.error(err);
+            showToast('Lỗi tải danh sách giáo viên', 'error');
         } finally {
             setLoading(false);
         }
@@ -45,217 +52,271 @@ export default function TeachersManagement() {
         fetchData();
     }, []);
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const showToast = (message: string, type: 'success' | 'error') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
+
+    const handleCreateOrUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await adminApi.createUser({ ...formData, role: 'teacher' });
+            if (editingUser) {
+                // Update
+                await adminApi.updateUser(editingUser.id, {
+                    name: formData.name,
+                    email: formData.email,
+                });
+                showToast('Cập nhật thành công!', 'success');
+            } else {
+                // Create
+                await adminApi.createUser({ ...formData, role: 'teacher' });
+                showToast('Thêm giáo viên thành công!', 'success');
+            }
             setShowModal(false);
+            setEditingUser(null);
             setFormData({ name: '', email: '', password: '' });
             fetchData();
         } catch (err) {
-            console.error('Failed to create:', err);
-            alert(err instanceof Error ? err.message : 'Tạo giáo viên thất bại');
+            showToast(err instanceof Error ? err.message : 'Có lỗi xảy ra', 'error');
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Bạn có chắc muốn xóa giáo viên này?')) return;
-
+    const handleDelete = async () => {
+        if (!showConfirm) return;
         try {
-            await adminApi.deleteUser(id);
+            await adminApi.deleteUser(showConfirm.id);
+            showToast('Đã xoá giáo viên', 'success');
             fetchData();
         } catch (err) {
-            console.error('Failed to delete:', err);
-            alert('Xóa giáo viên thất bại');
+            showToast('Lỗi khi xoá giáo viên', 'error');
+        } finally {
+            setShowConfirm(null);
         }
     };
+
+    const openCreateModal = () => {
+        setEditingUser(null);
+        setFormData({ name: '', email: '', password: '' });
+        setShowModal(true);
+    };
+
+    const openEditModal = (user: User) => {
+        setEditingUser(user);
+        setFormData({ name: user.name, email: user.email, password: '' }); // Don't fill password
+        setShowModal(true);
+    };
+
+    // Filter
+    const filteredTeachers = teachers.filter(t =>
+        t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827' }}>Quản lý Giáo viên</h1>
-                <button
-                    onClick={() => setShowModal(true)}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '12px 20px',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                        color: 'white',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontWeight: 600,
-                    }}
-                >
-                    <Plus size={20} />
-                    Thêm Giáo viên
+            {/* Toast */}
+            {toast && (
+                <div className={styles.toastContainer}>
+                    <div className={toast.type === 'success' ? styles.toastSuccess : styles.toastError}>
+                        {toast.message}
+                    </div>
+                </div>
+            )}
+
+            {/* Header */}
+            <div className={styles.pageHeader}>
+                <div>
+                    <h1 className={styles.pageTitle}>Quản lý Giáo viên</h1>
+                    <p className={styles.pageSubtitle}>{teachers.length} giáo viên trong hệ thống</p>
+                </div>
+                <button className={styles.btnPrimary} onClick={openCreateModal}>
+                    <Plus size={18} /> Thêm Giáo viên
                 </button>
             </div>
 
+            {/* Toolbar */}
+            <div className={styles.toolbar}>
+                <div className={styles.searchWrapper}>
+                    <Search className={styles.searchIcon} size={18} />
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm theo tên hoặc email..."
+                        className={styles.searchInput}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+            </div>
+
             {/* Table */}
-            <div style={{
-                backgroundColor: 'white',
-                borderRadius: '16px',
-                overflow: 'hidden',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-            }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div className={styles.tableWrapper}>
+                <table className={styles.table}>
                     <thead>
-                        <tr style={{ backgroundColor: '#f9fafb' }}>
-                            <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: 600, color: '#374151' }}>Tên</th>
-                            <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: 600, color: '#374151' }}>Email</th>
-                            <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: 600, color: '#374151' }}>Lớp phụ trách</th>
-                            <th style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 600, color: '#374151' }}>Hành động</th>
+                        <tr>
+                            <th>Giáo viên</th>
+                            <th>Liên hệ</th>
+                            <th>Lớp phụ trách</th>
+                            <th style={{ textAlign: 'center' }}>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
+                            <tr><td colSpan={4} className={styles.emptyState}>Đang tải...</td></tr>
+                        ) : filteredTeachers.length === 0 ? (
                             <tr>
-                                <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>
-                                    Đang tải...
-                                </td>
-                            </tr>
-                        ) : teachers.length === 0 ? (
-                            <tr>
-                                <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>
-                                    Chưa có giáo viên nào
+                                <td colSpan={4} className={styles.emptyState}>
+                                    <div className={styles.emptyIcon}><Users /></div>
+                                    <p className={styles.emptyTitle}>Không tìm thấy giáo viên nào</p>
+                                    <p className={styles.emptyMessage}>Hãy thử tìm kiếm từ khóa khác hoặc thêm mới</p>
                                 </td>
                             </tr>
                         ) : (
-                            teachers.map((teacher) => (
-                                <tr key={teacher.id} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                    <td style={{ padding: '16px', fontSize: '14px', color: '#111827', fontWeight: 500 }}>
-                                        {teacher.name}
-                                    </td>
-                                    <td style={{ padding: '16px', fontSize: '14px', color: '#6b7280' }}>
-                                        {teacher.email}
-                                    </td>
-                                    <td style={{ padding: '16px', fontSize: '14px', color: '#6b7280' }}>
-                                        {teacher.class_name || <span style={{ color: '#d1d5db' }}>Chưa phân công</span>}
-                                    </td>
-                                    <td style={{ padding: '16px', textAlign: 'center' }}>
-                                        <button
-                                            onClick={() => handleDelete(teacher.id)}
-                                            style={{
-                                                padding: '8px',
-                                                borderRadius: '8px',
-                                                backgroundColor: '#fee2e2',
-                                                color: '#dc2626',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                            }}
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
+                            filteredTeachers.map((teacher) => {
+                                const initials = teacher.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+                                return (
+                                    <tr key={teacher.id}>
+                                        <td>
+                                            <div className={styles.userRow}>
+                                                <div className={styles.avatarBlue}>{initials}</div>
+                                                <div>
+                                                    <div className={styles.userRowName}>{teacher.name}</div>
+                                                    <div className={styles.badgeBlue} style={{ marginTop: '4px', fontSize: '10px' }}>Teacher</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td style={{ color: '#94a3b8' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Mail size={14} /> {teacher.email}
+                                            </div>
+                                        </td>
+                                        <td style={{ color: '#e2e8f0', fontWeight: 500 }}>
+                                            {teacher.class_name ? (
+                                                <span className={styles.badgePurple}>{teacher.class_name}</span>
+                                            ) : (
+                                                <span className={styles.badgeMuted}>Chưa phân công</span>
+                                            )}
+                                        </td>
+                                        <td style={{ textAlign: 'center' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                                <button
+                                                    className={styles.btnIcon}
+                                                    onClick={() => openEditModal(teacher)}
+                                                    title="Sửa"
+                                                >
+                                                    <Edit2 size={16} />
+                                                </button>
+                                                <button
+                                                    className={`${styles.btnIcon} ${styles.btnIconDanger}`}
+                                                    onClick={() => setShowConfirm({ id: teacher.id, name: teacher.name })}
+                                                    title="Xoá"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>
             </div>
 
-            {/* Modal */}
+            {/* Modal Create/Edit */}
             {showModal && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 50,
-                }}>
-                    <div style={{
-                        backgroundColor: 'white',
-                        borderRadius: '20px',
-                        padding: '32px',
-                        width: '400px',
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827' }}>Thêm Giáo viên mới</h2>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                                <X size={24} color="#6b7280" />
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h2 className={styles.modalTitle}>
+                                {editingUser ? 'Cập nhật Giáo viên' : 'Thêm Giáo viên mới'}
+                            </h2>
+                            <button className={styles.btnIcon} onClick={() => setShowModal(false)}>
+                                <X size={20} />
                             </button>
                         </div>
-
-                        <form onSubmit={handleCreate}>
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
-                                    Họ tên
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        borderRadius: '10px',
-                                        border: '1px solid #e5e7eb',
-                                        fontSize: '14px',
-                                    }}
-                                />
+                        <form onSubmit={handleCreateOrUpdate}>
+                            <div className={styles.formGroup}>
+                                <label className={styles.formLabel}>Họ và tên</label>
+                                <div className={styles.searchWrapper} style={{ maxWidth: '100%' }}>
+                                    <User className={styles.searchIcon} size={18} />
+                                    <input
+                                        type="text"
+                                        required
+                                        className={styles.formInput}
+                                        style={{ paddingLeft: '40px' }}
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        placeholder="Ví dụ: Nguyễn Văn A"
+                                    />
+                                </div>
                             </div>
-
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    required
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        borderRadius: '10px',
-                                        border: '1px solid #e5e7eb',
-                                        fontSize: '14px',
-                                    }}
-                                />
+                            <div className={styles.formGroup}>
+                                <label className={styles.formLabel}>Email</label>
+                                <div className={styles.searchWrapper} style={{ maxWidth: '100%' }}>
+                                    <Mail className={styles.searchIcon} size={18} />
+                                    <input
+                                        type="email"
+                                        required
+                                        className={styles.formInput}
+                                        style={{ paddingLeft: '40px' }}
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        placeholder="email@example.com"
+                                    />
+                                </div>
                             </div>
+                            {!editingUser && (
+                                <div className={styles.formGroup}>
+                                    <label className={styles.formLabel}>Mật khẩu</label>
+                                    <input
+                                        type="password"
+                                        required
+                                        className={styles.formInput}
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+                            )}
 
-                            <div style={{ marginBottom: '24px' }}>
-                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
-                                    Mật khẩu
-                                </label>
-                                <input
-                                    type="password"
-                                    required
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        borderRadius: '10px',
-                                        border: '1px solid #e5e7eb',
-                                        fontSize: '14px',
-                                    }}
-                                />
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
+                                <button type="button" className={styles.btnSecondary} onClick={() => setShowModal(false)}>
+                                    Hủy
+                                </button>
+                                <button type="submit" className={styles.btnPrimary}>
+                                    {editingUser ? 'Lưu thay đổi' : 'Tạo giáo viên'}
+                                </button>
                             </div>
-
-                            <button
-                                type="submit"
-                                style={{
-                                    width: '100%',
-                                    padding: '14px',
-                                    borderRadius: '10px',
-                                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                                    color: 'white',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    fontWeight: 600,
-                                    fontSize: '14px',
-                                }}
-                            >
-                                Tạo Giáo viên
-                            </button>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Delete */}
+            {showConfirm && (
+                <div className={styles.confirmOverlay}>
+                    <div className={styles.confirmDialog} onClick={(e) => e.stopPropagation()}>
+                        <div style={{
+                            width: '48px', height: '48px', borderRadius: '50%',
+                            background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 16px'
+                        }}>
+                            <Trash2 size={24} />
+                        </div>
+                        <h3 className={styles.confirmTitle}>Xác nhận xoá?</h3>
+                        <p className={styles.confirmMessage}>
+                            Bạn có chắc chắn muốn xoá giáo viên <strong>{showConfirm.name}</strong>?<br />
+                            Hành động này không thể hoàn tác.
+                        </p>
+                        <div className={styles.confirmActions}>
+                            <button className={styles.btnSecondary} onClick={() => setShowConfirm(null)}>
+                                Hủy
+                            </button>
+                            <button className={styles.btnDanger} onClick={handleDelete}>
+                                Xoá vĩnh viễn
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

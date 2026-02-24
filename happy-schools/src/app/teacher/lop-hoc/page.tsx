@@ -19,6 +19,7 @@ interface ClassData {
     teacher_id?: number;
     is_online_session_active?: boolean;
     meeting_link?: string;
+    class_code?: string;
     online_enabled?: boolean;
 }
 
@@ -30,6 +31,7 @@ export default function ClassListPage() {
     const [classes, setClasses] = useState<ClassData[]>([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [createdClass, setCreatedClass] = useState<ClassData | null>(null);
     const [newClassData, setNewClassData] = useState({ name: '', grade: '', online_enabled: false });
     const [creating, setCreating] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -87,7 +89,8 @@ export default function ClassListPage() {
                 const newClass = await response.json();
                 console.log('[CREATE CLASS] Created Successfully:', newClass);
                 toast.success('Tạo lớp học thành công!');
-                setShowCreateModal(false);
+                // setShowCreateModal(false); // Do not close immediately
+                setCreatedClass(newClass);
                 setNewClassData({ name: '', grade: '', online_enabled: false });
                 setClasses(prev => [newClass, ...prev]);
                 fetchClasses(); // Refresh list
@@ -408,95 +411,175 @@ export default function ClassListPage() {
                             maxWidth: '500px',
                             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
                         }}>
-                            <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px', color: '#e2e8f0' }}>
-                                Tạo lớp học mới
-                            </h2>
-                            <form onSubmit={handleCreateClass}>
-                                <div style={{ marginBottom: '20px' }}>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
-                                        Tên lớp học
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newClassData.name}
-                                        onChange={(e) => setNewClassData({ ...newClassData, name: e.target.value })}
-                                        placeholder="Ví dụ: 10A1, Lớp Toán thầy A..."
+                            {createdClass ? (
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{
+                                        width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#dcfce7',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px'
+                                    }}>
+                                        <Users size={32} color="#16a34a" />
+                                    </div>
+                                    <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px', color: '#e2e8f0' }}>
+                                        Tạo lớp học thành công!
+                                    </h2>
+                                    <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
+                                        Lớp <strong>{createdClass.name}</strong> đã sẵn sàng.
+                                    </p>
+
+                                    <div style={{ backgroundColor: '#0f172a', padding: '20px', borderRadius: '16px', marginBottom: '24px', textAlign: 'left' }}>
+                                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
+                                            Mã lớp học
+                                        </label>
+                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                                            <code style={{
+                                                flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#334155',
+                                                color: '#38bdf8', fontSize: '18px', fontWeight: 'bold', fontFamily: 'monospace', textAlign: 'center'
+                                            }}>
+                                                {createdClass.class_code}
+                                            </code>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(createdClass.class_code || '');
+                                                    toast.success('Đã sao chép mã lớp');
+                                                }}
+                                                style={{ padding: '0 16px', borderRadius: '8px', backgroundColor: '#334155', border: 'none', cursor: 'pointer', color: 'white' }}
+                                            >
+                                                Copy
+                                            </button>
+                                        </div>
+
+                                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
+                                            Link tham gia
+                                        </label>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <input
+                                                readOnly
+                                                value={`${window.location.origin}/join?code=${createdClass.class_code}`}
+                                                style={{
+                                                    flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#334155',
+                                                    border: 'none', color: '#cbd5e1', fontSize: '13px'
+                                                }}
+                                            />
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(`${window.location.origin}/join?code=${createdClass.class_code}`);
+                                                    toast.success('Đã sao chép link');
+                                                }}
+                                                style={{ padding: '0 16px', borderRadius: '8px', backgroundColor: '#334155', border: 'none', cursor: 'pointer', color: 'white' }}
+                                            >
+                                                Copy
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => {
+                                            setShowCreateModal(false);
+                                            setCreatedClass(null);
+                                        }}
                                         style={{
                                             width: '100%',
-                                            padding: '12px',
-                                            borderRadius: '12px',
-                                            border: '1px solid #d1d5db',
-                                            fontSize: '16px',
-                                            outline: 'none',
-                                            transition: 'border-color 0.2s'
-                                        }}
-                                        autoFocus
-                                    />
-                                </div>
-                                <div style={{ marginBottom: '32px' }}>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
-                                        Khối lớp (Tùy chọn)
-                                    </label>
-                                    <select
-                                        value={newClassData.grade}
-                                        onChange={(e) => setNewClassData({ ...newClassData, grade: e.target.value })}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            borderRadius: '12px',
-                                            border: '1px solid #d1d5db',
-                                            fontSize: '16px',
-                                            outline: 'none',
-                                            backgroundColor: '#1e293b'
-                                        }}
-                                    >
-                                        <option value="">Chọn khối...</option>
-                                        <option value="10">Khối 10</option>
-                                        <option value="11">Khối 11</option>
-                                        <option value="12">Khối 12</option>
-                                        <option value="Khác">Khác</option>
-                                        <option value="Khác">Khác</option>
-                                    </select>
-                                </div>
-
-
-
-                                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowCreateModal(false)}
-                                        style={{
-                                            padding: '12px 20px',
-                                            borderRadius: '12px',
-                                            border: '1px solid #d1d5db',
-                                            backgroundColor: '#1e293b',
-                                            color: '#cbd5e1',
-                                            fontWeight: 600,
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        Hủy bỏ
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={creating}
-                                        style={{
                                             padding: '12px 24px',
                                             borderRadius: '12px',
                                             backgroundColor: '#14b8a6',
                                             color: 'white',
                                             fontWeight: 600,
                                             border: 'none',
-                                            cursor: creating ? 'not-allowed' : 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px'
+                                            cursor: 'pointer'
                                         }}
                                     >
-                                        {creating ? 'Đang tạo...' : 'Tạo lớp học'}
+                                        Hoàn tất
                                     </button>
                                 </div>
-                            </form>
+                            ) : (
+                                <form onSubmit={handleCreateClass}>
+                                    <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px', color: '#e2e8f0' }}>
+                                        Tạo lớp học mới
+                                    </h2>
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
+                                            Tên lớp học
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={newClassData.name}
+                                            onChange={(e) => setNewClassData({ ...newClassData, name: e.target.value })}
+                                            placeholder="Ví dụ: 10A1, Lớp Toán thầy A..."
+                                            style={{
+                                                width: '100%',
+                                                padding: '12px',
+                                                borderRadius: '12px',
+                                                border: '1px solid #d1d5db',
+                                                fontSize: '16px',
+                                                outline: 'none',
+                                                transition: 'border-color 0.2s'
+                                            }}
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <div style={{ marginBottom: '32px' }}>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
+                                            Khối lớp (Tùy chọn)
+                                        </label>
+                                        <select
+                                            value={newClassData.grade}
+                                            onChange={(e) => setNewClassData({ ...newClassData, grade: e.target.value })}
+                                            style={{
+                                                width: '100%',
+                                                padding: '12px',
+                                                borderRadius: '12px',
+                                                border: '1px solid #d1d5db',
+                                                fontSize: '16px',
+                                                outline: 'none',
+                                                backgroundColor: '#1e293b',
+                                                color: '#e2e8f0'
+                                            }}
+                                        >
+                                            <option value="">Chọn khối...</option>
+                                            <option value="10">Khối 10</option>
+                                            <option value="11">Khối 11</option>
+                                            <option value="12">Khối 12</option>
+                                            <option value="Khác">Khác</option>
+                                        </select>
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowCreateModal(false)}
+                                            style={{
+                                                padding: '12px 20px',
+                                                borderRadius: '12px',
+                                                border: '1px solid #d1d5db',
+                                                backgroundColor: '#1e293b',
+                                                color: '#cbd5e1',
+                                                fontWeight: 600,
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            Hủy bỏ
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={creating}
+                                            style={{
+                                                padding: '12px 24px',
+                                                borderRadius: '12px',
+                                                backgroundColor: '#14b8a6',
+                                                color: 'white',
+                                                fontWeight: 600,
+                                                border: 'none',
+                                                cursor: creating ? 'not-allowed' : 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px'
+                                            }}
+                                        >
+                                            {creating ? 'Đang tạo...' : 'Tạo lớp học'}
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
                         </div>
                     </div>
                 )

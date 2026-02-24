@@ -1,7 +1,7 @@
 
 from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List
 from pydantic import BaseModel
 from jose import JWTError, jwt
@@ -9,9 +9,10 @@ from app.database import get_db
 from app import models
 from app import security
 from app.config import get_settings
-import shutil
 import os
 import uuid
+import json
+from app.services.cache_service import redis_service
 
 router = APIRouter()
 settings = get_settings()
@@ -135,9 +136,9 @@ async def login(credentials: LoginRequest, db: Session = Depends(get_db)):
             class_name = cls.name
     
     if user.role == "teacher" and not class_name:
-         teacher_class = db.query(models.Class).filter(models.Class.teacher_id == user.id).first()
-         if teacher_class:
-             class_name = teacher_class.name
+         teacher_classes = db.query(models.Class).filter(models.Class.teacher_id == user.id).all()
+         if teacher_classes:
+             class_name = ", ".join([c.name for c in teacher_classes])
     
     access_token = security.create_access_token(data={"sub": user.email, "id": user.id, "role": user.role})
     
@@ -164,9 +165,9 @@ async def read_users_me(current_user: models.User = Depends(get_current_user), d
              class_name = cls.name
     
     if current_user.role == "teacher" and not class_name:
-         teacher_class = db.query(models.Class).filter(models.Class.teacher_id == current_user.id).first()
-         if teacher_class:
-             class_name = teacher_class.name
+         teacher_classes = db.query(models.Class).filter(models.Class.teacher_id == current_user.id).all()
+         if teacher_classes:
+             class_name = ", ".join([c.name for c in teacher_classes])
 
     return UserResponse(
         id=current_user.id,
@@ -253,7 +254,22 @@ async def upload_avatar(file: UploadFile = File(...), current_user: models.User 
 # But let's verify get_users
 @router.get("/users", response_model=List[UserResponse])
 async def get_users(role: Optional[str] = None, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    query = db.query(models.User)
+    # Try cache first
+    cache_key = f"users:{role}" if role else "users:all"
+    cached_data = redis_service.get(cache_key)
+    if cached_data:
+        try:
+             # Deserialize list of dicts and convert to UserResponse
+             data_list = json.loads(cached_data)
+             return [UserResponse(**item) for item in data_list]
+        except Exception as e:
+            print(f"Cache miss error: {e}")
+            pass
+
+    query = db.query(models.User).options(
+        joinedload(models.User.student_class),
+        joinedload(models.User.teacher_class)
+    )
     if role:
         query = query.filter(models.User.role == role)
     users = query.all()
@@ -261,9 +277,10 @@ async def get_users(role: Optional[str] = None, db: Session = Depends(get_db), c
     response = []
     for user in users:
         class_name = None
-        if user.class_id:
-             cls = db.query(models.Class).filter(models.Class.id == user.class_id).first()
-             if cls: class_name = cls.name
+        if user.student_class:
+            class_name = user.student_class.name
+        elif user.teacher_class:
+            class_name = ", ".join([c.name for c in user.teacher_class])
         
         response.append(UserResponse(
             id=user.id,
@@ -275,6 +292,16 @@ async def get_users(role: Optional[str] = None, db: Session = Depends(get_db), c
             class_id=user.class_id,
             class_name=class_name
         ))
+    
+    # Set cache
+    try:
+        # Pydantic v2 use model_dump(), v1 use dict()
+        # Ensure we serialize correctly
+        to_cache = [item.model_dump() for item in response]
+        redis_service.set(cache_key, json.dumps(to_cache), expire=300) # Cache 5 mins
+    except Exception as e:
+        print(f"Failed to set cache: {e}")
+        
     return response
 
 @router.get("/classes")
@@ -318,7 +345,7 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db), current_u
             hashed_password=hashed_pw,
             name=user.name,
             role=user.role,
-            class_id=user.class_id
+            class_id=user.class_id if user.role == "student" else None
         )
         print("DEBUG: Adding user to DB session...")
         db.add(new_user)
@@ -344,6 +371,9 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db), current_u
         if cls:
              class_name = cls.name
 
+    # Invalidate cache
+    redis_service.invalidate_pattern("users:*")
+
     return UserResponse(
         id=new_user.id,
         email=new_user.email,
@@ -366,6 +396,10 @@ async def delete_user(user_id: int, db: Session = Depends(get_db), current_user:
              
     db.delete(user)
     db.commit()
+    
+    # Invalidate cache
+    redis_service.invalidate_pattern("users:*")
+    
     return {"message": "User deleted successfully"}
 
 @router.put("/users/{user_id}", response_model=UserResponse)
@@ -391,6 +425,9 @@ async def update_user(user_id: int, user_update: UserCreate, db: Session = Depen
     
     db.commit()
     db.refresh(user)
+
+    # Invalidate cache
+    redis_service.invalidate_pattern("users:*")
 
     class_name = None
     if user.class_id:
@@ -450,4 +487,16 @@ async def update_class(class_id: int, class_data: ClassCreate, db: Session = Dep
     db.commit()
     db.refresh(cls)
     
-    return cls
+    teacher_name = None
+    if cls.teacher_id:
+        teacher = db.query(models.User).filter(models.User.id == cls.teacher_id).first()
+        if teacher: teacher_name = teacher.name
+
+    return {
+        "id": cls.id,
+        "name": cls.name,
+        "grade": cls.grade,
+        "teacher_id": cls.teacher_id,
+        "teacher_name": teacher_name,
+        "student_count": cls.student_count
+    }

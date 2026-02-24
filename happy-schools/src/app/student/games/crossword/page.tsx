@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, HelpCircle, RefreshCw, Trophy, Lightbulb } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { API_URL } from '@/lib/api';
 
 interface CrosswordData {
     id: number;
@@ -32,7 +33,7 @@ export default function CrosswordGame() {
         setIsCorrect(false);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'}/api/games/crossword/random`, {
+            const res = await fetch(`${API_URL}/api/games/crossword/random`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
@@ -81,7 +82,7 @@ export default function CrosswordGame() {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'}/api/games/crossword/check`, {
+            const res = await fetch(`${API_URL}/api/games/crossword/check`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

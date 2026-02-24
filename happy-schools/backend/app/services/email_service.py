@@ -71,3 +71,33 @@ def send_notification_email(to_email: str, student_name: str, title: str, messag
     """
     
     return send_email(to_email, subject, html_content, is_html=True)
+
+def send_bulk_notification_email(recipients: list[dict], title: str, message: str, action_url: str = None):
+    """
+    Background task to send notification emails to multiple recipients.
+    recipients: list of dicts with keys 'email' and 'name'
+    """
+    logging.info(f"Starting bulk email sending to {len(recipients)} recipients for: {title}")
+    
+    success_count = 0
+    for recipient in recipients:
+        if not recipient.get('email'):
+            continue
+            
+        try:
+            # We reuse send_notification_email which is blocking, but since this 
+            # entire function is run in a BackgroundTask, it won't block the API response.
+            result = send_notification_email(
+                to_email=recipient['email'],
+                student_name=recipient['name'],
+                title=title,
+                message=message,
+                action_url=action_url
+            )
+            if result:
+                success_count += 1
+        except Exception as e:
+            logging.error(f"Error sending to {recipient['email']}: {e}")
+            
+    logging.info(f"Bulk email completed. Sent {success_count}/{len(recipients)} emails.")
+

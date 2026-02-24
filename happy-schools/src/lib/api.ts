@@ -1,4 +1,4 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL || "https://api.schoolmanager.id.vn").replace("http://", "https://");
 
 // --- Types ---
 
@@ -111,8 +111,7 @@ export const activitiesApi = {
             throw error;
         }
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    createActivity: async (data: any) => {
+    createActivity: async (data: Partial<Activity>): Promise<Activity> => {
         try {
             const response = await fetch(`${API_URL}/api/activities/`, {
                 method: 'POST',
@@ -126,8 +125,7 @@ export const activitiesApi = {
             throw error;
         }
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    updateActivity: async (id: number, data: any) => {
+    updateActivity: async (id: number, data: Partial<Activity>): Promise<Activity> => {
         try {
             const response = await fetch(`${API_URL}/api/activities/${id}`, {
                 method: 'PUT',
@@ -329,6 +327,59 @@ export const adminApi = {
             console.error('Error updating user:', error);
             throw error;
         }
+    },
+    getStats: async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/admin/stats`, {
+                headers: getHeaders()
+            });
+            if (!response.ok) throw new Error('Failed to fetch admin stats');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching admin stats:', error);
+            throw error;
+        }
+    },
+    downloadStudentTemplate: async () => {
+        const response = await fetch(`${API_URL}/api/admin/student-template`, {
+            headers: getHeaders()
+        });
+        if (!response.ok) throw new Error('Failed to download template');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'mau_danh_sach_hoc_sinh.xlsx';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    },
+    importStudents: async (classId: number, file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const response = await fetch(`${API_URL}/api/admin/import-students?class_id=${classId}`, {
+            method: 'POST',
+            headers: {
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: formData
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || 'Import failed');
+        return data;
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    changePassword: async (data: any) => {
+        const response = await fetch(`${API_URL}/api/auth/change-password`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to change password');
+        }
+        return await response.json();
     }
 };
 
@@ -405,5 +456,184 @@ export const classesApi = {
             console.error('Error fetching classes:', error);
             throw error;
         }
+    }
+};
+
+// ============================================================
+// NEW FEATURE APIs
+// ============================================================
+
+export const wellnessApi = {
+    createMood: async (data: { mood_level: number; mood_emoji: string; note?: string }) => {
+        const res = await fetch(`${API_URL}/api/wellness/mood`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getMoodHistory: async (days = 30) => {
+        const res = await fetch(`${API_URL}/api/wellness/mood/history?days=${days}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getMoodAnalytics: async () => {
+        const res = await fetch(`${API_URL}/api/wellness/mood/analytics`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    createSOS: async (data: { message: string; is_anonymous?: boolean }) => {
+        const res = await fetch(`${API_URL}/api/wellness/sos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getSOSAlerts: async (status?: string) => {
+        const url = status ? `${API_URL}/api/wellness/sos/alerts?status=${status}` : `${API_URL}/api/wellness/sos/alerts`;
+        const res = await fetch(url, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    updateSOS: async (id: number, data: { status: string; reviewer_note?: string }) => {
+        const res = await fetch(`${API_URL}/api/wellness/sos/${id}`, { method: 'PATCH', headers: getHeaders(), body: JSON.stringify(data) });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getClassWellness: async (classId: number) => {
+        const res = await fetch(`${API_URL}/api/wellness/class/${classId}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    }
+};
+
+export const aiTutorApi = {
+    getAnalysis: async () => {
+        const res = await fetch(`${API_URL}/api/ai-tutor/analysis`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getRecommendations: async () => {
+        const res = await fetch(`${API_URL}/api/ai-tutor/recommendations`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getLearningPath: async () => {
+        const res = await fetch(`${API_URL}/api/ai-tutor/learning-path`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    }
+};
+
+export const gamificationApi = {
+    checkIn: async () => {
+        const res = await fetch(`${API_URL}/api/gamification/check-in`, { method: 'POST', headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getBadges: async () => {
+        const res = await fetch(`${API_URL}/api/gamification/badges`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getMyStats: async () => {
+        const res = await fetch(`${API_URL}/api/gamification/my-stats`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getLeaderboard: async (scope = 'class') => {
+        const res = await fetch(`${API_URL}/api/gamification/leaderboard?scope=${scope}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getShop: async () => {
+        const res = await fetch(`${API_URL}/api/gamification/shop`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    buyItem: async (itemId: number) => {
+        const res = await fetch(`${API_URL}/api/gamification/shop/buy/${itemId}`, { method: 'POST', headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    }
+};
+
+export const analyticsApi = {
+    getStudentTrends: async (studentId: number) => {
+        const res = await fetch(`${API_URL}/api/analytics/trends/${studentId}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getEarlyWarnings: async () => {
+        const res = await fetch(`${API_URL}/api/analytics/early-warning`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getClassReport: async (classId: number) => {
+        const res = await fetch(`${API_URL}/api/analytics/class-report/${classId}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    }
+};
+
+// teacher-specific report endpoints used by chatbot
+export const reportApi = {
+    createTeacherReport: async (data: { class_id: number; report_type: string; content: string }) => {
+        const res = await fetch(`${API_URL}/api/teacher/reports`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.detail || 'Failed to create report');
+        }
+        return res.json();
+    },
+    listTeacherReports: async () => {
+        const res = await fetch(`${API_URL}/api/teacher/reports`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+    }
+};
+
+export const parentApi = {
+    getChildren: async () => {
+        const res = await fetch(`${API_URL}/api/parent/children`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getChildReport: async (studentId: number) => {
+        const res = await fetch(`${API_URL}/api/parent/child/${studentId}/report`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getChildMood: async (studentId: number) => {
+        const res = await fetch(`${API_URL}/api/parent/child/${studentId}/mood`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    sendMessage: async (data: { receiver_id: number; message: string }) => {
+        const res = await fetch(`${API_URL}/api/parent/message`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getMessages: async () => {
+        const res = await fetch(`${API_URL}/api/parent/messages`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getTeachers: async () => {
+        const res = await fetch(`${API_URL}/api/parent/teachers`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    }
+};
+
+export const quizBattleApi = {
+    create: async (data: { quiz_id: number; time_per_question?: number }) => {
+        const res = await fetch(`${API_URL}/api/battle/create`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    join: async (code: string) => {
+        const res = await fetch(`${API_URL}/api/battle/join`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ battle_code: code }) });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    start: async (battleId: number) => {
+        const res = await fetch(`${API_URL}/api/battle/${battleId}/start`, { method: 'POST', headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getStatus: async (battleId: number) => {
+        const res = await fetch(`${API_URL}/api/battle/${battleId}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getQuestion: async (battleId: number, index: number) => {
+        const res = await fetch(`${API_URL}/api/battle/${battleId}/question?question_index=${index}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    submitAnswer: async (battleId: number, data: { question_index: number; answer: string; time_taken: number }) => {
+        const res = await fetch(`${API_URL}/api/battle/${battleId}/answer`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getLeaderboard: async (battleId: number) => {
+        const res = await fetch(`${API_URL}/api/battle/${battleId}/leaderboard`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getActive: async () => {
+        const res = await fetch(`${API_URL}/api/battle/active`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    }
+};
+
+export const aiGradingApi = {
+    gradeSubmission: async (assignmentId: number, submissionId: number) => {
+        const res = await fetch(`${API_URL}/api/assignments/${assignmentId}/ai-grade/${submissionId}`, { method: 'POST', headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
     }
 };

@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import {
-    Plus, FileText, Calendar, Users, CheckCircle, Clock, Trash2,
-    Edit, Eye, Send, X, Save, GripVertical, MessageSquare, Upload, RefreshCw, Lock
+    Plus, FileText, Calendar, Users, CheckCircle, Trash2,
+    Edit, Eye, X, RefreshCw, Lock, Upload, Send
 } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+import { API_URL } from '@/lib/api';
 
 interface Question {
     id?: number;
@@ -135,14 +134,7 @@ export default function BaiTapPage() {
     // Grading state
     const [grades, setGrades] = useState<{ [key: number]: { score: number; feedback: string } }>({});
 
-    useEffect(() => {
-        if (token) {
-            fetchAssignments();
-            fetchClasses();
-        }
-    }, [token]);
-
-    const fetchAssignments = async () => {
+    const fetchAssignments = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/api/assignments`, {
                 headers: { 'Authorization': `Bearer ${token}` },
@@ -156,9 +148,9 @@ export default function BaiTapPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [token]);
 
-    const fetchClasses = async () => {
+    const fetchClasses = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/api/classes`, {
                 headers: { 'Authorization': `Bearer ${token}` },
@@ -170,7 +162,16 @@ export default function BaiTapPage() {
         } catch (err) {
             console.error('Failed to fetch classes:', err);
         }
-    };
+    }, [token]);
+
+    useEffect(() => {
+        if (token) {
+            fetchAssignments();
+            fetchClasses();
+        }
+    }, [token, fetchAssignments, fetchClasses]);
+
+
 
     const fetchSubmissions = async (assignmentId: number) => {
         try {
@@ -258,7 +259,7 @@ export default function BaiTapPage() {
                     const error = JSON.parse(text);
                     console.error('API Error:', error);
                     alert(`❌ Lỗi API: ${error.detail || JSON.stringify(error)}`);
-                } catch (e) {
+                } catch (_e) {
                     console.error('API Error (Non-JSON):', text);
                     alert(`❌ Lỗi Server: ${text.substring(0, 100)}...`);
                 }
@@ -333,7 +334,7 @@ export default function BaiTapPage() {
                     fetchSubmissions(selectedAssignment.id);
                 }
             }
-        } catch (err) {
+        } catch (_err) {
             alert('❌ Lỗi khi chấm điểm');
         }
     };

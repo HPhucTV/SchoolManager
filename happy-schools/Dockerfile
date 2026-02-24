@@ -1,4 +1,4 @@
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # ---------- deps ----------
 FROM base AS deps
@@ -20,10 +20,14 @@ WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Accept API URL as build argument (Next.js inlines NEXT_PUBLIC_ vars at build time)
+ARG NEXT_PUBLIC_API_URL=https://api.schoolmanager.id.vn
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npm run build
+RUN chmod +x node_modules/.bin/next &&npm run build
 
 # ---------- runner ----------
 FROM base AS runner

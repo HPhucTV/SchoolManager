@@ -4,9 +4,8 @@ FROM python:3.10-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies (needed for some python packages or sqlite)
-# sqlite3 is usually included in python images, but good to be safe if needed extensions
-# RUN apt-get update && apt-get install -y sqlite3
+# Install system dependencies (needed for PostgreSQL connectivity)
+RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
 COPY requirements.txt .

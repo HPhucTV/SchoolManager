@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
@@ -268,15 +269,28 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
+    const [role, setRole] = useState('student');
+    // const [confirmPassword, setConfirmPassword] = useState(''); // Removed: Simple register for now
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [eyeOffset, setEyeOffset] = useState({ x: 0, y: 0 });
     const containerRef = useRef<HTMLDivElement>(null);
+    const [isMobile, setIsMobile] = useState(false);
 
-    const { login } = useAuth();
+    const { login, register } = useAuth();
     const router = useRouter();
+
+    // Handle resize to fix hydration mismatch
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        // Initial check
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Track mouse position for eye movement
     useEffect(() => {
@@ -285,32 +299,60 @@ export default function LoginPage() {
             const rect = containerRef.current.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
-            const x = Math.max(-1, Math.min(1, (e.clientX - centerX) / (rect.width / 2)));
-            const y = Math.max(-1, Math.min(1, (e.clientY - centerY) / (rect.height / 2)));
-            setEyeOffset({ x, y });
+
+            // Calculate offset from center (-1 to 1)
+            const offsetX = (e.clientX - centerX) / (rect.width / 2);
+            const offsetY = (e.clientY - centerY) / (rect.height / 2);
+
+            // Limit ease
+            setEyeOffset({
+                x: Math.max(-1, Math.min(1, offsetX)),
+                y: Math.max(-1, Math.min(1, offsetY))
+            });
         };
         window.addEventListener('mousemove', handleMouseMove);
         return () => window.removeEventListener('mousemove', handleMouseMove);
     }, []);
+
+    /* ─── Interaction Handlers ─── */
+    const [isInputFocused, setIsInputFocused] = useState(false);
+    const [randomQuote, setRandomQuote] = useState('');
+    const [quoteIndex, setQuoteIndex] = useState(0);
+
+    const funnyQuotes = [
+        "Gõ nhanh lên nào!",
+        "Đừng nhìn lén nha!",
+        "Mật khẩu là 123456 hả?",
+        "Suỵt! Bí mật nhé...",
+        "Tớ đang nhìn đấy!",
+        "Hi hi, nhột quá!",
+        "Chính xác chưa đó?"
+    ];
+
+    const handleInputFocus = () => {
+        setIsInputFocused(true);
+        // Pick a random quote distinct from the last one (simple approach)
+        const nextIndex = (quoteIndex + 1) % funnyQuotes.length;
+        setQuoteIndex(nextIndex);
+        setRandomQuote(funnyQuotes[Math.floor(Math.random() * funnyQuotes.length)]);
+    };
+
+    const handleInputBlur = () => {
+        setIsInputFocused(false);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setIsLoading(true);
 
-        if (activeTab === 'signup') {
-            if (password !== confirmPassword) {
-                setError('Mật khẩu xác nhận không khớp');
-                setIsLoading(false);
-                return;
-            }
-            setError('Chức năng đăng ký sẽ sớm được hỗ trợ!');
-            setIsLoading(false);
-            return;
-        }
-
         try {
-            await login(email, password);
+            if (activeTab === 'login') {
+                await login(email, password);
+            } else {
+                await register(name, email, password, role);
+            }
+
             const savedUser = localStorage.getItem('user');
             if (savedUser) {
                 const user = JSON.parse(savedUser);
@@ -319,7 +361,7 @@ export default function LoginPage() {
                 else router.push('/teacher');
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Đăng nhập thất bại');
+            setError(err instanceof Error ? err.message : 'Thao tác thất bại');
         } finally {
             setIsLoading(false);
         }
@@ -331,84 +373,58 @@ export default function LoginPage() {
             style={{
                 minHeight: '100vh',
                 display: 'flex',
-                flexDirection: 'row',
                 fontFamily: "'Inter', sans-serif",
+                backgroundColor: '#0f172a', // Ensure bg color matches
             }}
+            className="flex-col md:flex-row" // Tailwind handling
         >
             {/* ══════ LEFT PANEL — Characters ══════ */}
             <div
-                style={{
-                    flex: '1 1 50%',
-                    background: 'linear-gradient(160deg, #FFF5E6 0%, #FFECD2 40%, #FFE0B2 100%)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    alignItems: 'flex-end',
-                    justifyContent: 'center',
-                    minHeight: '100vh',
-                }}
+                className="flex md:flex-1 relative overflow-hidden items-center justify-center bg-[#0f172a] w-full md:w-auto h-[45vh] md:h-screen transition-all duration-500"
             >
+                {/* Background Effects */}
+                <div className="absolute inset-0 bg-[#0f172a]">
+                    <div className="absolute top-[10%] left-[20%] w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-indigo-600/20 rounded-full blur-[80px] md:blur-[120px] animate-pulse-slow"></div>
+                    <div className="absolute bottom-[10%] right-[10%] w-[250px] md:w-[400px] h-[250px] md:h-[400px] bg-teal-500/10 rounded-full blur-[60px] md:blur-[100px] animate-pulse-slow delay-1000"></div>
+                </div>
+
                 <FloatingItems />
 
-                {/* Title */}
+                {/* Title - Hidden on small mobile to save space for characters, or scaled down */}
                 <div style={{
                     position: 'absolute',
-                    top: '60px',
+                    top: '10%', // Moved up for mobile
                     left: '50%',
                     transform: 'translateX(-50%)',
                     textAlign: 'center',
                     zIndex: 5,
-                }}>
-                    <h2 style={{
-                        fontSize: '32px',
-                        fontWeight: 800,
-                        color: '#5B5FE6',
-                        margin: 0,
-                        lineHeight: 1.2,
-                    }}>
-                        🎓 Happy Schools
+                    width: '100%',
+                    transition: 'opacity 0.5s ease',
+                    opacity: isInputFocused ? 0.3 : 1
+                }} className="hidden md:block">
+                    {/* Only show "Happy Schools" title on desktop, on mobile focus on characters */}
+                    <h2 className="text-4xl font-bold text-white mb-2 tracking-tight animate-bounce-slow">
+                        🎓 SchoolManager
                     </h2>
-                    <p style={{
-                        fontSize: '15px',
-                        color: '#888',
-                        marginTop: '8px',
-                        fontWeight: 500,
-                    }}>
+                    <p className="text-slate-400 text-lg font-medium">
                         Nơi niềm vui học tập bắt đầu!
                     </p>
                 </div>
 
                 {/* Speech bubble when covering */}
                 {showPassword && (
-                    <div style={{
-                        position: 'absolute',
-                        top: '130px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        background: 'white',
-                        borderRadius: '16px',
-                        padding: '10px 18px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        zIndex: 10,
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        color: '#E53935',
-                        whiteSpace: 'nowrap',
-                        animation: 'popIn 0.3s ease-out',
-                    }}>
+                    <div className="absolute top-[15%] md:top-[25%] left-1/2 -translate-x-1/2 bg-white text-rose-500 px-4 py-2 md:px-5 md:py-3 rounded-2xl shadow-xl z-20 font-bold text-xs md:text-sm whitespace-nowrap animate-bounce">
                         🙈 Chúng tôi không nhìn đâu!
+                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-white"></div>
+                    </div>
+                )}
+
+                {/* Funny Quote Bubble (When Typing) */}
+                {isInputFocused && !showPassword && (
+                    <div className="absolute top-[20%] md:top-[28%] right-[5%] md:right-[15%] bg-white text-indigo-600 px-4 py-3 md:px-6 md:py-4 rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl shadow-2xl z-30 font-bold text-sm md:text-base whitespace-nowrap animate-in fade-in zoom-in slide-in-from-bottom-4 duration-300">
+                        {randomQuote}
                         {/* Triangle pointer */}
-                        <div style={{
-                            position: 'absolute',
-                            bottom: '-8px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            width: 0,
-                            height: 0,
-                            borderLeft: '8px solid transparent',
-                            borderRight: '8px solid transparent',
-                            borderTop: '8px solid white',
-                        }} />
+                        <div className="absolute -bottom-3 right-8 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[12px] border-t-white"></div>
                     </div>
                 )}
 
@@ -416,215 +432,169 @@ export default function LoginPage() {
                 <div style={{
                     position: 'relative',
                     width: '100%',
-                    height: '340px',
+                    height: '350px',
                     maxWidth: '500px',
-                    transition: 'transform 0.3s ease',
-                    transform: showPassword ? 'translateY(5px)' : 'translateY(0)',
-                }}>
-                    <GlobeCharacter eyeOffset={eyeOffset} isCovering={showPassword} />
-                    <PencilCharacter eyeOffset={eyeOffset} isCovering={showPassword} />
-                    <BackpackCharacter eyeOffset={eyeOffset} isCovering={showPassword} />
-                    <StarCharacter eyeOffset={eyeOffset} isCovering={showPassword} />
-                </div>
-
-                {/* Ground shadow */}
-                <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: '20px',
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.06), transparent)',
-                }} />
-            </div>
-
-            {/* ══════ RIGHT PANEL — Form ══════ */}
-            <div
-                style={{
-                    flex: '1 1 50%',
+                    transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    // Responsive styling via conditional transform
+                    transform: showPassword
+                        ? 'translateY(20px)'
+                        : isInputFocused
+                            ? isMobile
+                                ? 'scale(0.85) translateY(10px)' // Mobile focus: just slight move
+                                : 'translate(60px, 10px) scale(0.95) rotate(-2deg)' // Desktop focus
+                            : isMobile
+                                ? 'scale(0.7)' // Mobile default: smaller
+                                : 'scale(0.85)', // Desktop default
+                    zIndex: 10,
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '40px',
-                    background: '#fff',
-                    position: 'relative',
-                    overflow: 'hidden',
-                }}
-            >
-                {/* Decorative wave at bottom */}
-                <svg
-                    viewBox="0 0 500 120"
-                    preserveAspectRatio="none"
-                    style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '120px',
-                        zIndex: 0,
-                    }}
-                >
-                    <defs>
-                        <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#B388FF" stopOpacity="0.3" />
-                            <stop offset="50%" stopColor="#FF80AB" stopOpacity="0.25" />
-                            <stop offset="100%" stopColor="#82B1FF" stopOpacity="0.3" />
-                        </linearGradient>
-                    </defs>
-                    <path d="M0,40 C100,100 200,0 300,60 C400,120 450,20 500,60 L500,120 L0,120 Z" fill="url(#waveGrad)" />
-                    <path d="M0,70 C80,30 180,100 280,50 C380,0 440,80 500,40 L500,120 L0,120 Z" fill="url(#waveGrad)" opacity="0.5" />
-                </svg>
+                    justifyContent: 'center'
+                }}>
+                    {/* Glow behind characters */}
+                    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-[250px] md:w-[350px] h-[100px] md:h-[150px] bg-indigo-500/20 blur-3xl rounded-full animate-pulse"></div>
 
-                <div style={{ width: '100%', maxWidth: '400px', position: 'relative', zIndex: 1 }}>
-                    {/* Logo icon */}
-                    <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-                        <div style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '14px',
-                            background: 'linear-gradient(135deg, #5B5FE6, #7C4DFF)',
-                            boxShadow: '0 8px 24px rgba(91, 95, 230, 0.3)',
-                            marginBottom: '6px',
-                        }}>
-                            <span style={{ fontSize: '24px' }}>🏫</span>
+                    {/* Characters with funny animations & Staggered Entrance */}
+
+                    {/* 1. Globe (Left) */}
+                    <div className="absolute bottom-12 left-[10%] md:left-[5%]">
+                        <div className="animate-jump-in" style={{ animationDelay: '0.1s' }}>
+                            <div className="animate-sway">
+                                <GlobeCharacter eyeOffset={eyeOffset} isCovering={showPassword} />
+                            </div>
                         </div>
                     </div>
 
-                    {/* Welcome text */}
-                    <h1 style={{
-                        fontSize: '28px',
-                        fontWeight: 800,
-                        color: '#1a1a2e',
-                        textAlign: 'center',
-                        margin: '0 0 4px 0',
-                    }}>
-                        {activeTab === 'login' ? 'Chào mừng trở lại!' : 'Tạo tài khoản'}
-                    </h1>
-                    <p style={{
-                        color: '#999',
-                        textAlign: 'center',
-                        marginBottom: '28px',
-                        fontSize: '14px',
-                    }}>
-                        {activeTab === 'login'
-                            ? 'Vui lòng nhập thông tin đăng nhập'
-                            : 'Điền thông tin để bắt đầu'}
-                    </p>
+                    {/* 2. Pencil (Left-Center) */}
+                    <div className="absolute bottom-24 left-[30%] z-10">
+                        <div className="animate-jump-in" style={{ animationDelay: '0.3s' }}>
+                            <div className="animate-float-slow">
+                                <PencilCharacter eyeOffset={eyeOffset} isCovering={showPassword} />
+                            </div>
+                        </div>
+                    </div>
 
-                    {/* Tab switcher */}
-                    <div style={{
-                        display: 'flex',
-                        marginBottom: '24px',
-                        borderRadius: '12px',
-                        background: '#f5f5f5',
-                        padding: '4px',
-                    }}>
-                        {(['login', 'signup'] as const).map((tab) => (
-                            <button
-                                key={tab}
-                                onClick={() => { setActiveTab(tab); setError(''); }}
-                                style={{
-                                    flex: 1,
-                                    padding: '10px',
-                                    border: 'none',
-                                    borderRadius: '10px',
-                                    cursor: 'pointer',
-                                    fontWeight: 600,
-                                    fontSize: '14px',
-                                    transition: 'all 0.3s ease',
-                                    background: activeTab === tab
-                                        ? 'linear-gradient(135deg, #5B5FE6, #7C4DFF)'
-                                        : 'transparent',
-                                    color: activeTab === tab ? 'white' : '#999',
-                                    boxShadow: activeTab === tab
-                                        ? '0 4px 12px rgba(91, 95, 230, 0.3)'
-                                        : 'none',
-                                }}
-                            >
-                                {tab === 'login' ? 'Đăng nhập' : 'Đăng ký'}
-                            </button>
-                        ))}
+                    {/* 3. Backpack (Right-Center) */}
+                    <div
+                        className="absolute bottom-16 right-[35%] md:right-[42%] z-10 transition-transform duration-500"
+                        style={{ transform: isInputFocused ? 'translateX(10px) translateY(-5px)' : 'none' }}
+                    >
+                        <div className="animate-jump-in" style={{ animationDelay: '0.5s' }}>
+                            <div className="animate-bounce-gentle">
+                                <BackpackCharacter eyeOffset={eyeOffset} isCovering={showPassword} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 4. Star (Right) */}
+                    <div className="absolute bottom-20 right-[2%] md:right-[5%] z-20">
+                        <div className="animate-jump-in" style={{ animationDelay: '0.7s' }}>
+                            <div className="animate-spin-slow">
+                                <StarCharacter eyeOffset={eyeOffset} isCovering={showPassword} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ══════ RIGHT PANEL — Form ══════ */}
+            <div className="flex-1 flex items-center justify-center p-6 bg-[#0f172a] relative border-t md:border-t-0 md:border-l border-white/5 w-full rounded-t-[2rem] md:rounded-none -mt-8 md:mt-0 z-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] md:shadow-none min-h-[55vh] md:min-h-screen">
+                {/* Decorative background for mobile */}
+                <div className="absolute inset-0 md:hidden bg-[#0f172a] rounded-t-[2rem]">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                </div>
+
+                <div className="w-full max-w-md relative z-10 pb-8">
+                    {/* Tabs */}
+                    <div className="flex bg-slate-800/50 p-1 rounded-xl mb-6 relative">
+                        <div
+                            className="absolute inset-y-1 bg-indigo-600 rounded-lg transition-all duration-300 shadow-lg"
+                            style={{
+                                left: activeTab === 'login' ? '4px' : '50%',
+                                width: 'calc(50% - 4px)',
+                            }}
+                        />
+                        <button
+                            onClick={() => setActiveTab('login')}
+                            className={`flex-1 py-2 text-sm font-medium z-10 transition-colors ${activeTab === 'login' ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            Đăng nhập
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('signup')}
+                            className={`flex-1 py-2 text-sm font-medium z-10 transition-colors ${activeTab === 'signup' ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            Đăng ký
+                        </button>
+                    </div>
+
+                    {/* Logo icon */}
+                    <div className="text-center mb-6 md:mb-8">
+                        <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30 mb-4 transform hover:scale-110 hover:rotate-3 transition-all duration-300 animate-jump-in">
+                            <span className="text-2xl md:text-3xl animate-wiggle">🏫</span>
+                        </div>
+                        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight animate-jump-in" style={{ animationDelay: '0.2s' }}>
+                            {activeTab === 'login' ? 'Chào mừng trở lại!' : 'Tạo tài khoản mới'}
+                        </h1>
+                        <p className="text-slate-400 text-sm md:text-base animate-jump-in" style={{ animationDelay: '0.4s' }}>
+                            {activeTab === 'login' ? 'Vui lòng nhập thông tin đăng nhập' : 'Tham gia cộng đồng học tập ngay hôm nay'}
+                        </p>
                     </div>
 
                     {/* Error */}
                     {error && (
-                        <div style={{
-                            padding: '10px 14px',
-                            borderRadius: '10px',
-                            backgroundColor: '#FFF0F0',
-                            color: '#E53935',
-                            fontSize: '13px',
-                            marginBottom: '16px',
-                            textAlign: 'center',
-                            border: '1px solid #FFCDD2',
-                        }}>
+                        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-medium mb-6 text-center animate-shake">
                             {error}
                         </div>
                     )}
 
                     {/* Form */}
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 animate-jump-in" style={{ animationDelay: '0.8s' }}>
                         {activeTab === 'signup' && (
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={labelStyle}>Họ và tên</label>
+                            <div className="space-y-2 animate-in slide-in-from-left-4 fade-in duration-300">
+                                <label className="text-sm font-medium text-slate-300 ml-1">Họ và tên</label>
                                 <input
                                     type="text"
                                     value={name}
+                                    onFocus={handleInputFocus}
+                                    onBlur={handleInputBlur}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="Nguyễn Văn A"
                                     required
-                                    style={inputStyle}
-                                    onFocus={handleFocus}
-                                    onBlur={handleBlur}
+                                    className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all hover:bg-slate-800"
                                 />
                             </div>
                         )}
-
-                        <div style={{ marginBottom: '16px' }}>
-                            <label style={labelStyle}>Email</label>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-300 ml-1">Email</label>
                             <input
                                 type="email"
                                 value={email}
+                                onFocus={handleInputFocus}
+                                onBlur={handleInputBlur}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="you@example.com"
+                                placeholder="name@happyschools.vn"
                                 required
-                                style={inputStyle}
-                                onFocus={handleFocus}
-                                onBlur={handleBlur}
+                                className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all hover:bg-slate-800"
                             />
                         </div>
 
-                        <div style={{ marginBottom: activeTab === 'signup' ? '16px' : '10px' }}>
-                            <label style={labelStyle}>Mật khẩu</label>
-                            <div style={{ position: 'relative' }}>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-300 ml-1">Mật khẩu</label>
+                            <div className="relative">
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
+                                    onFocus={handleInputFocus}
+                                    onBlur={handleInputBlur}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
                                     required
-                                    style={{ ...inputStyle, paddingRight: '44px' }}
-                                    onFocus={handleFocus}
-                                    onBlur={handleBlur}
+                                    className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all hover:bg-slate-800 pr-12"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    style={{
-                                        position: 'absolute',
-                                        right: '12px',
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        background: 'none',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        color: showPassword ? '#7C4DFF' : '#aaa',
-                                        padding: '4px',
-                                        transition: 'color 0.2s ease',
-                                    }}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
                                 >
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
@@ -632,32 +602,30 @@ export default function LoginPage() {
                         </div>
 
                         {activeTab === 'signup' && (
-                            <div style={{ marginBottom: '10px' }}>
-                                <label style={labelStyle}>Xác nhận mật khẩu</label>
-                                <input
-                                    type="password"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    required
-                                    style={inputStyle}
-                                    onFocus={handleFocus}
-                                    onBlur={handleBlur}
-                                />
+                            <div className="space-y-2 animate-in slide-in-from-right-4 fade-in duration-300">
+                                <label className="text-sm font-medium text-slate-300 ml-1">Bạn là...</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setRole('student')}
+                                        className={`py-3 px-4 rounded-xl border font-medium transition-all ${role === 'student' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800/50 border-white/10 text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                                    >
+                                        👨‍🎓 Học sinh
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setRole('teacher')}
+                                        className={`py-3 px-4 rounded-xl border font-medium transition-all ${role === 'teacher' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800/50 border-white/10 text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                                    >
+                                        👩‍🏫 Giáo viên
+                                    </button>
+                                </div>
                             </div>
                         )}
 
                         {activeTab === 'login' && (
-                            <div style={{
-                                textAlign: 'right',
-                                marginBottom: '20px',
-                            }}>
-                                <a href="#" style={{
-                                    fontSize: '13px',
-                                    color: '#7C4DFF',
-                                    textDecoration: 'none',
-                                    fontWeight: 500,
-                                }}>
+                            <div className="flex justify-end">
+                                <a href="#" className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
                                     Quên mật khẩu?
                                 </a>
                             </div>
@@ -666,87 +634,66 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            style={{
-                                width: '100%',
-                                padding: '14px',
-                                fontSize: '15px',
-                                fontWeight: 700,
-                                color: 'white',
-                                background: isLoading
-                                    ? '#bbb'
-                                    : 'linear-gradient(135deg, #5B5FE6 0%, #7C4DFF 100%)',
-                                border: 'none',
-                                borderRadius: '12px',
-                                cursor: isLoading ? 'not-allowed' : 'pointer',
-                                boxShadow: isLoading ? 'none' : '0 8px 24px rgba(91, 95, 230, 0.35)',
-                                transition: 'all 0.3s ease',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px',
-                                marginTop: activeTab === 'signup' ? '20px' : '0',
-                            }}
+                            className={`w-full py-3.5 rounded-xl text-white font-bold text-base transition-all duration-300 shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 ${isLoading
+                                ? 'bg-slate-700 cursor-not-allowed'
+                                : 'bg-indigo-600 hover:bg-indigo-500 hover:-translate-y-0.5'
+                                }`}
                         >
-                            {isLoading && <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />}
-                            {isLoading
-                                ? 'Đang xử lý...'
-                                : activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký'}
+                            {isLoading && <Loader2 size={18} className="animate-spin" />}
+                            {isLoading ? 'Đang xử lý...' : (activeTab === 'login' ? 'Đăng nhập ngay' : 'Tạo tài khoản')}
                         </button>
                     </form>
 
                     {/* Demo accounts */}
-                    <div style={{
-                        marginTop: '24px',
-                        padding: '14px',
-                        background: 'linear-gradient(135deg, #F3E5F5 0%, #E8EAF6 100%)',
-                        borderRadius: '12px',
-                        fontSize: '12px',
-                    }}>
-                        <p style={{ fontWeight: 700, color: '#5B5FE6', marginBottom: '6px', fontSize: '13px' }}>
-                            📌 Tài khoản demo:
+                    <div className="mt-8 p-5 bg-indigo-500/10 rounded-xl border border-indigo-500/20 backdrop-blur-sm animate-jump-in" style={{ animationDelay: '1s' }}>
+                        <p className="font-bold text-indigo-400 mb-3 text-sm flex items-center gap-2">
+                            📌 Tài khoản Demo (Click để copy):
                         </p>
-                        <p style={{ color: '#555', marginBottom: '3px' }}>
-                            <strong>Admin:</strong> admin@happyschools.vn / test123
-                        </p>
-                        <p style={{ color: '#555', marginBottom: '3px' }}>
-                            <strong>Giáo viên:</strong> gv.10a@happyschools.vn / test123
-                        </p>
-                        <p style={{ color: '#555' }}>
-                            <strong>Học sinh:</strong> hs.an@happyschools.vn / test123
-                        </p>
+                        <div className="space-y-2 text-sm text-slate-300">
+                            {[
+                                { role: 'Admin', email: 'admin@happyschools.vn', pass: 'test123' },
+                                { role: 'Giáo viên', email: 'gv.10a@happyschools.vn', pass: 'test123' },
+                                { role: 'Học sinh', email: 'hs.an@happyschools.vn', pass: 'test123' }
+                            ].map((acc, idx) => (
+                                <div
+                                    key={idx}
+                                    className="group flex justify-between items-center p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+                                    onClick={() => { setEmail(acc.email); setPassword(acc.pass); }}
+                                    title="Click để điền tự động"
+                                >
+                                    <span className="font-medium text-white w-20">{acc.role}:</span>
+                                    <span className="font-mono text-xs opacity-70 group-hover:opacity-100">{acc.email}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
-                    {/* Switch prompt */}
-                    <p style={{
-                        textAlign: 'center',
-                        marginTop: '20px',
-                        fontSize: '13px',
-                        color: '#999',
-                    }}>
-                        {activeTab === 'login'
-                            ? 'Chưa có tài khoản? '
-                            : 'Đã có tài khoản? '}
-                        <button
-                            onClick={() => { setActiveTab(activeTab === 'login' ? 'signup' : 'login'); setError(''); }}
-                            style={{
-                                background: 'none',
-                                border: 'none',
-                                color: '#7C4DFF',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                            }}
-                        >
-                            {activeTab === 'login' ? 'Đăng ký' : 'Đăng nhập'}
-                        </button>
-                    </p>
+                    <div className="mt-8 text-center animate-jump-in" style={{ animationDelay: '1.4s' }}>
+                        <Link href="/" className="text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center justify-center gap-1">
+                            ← Quay về Trang chủ
+                        </Link>
+                    </div>
                 </div>
             </div>
 
             {/* ══════ Animations ══════ */}
             <style jsx global>{`
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
+                /* Entrance Animation */
+                @keyframes jump-in {
+                    0% { opacity: 0; transform: translateY(50px) scale(0.5); }
+                    60% { opacity: 1; transform: translateY(-10px) scale(1.05); }
+                    100% { opacity: 1; transform: translateY(0) scale(1); }
+                }
+                .animate-jump-in {
+                    animation: jump-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+                }
+
+                @keyframes animate-pulse-slow {
+                    0%, 100% { opacity: 0.4; transform: scale(1); }
+                    50% { opacity: 0.7; transform: scale(1.1); }
+                }
+                .animate-pulse-slow {
+                    animation: animate-pulse-slow 4s infinite;
                 }
                 @keyframes floatItem {
                     0%, 100% { transform: translateY(0px) rotate(0deg); }
@@ -754,51 +701,64 @@ export default function LoginPage() {
                     50% { transform: translateY(-8px) rotate(-3deg); }
                     75% { transform: translateY(-20px) rotate(3deg); }
                 }
-                @keyframes popIn {
-                    0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
-                    70% { transform: translateX(-50%) scale(1.1); opacity: 1; }
-                    100% { transform: translateX(-50%) scale(1); opacity: 1; }
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+                    20%, 40%, 60%, 80% { transform: translateX(4px); }
                 }
-                @media (max-width: 768px) {
-                    div[style*="flex-direction: row"] {
-                        flex-direction: column !important;
-                    }
+                .animate-shake {
+                    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+                }
+
+                /* Funny animations */
+                @keyframes sway {
+                    0%, 100% { transform: rotate(-3deg); }
+                    50% { transform: rotate(3deg); }
+                }
+                .animate-sway {
+                    animation: sway 3s ease-in-out infinite;
+                }
+
+                @keyframes float-slow {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-15px); }
+                }
+                .animate-float-slow {
+                    animation: float-slow 4s ease-in-out infinite;
+                }
+
+                @keyframes bounce-gentle {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-8px); }
+                }
+                .animate-bounce-gentle {
+                    animation: bounce-gentle 2.5s ease-in-out infinite;
+                }
+
+                @keyframes spin-slow {
+                    0%, 100% { transform: rotate(0deg); }
+                    50% { transform: rotate(10deg); }
+                }
+                .animate-spin-slow {
+                    animation: spin-slow 5s ease-in-out infinite;
+                }
+
+                @keyframes wiggle {
+                    0%, 100% { transform: rotate(-5deg); }
+                    50% { transform: rotate(5deg); }
+                }
+                .animate-wiggle {
+                    animation: wiggle 1s ease-in-out infinite;
+                }
+
+                @keyframes bounce-slow {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-5px); }
+                }
+                .animate-bounce-slow {
+                    animation: bounce-slow 2s ease-in-out infinite;
                 }
             `}</style>
         </div>
     );
 }
-
-/* ─── Shared styles ─── */
-const labelStyle: React.CSSProperties = {
-    display: 'block',
-    fontSize: '13px',
-    fontWeight: 600,
-    color: '#555',
-    marginBottom: '6px',
-};
-
-const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '12px 14px',
-    fontSize: '14px',
-    borderRadius: '10px',
-    border: '2px solid #eee',
-    outline: 'none',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
-    background: '#fafafa',
-    color: '#333',
-    boxSizing: 'border-box',
-};
-
-const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.style.borderColor = '#7C4DFF';
-    e.target.style.boxShadow = '0 0 0 3px rgba(124, 77, 255, 0.1)';
-    e.target.style.background = '#fff';
-};
-
-const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.style.borderColor = '#eee';
-    e.target.style.boxShadow = 'none';
-    e.target.style.background = '#fafafa';
-};

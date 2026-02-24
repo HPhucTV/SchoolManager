@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Search, Calendar, Users, CheckCircle, PlayCircle, Clock, X, Edit, Trash2, Eye, Play, Flag } from 'lucide-react';
-import { activitiesApi, Activity, API_URL } from '@/lib/api';
+import { activitiesApi, Activity } from '@/lib/api';
 
 const statusConfig = {
     completed: { label: 'Hoàn thành', bg: 'rgba(52, 211, 153, 0.15)', color: '#0d9488', Icon: CheckCircle },
@@ -155,7 +155,7 @@ export default function HoatDongPage() {
             setShowCreateModal(false);
             setFormData({ title: '', description: '', type: 'Hoạt động', scheduled_date: '', progress: 0 });
             await fetchActivities();
-        } catch (err) {
+        } catch (_err) {
             alert('❌ Lỗi khi tạo hoạt động');
         } finally {
             setSubmitting(false);
@@ -177,7 +177,7 @@ export default function HoatDongPage() {
             setShowEditModal(false);
             setSelectedActivity(null);
             await fetchActivities();
-        } catch (err) {
+        } catch (_err) {
             alert('❌ Lỗi khi cập nhật hoạt động');
         } finally {
             setSubmitting(false);
@@ -194,7 +194,7 @@ export default function HoatDongPage() {
             setShowDetailModal(false);
             setSelectedActivity(null);
             await fetchActivities();
-        } catch (err) {
+        } catch (_err) {
             alert('❌ Lỗi khi xóa hoạt động');
         } finally {
             setSubmitting(false);
@@ -210,7 +210,7 @@ export default function HoatDongPage() {
             if (selectedActivity?.id === activity.id) {
                 setSelectedActivity({ ...activity, status: newStatus as Activity['status'], progress });
             }
-        } catch (err) {
+        } catch (_err) {
             alert('❌ Lỗi khi cập nhật trạng thái');
         }
     };
@@ -359,8 +359,7 @@ export default function HoatDongPage() {
             {/* Detail Modal */}
             <Modal show={showDetailModal} onClose={() => setShowDetailModal(false)} title="Chi tiết Hoạt động">
                 {selectedActivity && (() => {
-                    const status = statusConfig[selectedActivity.status as keyof typeof statusConfig] || statusConfig.scheduled;
-                    const StatusIcon = status.Icon;
+
 
                     // State for survey results (local to this render block if we could, but better to lift or use SWR/Effect)
                     // Since this is inside the render loop, we need to handle fetching efficiently.
@@ -405,7 +404,7 @@ const ActivityDetailContent = ({ activity, onEdit, onDelete, onUpdateStatus }: {
     const status = statusConfig[activity.status as keyof typeof statusConfig] || statusConfig.scheduled;
     const StatusIcon = status.Icon;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [surveyResults, setSurveyResults] = useState<any[]>([]);
+    const [surveyResults] = useState<any[]>([]);
     const [loadingResults, setLoadingResults] = useState(false);
 
     useEffect(() => {
