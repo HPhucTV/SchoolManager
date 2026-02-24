@@ -170,9 +170,9 @@ export default function HoatDongPage() {
         try {
             await activitiesApi.updateActivity(selectedActivity.id, {
                 title: formData.title,
-                description: formData.description || null,
+                description: formData.description || undefined,
                 type: formData.type,
-                scheduled_date: formData.scheduled_date || null,
+                scheduled_date: formData.scheduled_date || undefined,
             });
             setShowEditModal(false);
             setSelectedActivity(null);
