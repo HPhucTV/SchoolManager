@@ -5,7 +5,7 @@
 <h1 align="center">SchoolManager</h1>
 
 <p align="center">
-  <strong>Nền tảng quản lý trường học thông minh tích hợp AI — hỗ trợ giáo viên, học sinh và phụ huynh</strong>
+  <strong>Nền tảng quản lý trường học thông minh tích hợp AI — hỗ trợ quản trị viên, giáo viên và học sinh</strong>
 </p>
 
 <p align="center">
@@ -26,7 +26,7 @@
 
 ---
 
-**SchoolManager** là nền tảng mã nguồn mở giúp quản lý trường học toàn diện, tích hợp AI chatbot, kiểm tra trực tuyến, phân tích học tập và chăm sóc sức khỏe tinh thần cho học sinh. Hệ thống được thiết kế dành cho **giáo viên**, **học sinh**, **phụ huynh** và **quản trị viên** với giao diện hiện đại, trải nghiệm mượt mà.
+**SchoolManager** là nền tảng mã nguồn mở giúp quản lý trường học toàn diện, tích hợp AI chatbot, kiểm tra trực tuyến, phân tích học tập và chăm sóc sức khỏe tinh thần cho học sinh. Hệ thống được thiết kế dành cho **quản trị viên**, **giáo viên** và **học sinh** với giao diện hiện đại, trải nghiệm mượt mà.
 
 Chúng tôi rất vui khi bạn quan tâm đến dự án! Trước khi đóng góp, vui lòng đọc qua [hướng dẫn đóng góp](CONTRIBUTING.md) và [quy tắc ứng xử](CODE_OF_CONDUCT.md).
 
@@ -40,7 +40,6 @@ Chúng tôi rất vui khi bạn quan tâm đến dự án! Trước khi đóng g
 - 🎮 **Gamification** — Hệ thống điểm, huy hiệu, bảng xếp hạng, cửa hàng phần thưởng
 - 💚 **Wellness & Sức khỏe tinh thần** — Theo dõi cảm xúc, cảnh báo SOS, phân tích sức khỏe lớp
 - 📊 **Dashboard & Analytics** — Thống kê toàn diện, cảnh báo sớm, báo cáo lớp chi tiết
-- 👨‍👩‍👧 **Cổng phụ huynh** — Theo dõi con, nhắn tin giáo viên, xem báo cáo học tập
 - 🐳 **Docker One-Click Deploy** — Triển khai toàn bộ hệ thống bằng một lệnh duy nhất
 
 ---
@@ -70,7 +69,7 @@ SchoolManager là giải pháp **quản lý trường học thế hệ mới**, 
 - **Trí tuệ nhân tạo** — Chatbot hỗ trợ sinh viên & giáo viên, phân tích năng lực, đề xuất lộ trình
 - **Chăm sóc sức khỏe** — Theo dõi cảm xúc hàng ngày, gửi cảnh báo SOS, báo cáo wellness
 - **Gamification** — Check-in, tích điểm, huy hiệu, bảng xếp hạng, cửa hàng phần thưởng
-- **Đa vai trò** — Giao diện riêng biệt cho Admin, Giáo viên, Học sinh, Phụ huynh
+- **Đa vai trò** — Giao diện riêng biệt cho Admin, Giáo viên, Học sinh
 
 ---
 
@@ -123,13 +122,6 @@ SchoolManager là giải pháp **quản lý trường học thế hệ mới**, 
 | Student Trends | Theo dõi xu hướng phát triển từng học sinh |
 | Teacher Reports | Giáo viên tạo báo cáo nhanh qua chatbot |
 
-### 👨‍👩‍👧 Cổng phụ huynh
-
-| Tính năng | Mô tả |
-|-----------|-------|
-| Child Monitoring | Theo dõi điểm số, cảm xúc, hoạt động của con |
-| Teacher Messaging | Nhắn tin trực tiếp với giáo viên |
-| Reports | Xem báo cáo học tập chi tiết |
 
 ---
 
@@ -144,41 +136,33 @@ SchoolManager là giải pháp **quản lý trường học thế hệ mới**, 
 ✅ RAM tối thiểu 4GB
 ```
 
-### Cài đặt với Docker (Khuyến nghị)
+### Cài đặt nhanh
 
 ```bash
 # 1. Clone repository
 git clone https://github.com/HPhucTV/SchoolManager.git
-cd SchoolManager/happy-schools
-
-# 2. Cấu hình môi trường
-cp .env.example backend/.env
-# Chỉnh sửa backend/.env nếu cần (API keys, database URL...)
-
-# 3. Khởi chạy toàn bộ hệ thống
-docker-compose up --build
+cd SchoolManager
 ```
 
-🎉 **Hoàn tất!**
-- 🌐 Frontend: [https://localhost](https://localhost) (hoặc `http://localhost:3000`)
-- 🔧 Backend API: `http://localhost:8001/docs`
-- 🗄️ PostgreSQL: `localhost:5432`
-
-### Cài đặt thủ công (Development)
-
 ```bash
-# Terminal 1: Backend
+# 2. Chạy Backend (mở Terminal 1)
 cd backend
 python -m venv venv
 venv\Scripts\activate           # Linux/Mac: source venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8001
+uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+```
 
-# Terminal 2: Frontend
-cd happy-schools
+```bash
+# 3. Chạy Frontend (mở Terminal 2)
 npm install
+echo NEXT_PUBLIC_API_URL=http://127.0.0.1:8001 > .env.local
 npm run dev
 ```
+
+🎉 **Hoàn tất!**
+- 🌐 Frontend: `http://localhost:3000`
+- 🔧 Backend API: `http://localhost:8001/docs`
 
 ### Khắc phục sự cố
 
@@ -193,12 +177,11 @@ npm run dev
 
 ## 🔑 Tài khoản Demo
 
-| Vai trò | Username | Password |
-|---------|----------|----------|
-| Admin | `admin` | `admin123` |
-| Giáo viên | `teacher1` | `teacher123` |
-| Học sinh | `student1` | `student123` |
-| Phụ huynh | `parent1` | `parent123` |
+| Vai trò | Email | Password |
+|---------|-------|----------|
+| Admin | `admin@happyschools.vn` | `test123` |
+| Giáo viên | `gv.10a@happyschools.vn` | `test123` |
+| Học sinh | `hs.an@happyschools.vn` | `test123` |
 
 > **Lưu ý:** Tài khoản demo được tạo tự động bởi script `backend/seed_db.py`.
 
@@ -242,11 +225,11 @@ npm run dev
 ## 📦 Cấu trúc dự án
 
 ```
-happy-schools/
+SchoolManager/
 │
 ├── 📂 backend/                          # ── FastAPI Backend ──
 │   ├── app/
-│   │   ├── routers/                     # API endpoint modules (22 routers)
+│   │   ├── routers/                     # API endpoint modules (21 routers)
 │   │   │   ├── activities.py            #   Quản lý hoạt động
 │   │   │   ├── admin.py                 #   Quản trị hệ thống
 │   │   │   ├── ai.py                    #   AI Chatbot
@@ -260,7 +243,7 @@ happy-schools/
 │   │   │   ├── gamification.py          #   Điểm, huy hiệu, cửa hàng
 │   │   │   ├── invitations.py           #   Lời mời tham gia
 │   │   │   ├── notifications.py         #   Thông báo hệ thống
-│   │   │   ├── parent.py                #   Cổng phụ huynh
+
 │   │   │   ├── quiz_battle.py           #   Quiz Battle PvP
 │   │   │   ├── quizzes.py               #   Quản lý đề thi / kiểm tra
 │   │   │   ├── schedule_api.py          #   Thời khóa biểu
@@ -333,9 +316,7 @@ happy-schools/
 │   │   │   ├── lop-hoc/                 #   Quản lý lớp học
 │   │   │   └── cai-dat/                 #   Cài đặt hệ thống
 │   │   │
-│   │   ├── parent/                      # 👨‍👩‍👧 Parent portal
-│   │   │   └── page.tsx                 #   Cổng phụ huynh
-│   │   │
+
 │   │   ├── login/                       # 🔐 Authentication
 │   │   ├── meeting/                     # 📹 Video meeting
 │   │   ├── page.tsx                     # 🏠 Landing page
@@ -442,11 +423,6 @@ happy-schools/
 - Ghi lại cảm xúc hàng ngày & gửi SOS khi cần
 - Chơi mini-games giải trí (Riddles, Word Chain)
 
-### 👨‍👩‍👧 Dành cho Phụ huynh
-
-- Theo dõi điểm số, cảm xúc và hoạt động của con
-- Nhắn tin trực tiếp với giáo viên chủ nhiệm
-- Xem báo cáo chi tiết về quá trình học tập
 
 ### 🏛️ Dành cho Quản trị viên
 
@@ -471,7 +447,7 @@ happy-schools/
 | Gamification | ✅ Hoàn thành |
 | Wellness & Mood Tracking | ✅ Hoàn thành |
 | Analytics & Early Warning | ✅ Hoàn thành |
-| Parent Portal | ✅ Hoàn thành |
+
 | Docker Deployment | ✅ Hoàn thành |
 | SSL & Domain | ✅ Hoàn thành |
 | Mobile Responsive | 🔧 Đang cải thiện |
