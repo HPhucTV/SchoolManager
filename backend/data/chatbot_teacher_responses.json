@@ -1,0 +1,136 @@
+{
+  "responses": {
+    "consultant": {
+      "class_management": [
+        "Để quản lý lớp hiệu quả, thầy/cô nên thiết lập quy tắc rõ ràng ngay từ đầu năm học và nhất quán trong việc áp dụng. Học sinh cần biết kỳ vọng của thầy/cô. 📋",
+        "Khi có học sinh gây rối, hãy tách riêng em ra nói chuyện thay vì phê bình trước lớp. Điều này giúp bảo vệ lòng tự trọng của em và tránh tạo xung đột. 🤝",
+        "Thầy/cô có thể thử phương pháp 'positive reinforcement' - khen ngợi hành vi tốt thay vì chỉ phạt hành vi xấu. Tỷ lệ lý tưởng là 5 lời khen : 1 lời nhắc nhở. ⭐",
+        "Phân nhóm học sinh theo năng lực khác nhau giúp các em hỗ trợ lẫn nhau. Học sinh giỏi hướng dẫn bạn yếu hơn - cả hai đều học được từ trải nghiệm này. 👥",
+        "Thiết kế bài học với nhiều hoạt động ngắn (10-15 phút/hoạt động) giúp duy trì sự tập trung, đặc biệt với lớp có nhiều học sinh hiếu động. ⏱️",
+        "Lớp quá ồn ào? Thử kỹ thuật 'Give me 5' - đưa 5 ngón tay lên, học sinh thấy sẽ tự giơ tay và im lặng. Hiệu quả hơn hét to rất nhiều! ✋",
+        "Xây dựng 'classroom contract' - cho học sinh cùng tham gia đặt ra nội quy lớp. Khi các em tham gia quyết định, các em có trách nhiệm hơn trong việc tuân thủ. 📝",
+        "Sắp xếp chỗ ngồi strategly: đặt học sinh hay nói chuyện xa nhau, học sinh yếu gần bàn giáo viên. Thay đổi chỗ ngồi mỗi tháng để tạo sự mới mẻ. 🪑",
+        "Bắt đầu mỗi tiết học bằng một 'warm-up' thú vị (câu đố, video ngắn, câu hỏi gợi mở) giúp thu hút sự chú ý và tạo không khí tích cực. 🎯",
+        "Sử dụng 'exit ticket' cuối mỗi tiết - học sinh viết 1 điều đã học và 1 câu hỏi còn thắc mắc. Giúp thầy/cô nắm được mức độ hiểu bài nhanh chóng. 🎟️",
+        "Khi xảy ra xung đột giữa các học sinh, hãy lắng nghe cả hai bên trước khi phán xét. Dạy các em kỹ năng giải quyết mâu thuẫn thay vì chỉ dàn xếp hộ. ⚖️",
+        "Tạo hệ thống 'reward' cho cả lớp (không chỉ cá nhân): khi cả lớp đạt mục tiêu chung, cả lớp được thưởng. Điều này xây dựng tinh thần đoàn kết. 🏆"
+      ],
+      "student_analysis": [
+        "Để đánh giá toàn diện học sinh, thầy/cô nên xem xét cả 3 yếu tố: học lực (điểm số), thái độ (sự tham gia), và tinh thần (mức độ hạnh phúc). 📊",
+        "Học sinh có điểm giảm đột ngột thường có vấn đề ngoài học tập - gia đình, bạn bè, sức khỏe tâm lý. Nên trò chuyện riêng trước khi áp dụng biện pháp kỷ luật. 💬",
+        "Theo dõi xu hướng điểm số theo thời gian quan trọng hơn điểm tuyệt đối. Học sinh đạt 5 điểm nhưng tăng đều còn đáng khích lệ hơn học sinh luôn 7 điểm nhưng không tiến bộ. 📈",
+        "Thầy/cô có thể sử dụng chức năng 'Phân tích lớp' để xem điểm trung bình, tỷ lệ hạnh phúc, và mức độ gắn kết của học sinh - từ đó điều chỉnh phương pháp dạy. 📋",
+        "Học sinh yếu thường cần được chia nhỏ mục tiêu: thay vì 'cải thiện điểm Toán', hãy đặt 'nắm vững phép nhân trong 2 tuần'. Mục tiêu nhỏ, cụ thể giúp các em không bị overwhelm. 🎯",
+        "Chú ý đến 'silent students' - những em ít phát biểu không có nghĩa là không có vấn đề. Quan sát ngôn ngữ cơ thể và mức độ tham gia nhóm để phát hiện sớm. 👁️",
+        "So sánh điểm số giữa các lần kiểm tra cùng chủ đề giúp xác định chính xác phần nào học sinh đã cải thiện và phần nào cần ôn lại. 🔍",
+        "Khi phân tích kết quả kiểm tra của cả lớp, nếu hơn 60% lớp sai cùng một câu, đó là dấu hiệu phần đó cần được dạy lại chứ không phải lỗi của học sinh. 📉",
+        "Đánh giá formative (trong quá trình học) quan trọng không kém summative (cuối kỳ). Các mini-quiz hàng tuần giúp phát hiện lỗ hổng kiến thức sớm. ✅",
+        "Thầy/cô nên tạo 'student profile' cho từng em: ghi nhận điểm mạnh, yếu, sở thích, phong cách học - giúp cá nhân hóa cách tiếp cận. 👤"
+      ],
+      "teaching_methods": [
+        "Phương pháp 'Think-Pair-Share' rất hiệu quả: học sinh suy nghĩ cá nhân → thảo luận đôi → chia sẻ trước lớp. Giúp cả học sinh rụt rè cũng có cơ hội tham gia. 💭",
+        "Differentiated instruction - phân hóa giảng dạy: cùng một bài nhưng giao nhiệm vụ khác nhau theo năng lực. Nhóm yếu làm bài cơ bản, nhóm khá làm bài nâng cao. 📚",
+        "Project-Based Learning (PBL) giúp học sinh áp dụng kiến thức vào thực tế. VD: thay vì dạy thống kê thuần túy, cho các em khảo sát và phân tích dữ liệu lớp. 🔬",
+        "Gamification - thêm yếu tố trò chơi vào bài giảng: thi đua nhóm, hệ thống điểm thưởng, thành tựu. Hệ thống này đã có tích hợp trong app, thầy/cô có thể tận dụng! 🎮",
+        "Kỹ thuật 'Jigsaw' - chia bài thành nhiều phần, mỗi nhóm nghiên cứu 1 phần rồi dạy lại cho nhóm khác. Học sinh vừa là người học vừa là người dạy. 🧩",
+        "Scaffolding - dẫn dắt từ từ: bắt đầu với ví dụ mẫu → làm cùng → làm có gợi ý → tự làm. Đặc biệt hiệu quả với khái niệm trừu tượng. 🪜",
+        "Sử dụng 'Bloom's Taxonomy' để thiết kế câu hỏi: từ Nhớ → Hiểu → Áp dụng → Phân tích → Đánh giá → Sáng tạo. Đảm bảo học sinh được rèn luyện tư duy bậc cao. 🧠",
+        "Flipped Classroom - lớp học đảo ngược: cho học sinh xem video bài giảng ở nhà, dành thời gian trên lớp để thảo luận và làm bài tập. Tiết kiệm thời gian và tăng tương tác. 🔄",
+        "Anchor charts - bảng tóm tắt treo trên tường lớp giúp học sinh tra cứu nhanh kiến thức đã học. Cho học sinh cùng tạo để tăng sự ghi nhớ. 📌",
+        "Thử phương pháp 'Socratic Seminar' - đặt câu hỏi mở để học sinh thảo luận, giáo viên chỉ đóng vai moderator. Phát triển tư duy phản biện rất tốt. 🗣️",
+        "Microlearning - chia kiến thức thành các đơn vị nhỏ 5-10 phút. Phù hợp với khả năng tập trung của học sinh phổ thông hiện nay. ⚡",
+        "Sử dụng storytelling trong giảng dạy - kể chuyện liên quan đến bài học giúp học sinh ghi nhớ lâu hơn 22 lần so với chỉ nghe thông tin khô khan (nghiên cứu Stanford). 📖"
+      ],
+      "assessment": [
+        "Đa dạng hóa hình thức đánh giá: không chỉ kiểm tra viết, thử thêm thuyết trình, dự án nhóm, portfolio, hoặc đánh giá thực hành để phản ánh đầy đủ năng lực học sinh. 📝",
+        "Rubric chấm điểm rõ ràng giúp đánh giá khách quan và nhất quán. Chia sẻ rubric cho học sinh trước để các em biết tiêu chí đánh giá. 📏",
+        "Peer assessment - cho học sinh đánh giá bài của nhau theo rubric. Giúp các em học cách nhận diện điểm mạnh/yếu và phát triển kỹ năng phản biện. 👥",
+        "Hãy dùng chức năng tạo quiz trong hệ thống để tạo các mini-test hàng tuần. Ngắn gọn (5-10 câu) nhưng giúp theo dõi tiến bộ liên tục. ✅",
+        "Self-assessment - cho học sinh tự đánh giá mức độ hiểu bài (thang 1-5) trước và sau bài học. Giúp các em có metacognition - nhận thức về quá trình học của mình. 🪞",
+        "Feedback kịp thời quan trọng hơn feedback chi tiết. Trả bài trong 1-2 ngày với nhận xét ngắn gọn hiệu quả hơn trả bài sau 2 tuần với nhận xét dài. ⚡",
+        "Thiết kế đề kiểm tra theo ma trận Bloom: 40% Nhớ-Hiểu, 40% Áp dụng-Phân tích, 20% Đánh giá-Sáng tạo. Đảm bảo phân hóa được năng lực học sinh. 🧮",
+        "Không nên so sánh điểm giữa các học sinh. Thay vào đó, so sánh tiến bộ của từng em qua thời gian - 'growth-based assessment' giúp tạo động lực tốt hơn. 📈"
+      ],
+      "wellness": [
+        "Nhận diện dấu hiệu stress ở học sinh: thay đổi hành vi đột ngột, điểm số giảm, thu mình, hay vắng mặt. Nên trò chuyện riêng với em và thông báo phụ huynh nếu cần. 🫂",
+        "Bắt đầu mỗi buổi học bằng 'mood check-in' - hỏi học sinh cảm thấy thế nào hôm nay. Có thể dùng emoji hoặc thang màu để các em dễ chia sẻ hơn. 🎨",
+        "Khi học sinh có biểu hiện kiệt sức (burnout), hãy giúp em ưu tiên - không phải bỏ hết mọi thứ, mà xác định đâu là quan trọng nhất để tập trung. ⚡",
+        "Xây dựng 'safe space' trong lớp - nơi học sinh biết rằng mình có thể chia sẻ khó khăn mà không bị phán xét. Trust là foundation của mọi mối quan hệ thầy trò. 💚",
+        "Giáo viên cũng cần chăm sóc sức khỏe tinh thần của mình. Burnout ở giáo viên ảnh hưởng trực tiếp đến chất lượng giảng dạy. Đặt ranh giới công việc - cuộc sống. 🧘",
+        "Nếu phát hiện học sinh bị bắt nạt (bullying), cần can thiệp ngay: tách nạn nhân khỏi tình huống, trao đổi riêng với cả hai bên, thông báo Ban Giám Hiệu. 🛡️",
+        "Mindfulness 2 phút đầu giờ - hướng dẫn học sinh hít thở sâu, thả lỏng. Nghiên cứu cho thấy giảm 28% hành vi gây rối và tăng khả năng tập trung. 🧘‍♂️",
+        "Chú ý đến học sinh có hoàn cảnh đặc biệt (bố mẹ ly hôn, gia đình khó khăn). Sự đồng cảm và hỗ trợ kịp thời từ giáo viên có thể là điểm tựa quan trọng. 💛",
+        "Tạo 'buddy system' - ghép cặp học sinh mới hoặc học sinh gặp khó khăn với một bạn hỗ trợ. Giúp xây dựng kết nối xã hội và giảm cảm giác cô lập. 🤝",
+        "Khi điểm hạnh phúc hoặc gắn kết của lớp giảm, đó là tín hiệu cần tổ chức các hoạt động team building hoặc điều chỉnh cường độ bài tập. 📊"
+      ],
+      "report": [
+        "Thầy/cô có thể tạo báo cáo lớp bằng cách nhấn nút '📄 Báo cáo' ở góc trên. Chọn lớp, loại báo cáo, và nhập nội dung cần báo cáo. 📋",
+        "Dùng lệnh 'xem báo cáo' hoặc 'lịch sử báo cáo' để xem lại các báo cáo đã tạo trước đó. Hữu ích khi cần theo dõi diễn biến qua thời gian. 📁",
+        "Gõ 'báo cáo' kèm tên lớp để xem báo cáo nhanh: tổng học sinh, điểm trung bình, tỷ lệ hạnh phúc và gắn kết. 📊",
+        "Báo cáo định kỳ (tuần/tháng) giúp thầy/cô theo dõi xu hướng và phát hiện vấn đề sớm. Khuyến khích tạo báo cáo ít nhất 2 lần/tháng. 📅",
+        "Sử dụng dữ liệu báo cáo để trao đổi với phụ huynh - số liệu cụ thể thuyết phục hơn nhận xét chung chung. 📧"
+      ],
+      "greeting": [
+        "Chào thầy/cô! 👋 Tôi là Trợ lý Giáo dục AI, sẵn sàng hỗ trợ thầy/cô về quản lý lớp, phân tích học sinh, và phương pháp giảng dạy.",
+        "Xin chào thầy/cô! 🌟 Hôm nay tôi có thể giúp gì cho thầy/cô? Thầy/cô có thể hỏi về phân tích lớp, tư vấn giảng dạy, hoặc tạo báo cáo.",
+        "Chào thầy/cô! 📚 Tôi ở đây để hỗ trợ công việc giảng dạy. Thầy/cô cần tư vấn về vấn đề gì hôm nay?",
+        "Xin chào! 💡 Tôi là trợ lý AI dành riêng cho giáo viên. Hãy chia sẻ câu hỏi hoặc thách thức mà thầy/cô đang gặp trong giảng dạy nhé!",
+        "Chào thầy/cô! 🎯 Tôi có thể giúp phân tích dữ liệu lớp, gợi ý phương pháp dạy, hoặc hỗ trợ quản lý học sinh. Thầy/cô cần gì nào?"
+      ],
+      "general": [
+        "Đó là một câu hỏi hay! Thầy/cô có thể cho tôi biết thêm chi tiết để tôi tư vấn chính xác hơn không? 🤔",
+        "Tôi hiểu thầy/cô đang quan tâm về vấn đề này. Thầy/cô có thể thử xem 'Phân tích lớp' hoặc hỏi tôi cụ thể hơn về phương pháp giảng dạy, quản lý lớp, hoặc đánh giá học sinh. 💡",
+        "Thầy/cô có thể hỏi tôi về: quản lý lớp, phân tích học sinh, phương pháp dạy, đánh giá kiểm tra, sức khỏe tinh thần, hoặc tạo báo cáo. Tôi sẵn sàng hỗ trợ! 📋",
+        "Cảm ơn thầy/cô đã chia sẻ! Giáo dục là hành trình dài, và mỗi ngày chúng ta đều có cơ hội tạo ra sự thay đổi tích cực cho học sinh. 🌱",
+        "Nếu thầy/cô cần thông tin cụ thể về một lớp, hãy thử gõ 'báo cáo' hoặc sử dụng các nút gợi ý nhanh ở dưới. Tôi sẽ lấy dữ liệu thực cho thầy/cô! 📊",
+        "Mỗi học sinh là một cá thể riêng biệt. Điều quan trọng nhất mà giáo viên có thể làm là tạo ra môi trường học tập an toàn, nơi mỗi em đều cảm thấy được lắng nghe. 💚",
+        "Thầy/cô có thể gõ 'học sinh yếu' để xem danh sách học sinh cần chú ý, hoặc 'gợi ý giảng dạy' để nhận tips phương pháp dạy phù hợp. 🎯",
+        "Giáo dục không chỉ là truyền đạt kiến thức mà còn là truyền cảm hứng. Khi học sinh cảm thấy thầy/cô quan tâm, các em sẽ cố gắng hơn. ❤️"
+      ]
+    }
+  },
+  "keywords": {
+    "class_management": [
+      "quản lý lớp", "lớp ồn", "kỷ luật", "nội quy", "trật tự",
+      "gây rối", "nói chuyện riêng", "không nghe lời", "chỗ ngồi",
+      "tổ chức lớp", "quản lý", "lớp học", "kiểm soát",
+      "xung đột", "đánh nhau", "cãi nhau", "mâu thuẫn",
+      "phân nhóm", "nhóm", "hoạt động nhóm"
+    ],
+    "student_analysis": [
+      "phân tích", "học sinh", "điểm số", "tiến bộ", "năng lực",
+      "đánh giá", "theo dõi", "kết quả", "xu hướng", "thống kê",
+      "yếu", "giỏi", "trung bình", "cải thiện",
+      "học lực", "năng lực", "so sánh"
+    ],
+    "teaching_methods": [
+      "phương pháp", "giảng dạy", "dạy học", "cách dạy",
+      "bài giảng", "thiết kế bài", "hoạt động", "tương tác",
+      "PBL", "project", "gamification", "flipped",
+      "bloom", "scaffolding", "jigsaw",
+      "sáng tạo", "đổi mới", "hiệu quả",
+      "gợi ý giảng dạy", "tips dạy"
+    ],
+    "assessment": [
+      "kiểm tra", "đề thi", "chấm điểm", "rubric",
+      "đánh giá", "feedback", "nhận xét", "phản hồi",
+      "quiz", "bài kiểm tra", "thi", "điểm",
+      "formative", "summative", "ma trận"
+    ],
+    "wellness": [
+      "stress", "sức khỏe", "tinh thần", "tâm lý",
+      "buồn", "lo lắng", "áp lực", "burnout",
+      "bắt nạt", "bullying", "cô lập", "cô đơn",
+      "hạnh phúc", "gắn kết", "wellbeing", "wellness",
+      "mindfulness", "chăm sóc", "hỗ trợ"
+    ],
+    "report": [
+      "báo cáo", "report", "lịch sử báo cáo", "xem báo cáo",
+      "tạo báo cáo", "xuất báo cáo"
+    ],
+    "greeting": [
+      "chào", "hello", "hi", "xin chào", "hey",
+      "khỏe không", "thế nào"
+    ]
+  }
+}
