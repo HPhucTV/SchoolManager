@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.github
+happy-schools
+*.md
+docs
+scripts
+certs
+certbot
+.env.local
+.env.example
