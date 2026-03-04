@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.1.0-blue?style=for-the-badge" alt="Version" />
   <img src="https://img.shields.io/badge/license-Apache%202.0-green?style=for-the-badge" alt="License" />
   <img src="https://img.shields.io/badge/Next.js-16.1.6-black?style=for-the-badge&logo=next.js" alt="Next.js" />
   <img src="https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi" alt="FastAPI" />
@@ -39,6 +39,7 @@ Chúng tôi rất vui khi bạn quan tâm đến dự án! Trước khi đóng g
 - ⚔️ **Quiz Battle** — Chế độ thi đấu thời gian thực giữa các học sinh
 - 🎮 **Gamification** — Hệ thống điểm, huy hiệu, bảng xếp hạng, cửa hàng phần thưởng
 - 💚 **Wellness & Sức khỏe tinh thần** — Theo dõi cảm xúc, cảnh báo SOS, phân tích sức khỏe lớp
+- 🔍 **Smart Search** — Tìm kiếm toàn cục thông minh (Ctrl+K) với thuật toán BM25 + AI Ranking
 - 📊 **Dashboard & Analytics** — Thống kê toàn diện, cảnh báo sớm, báo cáo lớp chi tiết
 - 🐳 **Docker One-Click Deploy** — Triển khai toàn bộ hệ thống bằng một lệnh duy nhất
 
@@ -112,6 +113,15 @@ SchoolManager là giải pháp **quản lý trường học thế hệ mới**, 
 | Class Wellness | Báo cáo sức khỏe tinh thần toàn lớp |
 | Mood Analytics | Phân tích xu hướng cảm xúc theo thời gian |
 
+### 🔍 Smart Search
+
+| Tính năng | Mô tả |
+|-----------|-------|
+| Global Search (Ctrl+K) | Tìm kiếm xuyên suốt học sinh, lớp, bài tập, kiểm tra, hoạt động, thông báo |
+| Hybrid Ranking | Thuật toán BM25 + Recency + Personalization + Popularity |
+| Search History | Lưu lịch sử tìm kiếm, gợi ý autocomplete |
+| Vietnamese Support | Hỗ trợ tìm kiếm tiếng Việt không dấu |
+
 ### 📊 Analytics & Reporting
 
 | Tính năng | Mô tả |
@@ -180,10 +190,11 @@ npm run dev
 | Vai trò | Email | Password |
 |---------|-------|----------|
 | Admin | `admin@happyschools.vn` | `test123` |
-| Giáo viên | `gv.10a@happyschools.vn` | `test123` |
-| Học sinh | `hs.an@happyschools.vn` | `test123` |
+| Giáo viên | `gv.thao@happyschools.vn` | `test123` |
+| Giáo viên | `gv.minh@happyschools.vn` | `test123` |
+| Học sinh | `hs.an0@happyschools.vn` | `test123` |
 
-> **Lưu ý:** Tài khoản demo được tạo tự động bởi script `backend/seed_db.py`.
+> **Lưu ý:** Tài khoản demo được tạo tự động bởi script `scripts/seed_db.py`.
 
 ---
 
@@ -250,6 +261,7 @@ SchoolManager/
 │   │   │   ├── statistics.py            #   Thống kê tổng quan
 │   │   │   ├── student_api.py           #   API dành cho học sinh
 │   │   │   ├── students.py              #   Quản lý danh sách học sinh
+│   │   │   ├── search.py                #   Smart Search (BM25 + AI Ranking)
 │   │   │   ├── teacher_reports.py       #   Báo cáo giáo viên
 │   │   │   └── wellness.py              #   Sức khỏe tinh thần & SOS
 │   │   │
@@ -333,7 +345,7 @@ SchoolManager/
 │   │   ├── classes/                     #   Class components (2)
 │   │   ├── class-details/               #   Class detail views (3)
 │   │   ├── landing/                     #   Landing page sections
-│   │   ├── layout/                      #   Layout components
+│   │   ├── layout/                      #   Layout components (Header, GlobalSearch)
 │   │   ├── schedule/                    #   Schedule components
 │   │   └── student/                     #   Student-specific components
 │   │
@@ -444,6 +456,7 @@ SchoolManager/
 | AI Tutor | ✅ Hoàn thành |
 | Quiz System (AI + Manual) | ✅ Hoàn thành |
 | Quiz Battle | ✅ Hoàn thành |
+| Smart Search (Ctrl+K) | ✅ Hoàn thành |
 | Gamification | ✅ Hoàn thành |
 | Wellness & Mood Tracking | ✅ Hoàn thành |
 | Analytics & Early Warning | ✅ Hoàn thành |

@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-03-04
+
+### Added
+
+#### 🔍 Smart Global Search
+
+- **Ctrl+K Modal**: Tìm kiếm toàn cục mở bằng phím tắt Ctrl+K / Cmd+K
+- **Hybrid Scoring Algorithm**: Kết hợp BM25 text relevance, recency, personalization, popularity
+- **6 loại kết quả**: Học sinh, lớp học, bài tập, bài kiểm tra, hoạt động, thông báo
+- **Search History & Suggestions**: Lưu lịch sử tìm kiếm, gợi ý autocomplete
+- **Vietnamese Support**: Hỗ trợ tìm kiếm không dấu cho tiếng Việt
+- **Keyboard Navigation**: Điều hướng bằng phím ↑↓, Enter, Esc
+- **Backend**: `search.py` router — `GET /api/search`, `GET /api/search/suggestions`, `POST /api/search/log-click`
+- **Frontend**: `GlobalSearch.tsx` component tích hợp vào `Header.tsx`
+- **Model**: `SearchHistory` lưu trữ lịch sử tìm kiếm cho cá nhân hoá
+
+#### 🌱 Improved Seed Data
+
+- **Comprehensive `seed_db.py`**: Script seed mới phủ toàn bộ 15+ models
+- Dữ liệu demo gồm: 4 lớp, 4 giáo viên, 32 học sinh, thời khoá biểu, bài tập, kiểm tra, hoạt động, thông báo, nhật ký cảm xúc, SOS, huy hiệu, báo cáo giáo viên
+
+### Fixed
+
+- Fix `get_current_user` import path (security → auth router)
+- Fix Pydantic v2 deprecation: `regex` → `pattern` trong Query parameter
+- Fix TypeScript `useRef()` cần initial value
+- Remove unused import `X` from `GlobalSearch.tsx`
+
+---
+
 ## [1.0.0] - 2026-02-24
 
 ### 🚀 Initial Release
@@ -148,6 +178,6 @@ First production release of SchoolManager with full-featured school management p
 
 **SchoolManager Changelog**
 
-[v1.0.0](#100---2026-02-24) • [v0.1.0](#010---2026-02-04)
+[v1.1.0](#110---2026-03-04) • [v1.0.0](#100---2026-02-24) • [v0.1.0](#010---2026-02-04)
 
 </div>
