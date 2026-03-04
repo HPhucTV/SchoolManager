@@ -245,8 +245,8 @@ export default function QuizTakingPage({ params }: { params: Promise<{ id: strin
                         <div style={{
                             display: 'flex', alignItems: 'center', gap: '8px',
                             padding: '8px 16px', borderRadius: '20px',
-                            backgroundColor: timeLeft < 300 ? '#fee2e2' : '#eff6ff',
-                            color: timeLeft < 300 ? '#dc2626' : '#2563eb', fontWeight: 700
+                            backgroundColor: timeLeft < 300 ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)',
+                            color: timeLeft < 300 ? '#f87171' : '#60a5fa', fontWeight: 700
                         }}>
                             <Clock size={18} />
                             {formatTime(timeLeft)}
@@ -300,21 +300,21 @@ export default function QuizTakingPage({ params }: { params: Promise<{ id: strin
                                                     onClick={() => handleAnswer(q.id, opt)}
                                                     style={{
                                                         padding: '12px 16px', borderRadius: '12px', border: '1px solid',
-                                                        borderColor: isSelected ? '#8b5cf6' : '#e5e7eb',
-                                                        backgroundColor: isSelected ? '#f5f3ff' : 'white',
+                                                        borderColor: isSelected ? '#8b5cf6' : '#334155',
+                                                        backgroundColor: isSelected ? 'rgba(139,92,246,0.1)' : '#0f172a',
                                                         cursor: 'pointer', transition: 'all 0.2s',
                                                         display: 'flex', alignItems: 'center', gap: '12px'
                                                     }}
                                                 >
                                                     <div style={{
                                                         width: '24px', height: '24px', borderRadius: '50%', border: '2px solid',
-                                                        borderColor: isSelected ? '#8b5cf6' : '#d1d5db',
+                                                        borderColor: isSelected ? '#8b5cf6' : '#475569',
                                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        color: isSelected ? '#8b5cf6' : '#9ca3af', fontWeight: 600, fontSize: '12px'
+                                                        color: isSelected ? '#a78bfa' : '#94a3b8', fontWeight: 600, fontSize: '12px'
                                                     }}>
                                                         {opt}
                                                     </div>
-                                                    <span style={{ fontSize: '14px', color: '#cbd5e1' }}>{optionText}</span>
+                                                    <span style={{ fontSize: '14px', color: isSelected ? '#e2e8f0' : '#cbd5e1' }}>{optionText}</span>
                                                 </div>
                                             );
                                         })}

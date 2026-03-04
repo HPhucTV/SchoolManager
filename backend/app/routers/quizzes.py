@@ -175,7 +175,12 @@ async def generate_ai_questions(topic: str, difficulty: str, count: int, start_i
 
 @router.get("", response_model=List[QuizResponse])
 async def get_quizzes(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    quizzes = db.query(models.Quiz).filter(models.Quiz.teacher_id == current_user.id).all()
+    if current_user.role == "student":
+        # Students see all quizzes assigned to their class
+        quizzes = db.query(models.Quiz).filter(models.Quiz.class_id == current_user.class_id).all()
+    else:
+        # Teachers see quizzes they created
+        quizzes = db.query(models.Quiz).filter(models.Quiz.teacher_id == current_user.id).all()
     return quizzes
 
 @router.post("", response_model=QuizResponse)

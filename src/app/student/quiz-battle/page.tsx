@@ -130,34 +130,34 @@ export default function QuizBattlePage() {
                 {/* Lobby */}
                 {view === 'lobby' && (
                     <>
-                        <h1 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '4px' }}>⚔️ Quiz Battle</h1>
-                        <p style={{ color: '#64748b', marginBottom: '24px' }}>Thi đấu kiến thức thời gian thực!</p>
+                        <h1 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '4px', color: '#e2e8f0' }}>⚔️ Quiz Battle</h1>
+                        <p style={{ color: '#94a3b8', marginBottom: '24px' }}>Thi đấu kiến thức thời gian thực!</p>
 
-                        <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '20px' }}>
-                            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>🎫 Nhập mã trận đấu</h3>
+                        <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', border: '1px solid #334155', marginBottom: '20px' }}>
+                            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px', color: '#e2e8f0' }}>🎫 Nhập mã trận đấu</h3>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                <input value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())} placeholder="VD: ABC123" maxLength={6} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #e2e8f0', fontSize: '18px', fontWeight: 700, textAlign: 'center', letterSpacing: '4px', textTransform: 'uppercase' }} />
+                                <input value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())} placeholder="VD: ABC123" maxLength={6} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #334155', backgroundColor: '#0f172a', color: '#e2e8f0', fontSize: '18px', fontWeight: 700, textAlign: 'center', letterSpacing: '4px', textTransform: 'uppercase' }} />
                                 <button onClick={handleJoin} style={{ padding: '14px 28px', background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 700, fontSize: '15px' }}>
                                     Tham gia
                                 </button>
                             </div>
                         </div>
 
-                        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>🔥 Trận đấu đang diễn ra</h3>
+                        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px', color: '#e2e8f0' }}>🔥 Trận đấu đang diễn ra</h3>
                         {activeBattles.length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: '48px', background: 'white', borderRadius: '16px', color: '#94a3b8' }}>
+                            <div style={{ textAlign: 'center', padding: '48px', background: '#1e293b', borderRadius: '16px', color: '#94a3b8', border: '1px solid #334155' }}>
                                 Chưa có trận đấu nào
                             </div>
                         ) : (
                             activeBattles.map(b => (
-                                <div key={b.id} style={{ background: 'white', borderRadius: '14px', padding: '16px', marginBottom: '10px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <div key={b.id} style={{ background: '#1e293b', borderRadius: '14px', padding: '16px', marginBottom: '10px', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '16px' }}>
                                     <div style={{ flex: 1 }}>
-                                        <div style={{ fontWeight: 600, fontSize: '15px', marginBottom: '4px' }}>{b.quiz_title}</div>
-                                        <div style={{ fontSize: '12px', color: '#64748b' }}>
+                                        <div style={{ fontWeight: 600, fontSize: '15px', marginBottom: '4px', color: '#e2e8f0' }}>{b.quiz_title}</div>
+                                        <div style={{ fontSize: '12px', color: '#94a3b8' }}>
                                             {b.quiz_subject} • {b.participants_count} người • {b.time_per_question}s/câu • bởi {b.created_by}
                                         </div>
                                     </div>
-                                    <span style={{ fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: '8px', background: b.status === 'waiting' ? '#eff6ff' : '#fef3c7', color: b.status === 'waiting' ? '#3b82f6' : '#d97706' }}>
+                                    <span style={{ fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: '8px', background: b.status === 'waiting' ? 'rgba(59,130,246,0.1)' : 'rgba(217,119,6,0.1)', color: b.status === 'waiting' ? '#60a5fa' : '#fbbf24' }}>
                                         {b.status === 'waiting' ? '⏳ Chờ' : '⚡ Đang chơi'}
                                     </span>
                                     {!b.joined && (
@@ -175,12 +175,12 @@ export default function QuizBattlePage() {
                 {view === 'waiting' && (
                     <div style={{ textAlign: 'center', paddingTop: '60px' }}>
                         <div style={{ fontSize: '64px', marginBottom: '16px', animation: 'pulse 2s infinite' }}>⏳</div>
-                        <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>Đang chờ bắt đầu...</h2>
-                        <p style={{ color: '#64748b', marginBottom: '16px' }}>Mã trận: <strong style={{ color: '#8b5cf6', fontSize: '20px' }}>{battleData?.battle_code}</strong></p>
+                        <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px', color: '#e2e8f0' }}>Đang chờ bắt đầu...</h2>
+                        <p style={{ color: '#94a3b8', marginBottom: '16px' }}>Mã trận: <strong style={{ color: '#8b5cf6', fontSize: '20px' }}>{battleData?.battle_code}</strong></p>
                         <p style={{ color: '#94a3b8' }}>Người chơi: {battleData?.participants?.length || 0}</p>
                         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px', marginTop: '16px' }}>
                             {battleData?.participants?.map((p: any) => (
-                                <span key={p.id} style={{ padding: '6px 14px', background: p.is_me ? '#eff6ff' : '#f1f5f9', borderRadius: '20px', fontSize: '13px', fontWeight: 500, border: p.is_me ? '2px solid #3b82f6' : 'none' }}>
+                                <span key={p.id} style={{ padding: '6px 14px', background: p.is_me ? 'rgba(59,130,246,0.1)' : '#1e293b', borderRadius: '20px', fontSize: '13px', fontWeight: 500, border: p.is_me ? '2px solid #3b82f6' : '1px solid #334155', color: '#e2e8f0' }}>
                                     {p.name} {p.is_me ? '(Bạn)' : ''}
                                 </span>
                             ))}
@@ -193,7 +193,7 @@ export default function QuizBattlePage() {
                     <div>
                         {/* Header */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 500 }}>Câu {questionIndex + 1}/{question.total_questions}</span>
+                            <span style={{ fontSize: '14px', color: '#94a3b8', fontWeight: 500 }}>Câu {questionIndex + 1}/{question.total_questions}</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: timeLeft <= 5 ? '#ef4444' : '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '16px', animation: timeLeft <= 5 ? 'pulse 0.5s infinite' : 'none' }}>
                                     {timeLeft}
@@ -202,8 +202,8 @@ export default function QuizBattlePage() {
                         </div>
 
                         {/* Question */}
-                        <div style={{ background: 'white', borderRadius: '16px', padding: '28px', marginBottom: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', textAlign: 'center' }}>
-                            <p style={{ fontSize: '20px', fontWeight: 600, lineHeight: 1.5, color: '#1e293b' }}>{question.question_text}</p>
+                        <div style={{ background: '#1e293b', borderRadius: '16px', padding: '28px', marginBottom: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid #334155', textAlign: 'center' }}>
+                            <p style={{ fontSize: '20px', fontWeight: 600, lineHeight: 1.5, color: '#e2e8f0' }}>{question.question_text}</p>
                         </div>
 
                         {/* Options */}
@@ -219,7 +219,7 @@ export default function QuizBattlePage() {
                                 if (result) {
                                     if (isCorrect) bg = '#22c55e';
                                     else if (isWrong) bg = '#ef4444';
-                                    else bg = '#e2e8f0';
+                                    else bg = '#334155';
                                 }
 
                                 return (
@@ -233,7 +233,7 @@ export default function QuizBattlePage() {
 
                         {/* Result feedback */}
                         {result && (
-                            <div style={{ textAlign: 'center', marginTop: '16px', padding: '12px', borderRadius: '12px', background: result.correct ? '#f0fdf4' : '#fef2f2' }}>
+                            <div style={{ textAlign: 'center', marginTop: '16px', padding: '12px', borderRadius: '12px', background: result.correct ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)' }}>
                                 <span style={{ fontWeight: 700, color: result.correct ? '#22c55e' : '#ef4444' }}>
                                     {result.correct ? `✅ Chính xác! +${result.points_earned} điểm` : `❌ Sai rồi! Đáp án đúng: ${result.correct_answer}`}
                                 </span>
@@ -246,16 +246,16 @@ export default function QuizBattlePage() {
                 {view === 'result' && (
                     <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '64px', marginBottom: '8px' }}>🏆</div>
-                        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '24px' }}>Kết quả trận đấu</h2>
-                        <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '24px', color: '#e2e8f0' }}>Kết quả trận đấu</h2>
+                        <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
                             {leaderboard.map((p: any) => (
-                                <div key={p.rank} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', background: p.is_me ? '#fffbeb' : '#f8fafc', borderRadius: '10px', marginBottom: '8px', border: p.is_me ? '2px solid #f59e0b' : 'none' }}>
+                                <div key={p.rank} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', background: p.is_me ? 'rgba(245,158,11,0.1)' : '#0f172a', borderRadius: '10px', marginBottom: '8px', border: p.is_me ? '2px solid #f59e0b' : '1px solid #334155' }}>
                                     <span style={{ fontSize: '24px', minWidth: '32px' }}>
                                         {p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : `#${p.rank}`}
                                     </span>
                                     <div style={{ flex: 1, textAlign: 'left' }}>
-                                        <span style={{ fontWeight: 600 }}>{p.name} {p.is_me ? '(Bạn)' : ''}</span>
-                                        <div style={{ fontSize: '12px', color: '#64748b' }}>{p.correct}/{p.total} đúng</div>
+                                        <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{p.name} {p.is_me ? '(Bạn)' : ''}</span>
+                                        <div style={{ fontSize: '12px', color: '#94a3b8' }}>{p.correct}/{p.total} đúng</div>
                                     </div>
                                     <span style={{ fontWeight: 700, fontSize: '18px', color: '#f59e0b' }}>{p.score}</span>
                                 </div>

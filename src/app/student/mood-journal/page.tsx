@@ -91,8 +91,8 @@ export default function MoodJournalPage() {
             <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <div>
-                        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', margin: 0 }}>💚 Nhật ký cảm xúc</h1>
-                        <p style={{ color: '#64748b', margin: '4px 0 0' }}>Ghi lại cảm xúc mỗi ngày để hiểu bản thân hơn</p>
+                        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>💚 Nhật ký cảm xúc</h1>
+                        <p style={{ color: '#94a3b8', margin: '4px 0 0' }}>Ghi lại cảm xúc mỗi ngày để hiểu bản thân hơn</p>
                     </div>
                     <button onClick={() => setShowSOS(true)} style={{ padding: '10px 20px', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(239,68,68,0.3)' }}>
                         🆘 Cần giúp đỡ
@@ -106,7 +106,7 @@ export default function MoodJournalPage() {
                         { key: 'history' as const, label: '📋 Lịch sử' },
                         { key: 'analytics' as const, label: '📊 Phân tích' }
                     ].map(t => (
-                        <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '10px 20px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '14px', background: tab === t.key ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : '#f1f5f9', color: tab === t.key ? 'white' : '#64748b', transition: 'all 0.2s' }}>
+                        <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '10px 20px', borderRadius: '10px', border: tab === t.key ? 'none' : '1px solid #334155', cursor: 'pointer', fontWeight: 600, fontSize: '14px', background: tab === t.key ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : '#1e293b', color: tab === t.key ? 'white' : '#cbd5e1', transition: 'all 0.2s' }}>
                             {t.label}
                         </button>
                     ))}
@@ -114,18 +114,18 @@ export default function MoodJournalPage() {
 
                 {/* Tab: Log */}
                 {tab === 'log' && (
-                    <div style={{ background: 'white', borderRadius: '16px', padding: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                        <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '24px', color: '#1e293b' }}>Hôm nay bạn cảm thấy thế nào?</h2>
+                    <div style={{ background: '#1e293b', borderRadius: '16px', padding: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
+                        <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '24px', color: '#e2e8f0' }}>Hôm nay bạn cảm thấy thế nào?</h2>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
                             {MOODS.map(mood => (
-                                <button key={mood.level} onClick={() => setSelectedMood(mood.level)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '16px 20px', borderRadius: '16px', border: selectedMood === mood.level ? `3px solid ${mood.color}` : '3px solid transparent', background: selectedMood === mood.level ? `${mood.color}15` : '#f8fafc', cursor: 'pointer', transition: 'all 0.2s', transform: selectedMood === mood.level ? 'scale(1.1)' : 'scale(1)' }}>
+                                <button key={mood.level} onClick={() => setSelectedMood(mood.level)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '16px 20px', borderRadius: '16px', border: selectedMood === mood.level ? `3px solid ${mood.color}` : '3px solid #334155', background: selectedMood === mood.level ? `${mood.color}15` : '#0f172a', cursor: 'pointer', transition: 'all 0.2s', transform: selectedMood === mood.level ? 'scale(1.1)' : 'scale(1)' }}>
                                     <span style={{ fontSize: '40px' }}>{mood.emoji}</span>
                                     <span style={{ fontSize: '12px', fontWeight: 600, color: mood.color }}>{mood.label}</span>
                                 </button>
                             ))}
                         </div>
-                        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Ghi chú thêm (tùy chọn)..." rows={3} style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '2px solid #e2e8f0', fontSize: '14px', resize: 'none', marginBottom: '16px', boxSizing: 'border-box' }} />
-                        <button onClick={submitMood} disabled={!selectedMood || submitting} style={{ width: '100%', padding: '14px', background: selectedMood ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : '#e2e8f0', color: selectedMood ? 'white' : '#94a3b8', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 600, cursor: selectedMood ? 'pointer' : 'default' }}>
+                        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Ghi chú thêm (tùy chọn)..." rows={3} style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '2px solid #334155', backgroundColor: '#0f172a', color: '#e2e8f0', fontSize: '14px', resize: 'none', marginBottom: '16px', boxSizing: 'border-box' }} />
+                        <button onClick={submitMood} disabled={!selectedMood || submitting} style={{ width: '100%', padding: '14px', background: selectedMood ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : '#334155', color: selectedMood ? 'white' : '#94a3b8', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 600, cursor: selectedMood ? 'pointer' : 'default' }}>
                             {submitting ? 'Đang lưu...' : '💾 Lưu cảm xúc'}
                         </button>
                     </div>
@@ -133,20 +133,20 @@ export default function MoodJournalPage() {
 
                 {/* Tab: History */}
                 {tab === 'history' && (
-                    <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                        <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Lịch sử 30 ngày qua</h2>
+                    <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
+                        <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px', color: '#e2e8f0' }}>Lịch sử 30 ngày qua</h2>
                         {history.length === 0 ? (
-                            <p style={{ textAlign: 'center', color: '#94a3b8', padding: '32px' }}>Chưa có dữ liệu. Hãy bắt đầu ghi nhận cảm xúc! ✨</p>
+                            <p style={{ textAlign: 'center', color: '#cbd5e1', padding: '32px' }}>Chưa có dữ liệu. Hãy bắt đầu ghi nhận cảm xúc! ✨</p>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 {history.map(entry => (
-                                    <div key={entry.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px 16px', background: '#f8fafc', borderRadius: '12px' }}>
+                                    <div key={entry.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px 16px', background: '#0f172a', borderRadius: '12px' }}>
                                         <span style={{ fontSize: '32px' }}>{entry.mood_emoji}</span>
                                         <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: 600, fontSize: '14px', color: '#1e293b' }}>{MOODS.find(m => m.level === entry.mood_level)?.label}</div>
-                                            {entry.note && <p style={{ fontSize: '13px', color: '#64748b', margin: '2px 0 0' }}>{entry.note}</p>}
+                                            <div style={{ fontWeight: 600, fontSize: '14px', color: '#e2e8f0' }}>{MOODS.find(m => m.level === entry.mood_level)?.label}</div>
+                                            {entry.note && <p style={{ fontSize: '13px', color: '#94a3b8', margin: '2px 0 0' }}>{entry.note}</p>}
                                         </div>
-                                        <span style={{ fontSize: '12px', color: '#94a3b8' }}>{new Date(entry.created_at).toLocaleDateString('vi-VN')}</span>
+                                        <span style={{ fontSize: '12px', color: '#cbd5e1' }}>{new Date(entry.created_at).toLocaleDateString('vi-VN')}</span>
                                     </div>
                                 ))}
                             </div>
@@ -157,18 +157,18 @@ export default function MoodJournalPage() {
                 {/* Tab: Analytics */}
                 {tab === 'analytics' && analytics && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                        <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                            <h3 style={{ fontSize: '14px', color: '#64748b', marginBottom: '8px' }}>Trung bình tuần</h3>
+                        <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
+                            <h3 style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>Trung bình tuần</h3>
                             <div style={{ fontSize: '36px', fontWeight: 700, color: '#8b5cf6' }}>{analytics.avg_week}/5</div>
-                            <div style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>{trendIcon} {trendLabel}</div>
+                            <div style={{ fontSize: '14px', color: '#94a3b8', marginTop: '4px' }}>{trendIcon} {trendLabel}</div>
                         </div>
-                        <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                            <h3 style={{ fontSize: '14px', color: '#64748b', marginBottom: '8px' }}>Trung bình tháng</h3>
+                        <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
+                            <h3 style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>Trung bình tháng</h3>
                             <div style={{ fontSize: '36px', fontWeight: 700, color: '#6d28d9' }}>{analytics.avg_month}/5</div>
-                            <div style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>📝 {analytics.total_entries} ghi nhận</div>
+                            <div style={{ fontSize: '14px', color: '#94a3b8', marginTop: '4px' }}>📝 {analytics.total_entries} ghi nhận</div>
                         </div>
-                        <div style={{ gridColumn: 'span 2', background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>Phân bổ cảm xúc</h3>
+                        <div style={{ gridColumn: 'span 2', background: '#1e293b', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
+                            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#e2e8f0' }}>Phân bổ cảm xúc</h3>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', height: '120px' }}>
                                 {MOODS.map(mood => {
                                     const count = analytics.distribution[mood.level] || 0;
@@ -176,7 +176,7 @@ export default function MoodJournalPage() {
                                     const height = (count / maxCount) * 100;
                                     return (
                                         <div key={mood.level} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>{count}</span>
+                                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#cbd5e1' }}>{count}</span>
                                             <div style={{ width: '100%', height: `${height}%`, minHeight: '4px', background: `linear-gradient(to top, ${mood.color}, ${mood.color}99)`, borderRadius: '8px 8px 0 0', transition: 'height 0.5s' }} />
                                             <span style={{ fontSize: '20px' }}>{mood.emoji}</span>
                                         </div>
@@ -190,24 +190,24 @@ export default function MoodJournalPage() {
                 {/* SOS Modal */}
                 {showSOS && (
                     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                        <div style={{ background: 'white', borderRadius: '20px', padding: '32px', maxWidth: '480px', width: '90%' }}>
+                        <div style={{ background: '#1e293b', borderRadius: '20px', padding: '32px', maxWidth: '480px', width: '90%', border: '1px solid #334155' }}>
                             {sosSent ? (
                                 <div style={{ textAlign: 'center' }}>
                                     <div style={{ fontSize: '48px', marginBottom: '16px' }}>💚</div>
-                                    <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Đã gửi tín hiệu</h2>
-                                    <p style={{ color: '#64748b', marginBottom: '24px' }}>Giáo viên sẽ liên hệ hỗ trợ bạn sớm nhất</p>
+                                    <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px', color: '#e2e8f0' }}>Đã gửi tín hiệu</h2>
+                                    <p style={{ color: '#94a3b8', marginBottom: '24px' }}>Giáo viên sẽ liên hệ hỗ trợ bạn sớm nhất</p>
                                     <button onClick={() => { setShowSOS(false); setSOSSent(false); }} style={{ padding: '12px 32px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600 }}>Đóng</button>
                                 </div>
                             ) : (
                                 <>
-                                    <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>🆘 Gửi tín hiệu cần giúp đỡ</h2>
-                                    <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '16px' }}>Tin nhắn sẽ được gửi đến giáo viên chủ nhiệm. Bạn không đơn độc!</p>
-                                    <textarea value={sosMessage} onChange={e => setSOSMessage(e.target.value)} placeholder="Chia sẻ những gì bạn đang trải qua..." rows={4} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', fontSize: '14px', resize: 'none', marginBottom: '12px', boxSizing: 'border-box' }} />
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#64748b', marginBottom: '16px', cursor: 'pointer' }}>
+                                    <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0' }}>🆘 Gửi tín hiệu cần giúp đỡ</h2>
+                                    <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>Tin nhắn sẽ được gửi đến giáo viên chủ nhiệm. Bạn không đơn độc!</p>
+                                    <textarea value={sosMessage} onChange={e => setSOSMessage(e.target.value)} placeholder="Chia sẻ những gì bạn đang trải qua..." rows={4} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #334155', backgroundColor: '#0f172a', color: '#e2e8f0', fontSize: '14px', resize: 'none', marginBottom: '12px', boxSizing: 'border-box' }} />
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#94a3b8', marginBottom: '16px', cursor: 'pointer' }}>
                                         <input type="checkbox" checked={sosAnon} onChange={e => setSOSAnon(e.target.checked)} /> Gửi ẩn danh
                                     </label>
                                     <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button onClick={() => setShowSOS(false)} style={{ flex: 1, padding: '12px', background: '#f1f5f9', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, color: '#64748b' }}>Hủy</button>
+                                        <button onClick={() => setShowSOS(false)} style={{ flex: 1, padding: '12px', background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, color: '#cbd5e1' }}>Hủy</button>
                                         <button onClick={sendSOS} disabled={!sosMessage.trim()} style={{ flex: 1, padding: '12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600 }}>Gửi SOS</button>
                                     </div>
                                 </>

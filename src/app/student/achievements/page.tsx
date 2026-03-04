@@ -59,7 +59,7 @@ export default function AchievementsPage() {
         <ProtectedRoute allowedRoles={['student']}>
             <div style={{ padding: '24px', textAlign: 'center', paddingTop: '100px' }}>
                 <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎮</div>
-                <p style={{ color: '#64748b' }}>Đang tải...</p>
+                <p style={{ color: '#94a3b8' }}>Đang tải...</p>
             </div>
         </ProtectedRoute>
     );
@@ -69,8 +69,8 @@ export default function AchievementsPage() {
             <div style={{ padding: '24px', maxWidth: '1000px', margin: '0 auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <div>
-                        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', margin: 0 }}>🎮 Thành tích & Phần thưởng</h1>
-                        <p style={{ color: '#64748b', margin: '4px 0 0' }}>Chinh phục thử thách, nhận huy hiệu, đổi phần thưởng</p>
+                        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>🎮 Thành tích & Phần thưởng</h1>
+                        <p style={{ color: '#94a3b8', margin: '4px 0 0' }}>Chinh phục thử thách, nhận huy hiệu, đổi phần thưởng</p>
                     </div>
                     <button onClick={handleCheckIn} style={{ padding: '12px 24px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '15px', boxShadow: '0 4px 12px rgba(245,158,11,0.3)' }}>
                         🔥 Điểm danh
@@ -97,10 +97,10 @@ export default function AchievementsPage() {
                             { label: 'Streak', value: `${stats.streak} ngày`, icon: '🔥', color: '#ef4444' },
                             { label: 'Huy hiệu', value: `${stats.badges_earned}/${stats.total_badges}`, icon: '🏆', color: '#10b981' },
                         ].map((s, i) => (
-                            <div key={i} style={{ background: 'white', borderRadius: '14px', padding: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', textAlign: 'center' }}>
+                            <div key={i} style={{ background: '#1e293b', borderRadius: '14px', padding: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', border: '1px solid #334155', textAlign: 'center' }}>
                                 <div style={{ fontSize: '24px' }}>{s.icon}</div>
                                 <div style={{ fontSize: '20px', fontWeight: 700, color: s.color }}>{s.value}</div>
-                                <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500 }}>{s.label}</div>
+                                <div style={{ fontSize: '11px', color: '#cbd5e1', fontWeight: 500 }}>{s.label}</div>
                             </div>
                         ))}
                     </div>
@@ -108,13 +108,13 @@ export default function AchievementsPage() {
 
                 {/* XP Progress */}
                 {stats && (
-                    <div style={{ background: 'white', borderRadius: '14px', padding: '16px 20px', marginBottom: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#64748b', marginBottom: '6px' }}>
+                    <div style={{ background: '#1e293b', borderRadius: '14px', padding: '16px 20px', marginBottom: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#94a3b8', marginBottom: '6px' }}>
                             <span>Level {stats.level}</span>
                             <span>{stats.xp_progress}/100 XP</span>
                             <span>Level {stats.level + 1}</span>
                         </div>
-                        <div style={{ width: '100%', height: '10px', background: '#e2e8f0', borderRadius: '5px' }}>
+                        <div style={{ width: '100%', height: '10px', background: '#334155', borderRadius: '5px' }}>
                             <div style={{ width: `${stats.xp_progress}%`, height: '100%', background: 'linear-gradient(90deg, #8b5cf6, #6d28d9)', borderRadius: '5px', transition: 'width 0.5s' }} />
                         </div>
                     </div>
@@ -127,7 +127,7 @@ export default function AchievementsPage() {
                         { key: 'leaderboard' as const, label: '🏅 Bảng xếp hạng' },
                         { key: 'shop' as const, label: '🛒 Cửa hàng' }
                     ].map(t => (
-                        <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '10px 20px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '14px', background: tab === t.key ? 'linear-gradient(135deg, #f59e0b, #d97706)' : '#f1f5f9', color: tab === t.key ? 'white' : '#64748b' }}>
+                        <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '10px 20px', borderRadius: '10px', border: tab === t.key ? 'none' : '1px solid #334155', cursor: 'pointer', fontWeight: 600, fontSize: '14px', background: tab === t.key ? 'linear-gradient(135deg, #f59e0b, #d97706)' : '#1e293b', color: tab === t.key ? 'white' : '#cbd5e1' }}>
                             {t.label}
                         </button>
                     ))}
@@ -137,10 +137,10 @@ export default function AchievementsPage() {
                 {tab === 'badges' && (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
                         {badges.map((b: any) => (
-                            <div key={b.id} style={{ background: 'white', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', textAlign: 'center', opacity: b.earned ? 1 : 0.55, border: b.earned ? '2px solid #f59e0b' : '2px solid transparent' }}>
+                            <div key={b.id} style={{ background: '#1e293b', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', border: b.earned ? '2px solid #f59e0b' : '1px solid #334155', textAlign: 'center', opacity: b.earned ? 1 : 0.55 }}>
                                 <div style={{ fontSize: '40px', marginBottom: '8px' }}>{b.icon}</div>
-                                <div style={{ fontWeight: 700, fontSize: '14px', color: '#1e293b', marginBottom: '4px' }}>{b.name}</div>
-                                <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 8px' }}>{b.description}</p>
+                                <div style={{ fontWeight: 700, fontSize: '14px', color: '#e2e8f0', marginBottom: '4px' }}>{b.name}</div>
+                                <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 8px' }}>{b.description}</p>
                                 <div style={{ fontSize: '11px', color: '#8b5cf6' }}>+{b.xp_reward} XP | +{b.coin_reward} xu</div>
                                 {b.earned && <div style={{ marginTop: '8px', fontSize: '11px', color: '#22c55e', fontWeight: 600 }}>✅ Đã nhận</div>}
                             </div>
@@ -150,21 +150,21 @@ export default function AchievementsPage() {
 
                 {/* Leaderboard */}
                 {tab === 'leaderboard' && leaderboard && (
-                    <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+                    <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
                         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                            <button onClick={() => loadLeaderboard('class')} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '13px', background: lbScope === 'class' ? '#f59e0b' : '#f1f5f9', color: lbScope === 'class' ? 'white' : '#64748b' }}>Lớp</button>
-                            <button onClick={() => loadLeaderboard('school')} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '13px', background: lbScope === 'school' ? '#f59e0b' : '#f1f5f9', color: lbScope === 'school' ? 'white' : '#64748b' }}>Trường</button>
+                            <button onClick={() => loadLeaderboard('class')} style={{ padding: '8px 16px', borderRadius: '8px', border: lbScope === 'class' ? 'none' : '1px solid #334155', cursor: 'pointer', fontWeight: 600, fontSize: '13px', background: lbScope === 'class' ? '#f59e0b' : '#0f172a', color: lbScope === 'class' ? 'white' : '#cbd5e1' }}>Lớp</button>
+                            <button onClick={() => loadLeaderboard('school')} style={{ padding: '8px 16px', borderRadius: '8px', border: lbScope === 'school' ? 'none' : '1px solid #334155', cursor: 'pointer', fontWeight: 600, fontSize: '13px', background: lbScope === 'school' ? '#f59e0b' : '#0f172a', color: lbScope === 'school' ? 'white' : '#cbd5e1' }}>Trường</button>
                         </div>
                         {leaderboard.leaderboard?.map((item: any) => (
-                            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: item.is_me ? '#fffbeb' : '#f8fafc', borderRadius: '10px', marginBottom: '6px', border: item.is_me ? '2px solid #f59e0b' : 'none' }}>
+                            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: item.is_me ? 'rgba(245,158,11,0.1)' : '#0f172a', borderRadius: '10px', marginBottom: '6px', border: item.is_me ? '2px solid #f59e0b' : '1px solid #334155' }}>
                                 <span style={{ fontWeight: 700, fontSize: '18px', color: item.rank <= 3 ? '#f59e0b' : '#94a3b8', minWidth: '30px' }}>
                                     {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : `#${item.rank}`}
                                 </span>
-                                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
+                                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
                                     {item.avatar_url ? <img src={item.avatar_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : '👤'}
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <span style={{ fontWeight: 600, fontSize: '14px' }}>{item.name} {item.is_me ? '(Bạn)' : ''}</span>
+                                    <span style={{ fontWeight: 600, fontSize: '14px', color: '#e2e8f0' }}>{item.name} {item.is_me ? '(Bạn)' : ''}</span>
                                     {item.equipped_title && <span style={{ fontSize: '11px', color: '#8b5cf6', marginLeft: '6px' }}>• {item.equipped_title}</span>}
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
@@ -173,7 +173,7 @@ export default function AchievementsPage() {
                                 </div>
                             </div>
                         ))}
-                        <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
+                        <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px', color: '#94a3b8' }}>
                             Hạng của bạn: #{leaderboard.my_rank}
                         </div>
                     </div>
@@ -182,19 +182,19 @@ export default function AchievementsPage() {
                 {/* Shop */}
                 {tab === 'shop' && shop && (
                     <div>
-                        <div style={{ background: 'linear-gradient(135deg, #f59e0b15, #f9731615)', borderRadius: '12px', padding: '16px', marginBottom: '16px', textAlign: 'center' }}>
+                        <div style={{ background: 'rgba(245,158,11,0.1)', borderRadius: '12px', padding: '16px', marginBottom: '16px', textAlign: 'center', border: '1px solid rgba(245,158,11,0.2)' }}>
                             <span style={{ fontSize: '20px' }}>🪙</span> Số xu hiện tại: <strong style={{ color: '#f59e0b' }}>{shop.coins}</strong>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
                             {shop.items?.map((item: any) => (
-                                <div key={item.id} style={{ background: 'white', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', textAlign: 'center' }}>
+                                <div key={item.id} style={{ background: '#1e293b', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', border: '1px solid #334155', textAlign: 'center' }}>
                                     <div style={{ fontSize: '36px', marginBottom: '8px' }}>{item.icon}</div>
-                                    <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px' }}>{item.name}</div>
-                                    <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 12px' }}>{item.description}</p>
+                                    <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px', color: '#e2e8f0' }}>{item.name}</div>
+                                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 12px' }}>{item.description}</p>
                                     {item.owned ? (
-                                        <div style={{ padding: '8px', background: '#f0fdf4', borderRadius: '8px', color: '#22c55e', fontWeight: 600, fontSize: '13px' }}>✅ Đã sở hữu</div>
+                                        <div style={{ padding: '8px', background: 'rgba(34,197,94,0.1)', borderRadius: '8px', color: '#4ade80', fontWeight: 600, fontSize: '13px' }}>✅ Đã sở hữu</div>
                                     ) : (
-                                        <button onClick={() => handleBuy(item.id)} disabled={shop.coins < item.price} style={{ width: '100%', padding: '10px', border: 'none', borderRadius: '10px', cursor: shop.coins >= item.price ? 'pointer' : 'default', fontWeight: 600, fontSize: '13px', background: shop.coins >= item.price ? 'linear-gradient(135deg, #f59e0b, #d97706)' : '#e2e8f0', color: shop.coins >= item.price ? 'white' : '#94a3b8' }}>
+                                        <button onClick={() => handleBuy(item.id)} disabled={shop.coins < item.price} style={{ width: '100%', padding: '10px', border: 'none', borderRadius: '10px', cursor: shop.coins >= item.price ? 'pointer' : 'default', fontWeight: 600, fontSize: '13px', background: shop.coins >= item.price ? 'linear-gradient(135deg, #f59e0b, #d97706)' : '#334155', color: shop.coins >= item.price ? 'white' : '#64748b' }}>
                                             🪙 {item.price} xu
                                         </button>
                                     )}
