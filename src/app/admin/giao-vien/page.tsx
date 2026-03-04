@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { adminApi, classesApi } from '@/lib/api';
 import {
     Plus, Search, Edit2, Trash2, X, Filter,
-    Mail, User, BookOpen, Users
+    Mail, User, BookOpen, Users, KeyRound
 } from 'lucide-react';
 import styles from '../admin.module.css';
 
@@ -35,6 +35,7 @@ export default function TeachersManagement() {
     // Toast & Confirm
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
     const [showConfirm, setShowConfirm] = useState<{ id: number; name: string } | null>(null);
+    const [showResetConfirm, setShowResetConfirm] = useState<{ id: number; name: string } | null>(null);
 
     const fetchData = async () => {
         try {
@@ -91,6 +92,18 @@ export default function TeachersManagement() {
             showToast('Lỗi khi xoá giáo viên', 'error');
         } finally {
             setShowConfirm(null);
+        }
+    };
+
+    const handleResetPassword = async () => {
+        if (!showResetConfirm) return;
+        try {
+            const result = await adminApi.resetPassword(showResetConfirm.id);
+            showToast(result.message, 'success');
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : 'Lỗi khi đặt lại mật khẩu', 'error');
+        } finally {
+            setShowResetConfirm(null);
         }
     };
 
@@ -206,6 +219,13 @@ export default function TeachersManagement() {
                                                     <Edit2 size={16} />
                                                 </button>
                                                 <button
+                                                    className={`${styles.btnIcon} ${styles.btnIconWarning}`}
+                                                    onClick={() => setShowResetConfirm({ id: teacher.id, name: teacher.name })}
+                                                    title="Đặt lại mật khẩu"
+                                                >
+                                                    <KeyRound size={16} />
+                                                </button>
+                                                <button
                                                     className={`${styles.btnIcon} ${styles.btnIconDanger}`}
                                                     onClick={() => setShowConfirm({ id: teacher.id, name: teacher.name })}
                                                     title="Xoá"
@@ -315,6 +335,34 @@ export default function TeachersManagement() {
                             </button>
                             <button className={styles.btnDanger} onClick={handleDelete}>
                                 Xoá vĩnh viễn
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Reset Password */}
+            {showResetConfirm && (
+                <div className={styles.confirmOverlay}>
+                    <div className={styles.confirmDialog} onClick={(e) => e.stopPropagation()}>
+                        <div style={{
+                            width: '48px', height: '48px', borderRadius: '50%',
+                            background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 16px'
+                        }}>
+                            <KeyRound size={24} />
+                        </div>
+                        <h3 className={styles.confirmTitle}>Đặt lại mật khẩu?</h3>
+                        <p className={styles.confirmMessage}>
+                            Mật khẩu của <strong>{showResetConfirm.name}</strong> sẽ được đặt lại thành <strong>test123</strong>.
+                        </p>
+                        <div className={styles.confirmActions}>
+                            <button className={styles.btnSecondary} onClick={() => setShowResetConfirm(null)}>
+                                Hủy
+                            </button>
+                            <button className={styles.btnPrimary} onClick={handleResetPassword}>
+                                Xác nhận
                             </button>
                         </div>
                     </div>

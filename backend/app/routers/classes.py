@@ -93,6 +93,8 @@ async def get_class_details(class_id: int, db: Session = Depends(get_db), curren
     query = db.query(models.Class).filter(models.Class.id == class_id)
     if current_user.role == "teacher":
         query = query.filter(models.Class.teacher_id == current_user.id)
+    elif current_user.role == "student":
+        query = query.filter(models.Class.id == current_user.class_id)
     
     c = query.first()
     if not c:
@@ -142,6 +144,8 @@ async def get_class_students(class_id: int, db: Session = Depends(get_db), curre
     if current_user.role == "teacher" and cls.teacher_id != current_user.id:
         # Allow if admin or teacher owner
         # For now strict check
+        raise HTTPException(status_code=403, detail="Not authorized to view this class")
+    elif current_user.role == "student" and current_user.class_id != class_id:
         raise HTTPException(status_code=403, detail="Not authorized to view this class")
 
     students = db.query(models.User).filter(models.User.class_id == class_id, models.User.role == "student").all()

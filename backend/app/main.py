@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
-from app.routers import ai, auth, activities, invitations, dashboard, students, statistics, assignments, student_api, classes, quizzes, games, notifications, admin, schedule_api, wellness, ai_tutor, gamification, analytics, quiz_battle
+from app.routers import ai, auth, activities, invitations, dashboard, students, statistics, assignments, student_api, classes, quizzes, games, notifications, admin, schedule_api, wellness, ai_tutor, gamification, analytics, quiz_battle, search
 from app.database import engine, Base
 
 
@@ -84,6 +84,8 @@ from app.routers import teacher_reports
 app.include_router(teacher_reports.router, prefix=f"{settings.API_V1_STR}/teacher/reports", tags=["teacher-reports"])
 
 app.include_router(quiz_battle.router, prefix=f"{settings.API_V1_STR}/battle", tags=["quiz-battle"])
+
+app.include_router(search.router, prefix=f"{settings.API_V1_STR}/search", tags=["search"])
 
 
 @app.get("/")

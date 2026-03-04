@@ -372,3 +372,19 @@ class BattleAnswer(Base):
     
     battle = relationship("QuizBattle")
     participant = relationship("BattleParticipant")
+
+# ========================
+# Global Search
+# ========================
+
+class SearchHistory(Base):
+    __tablename__ = "search_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    query = Column(String, index=True)
+    result_type = Column(String, nullable=True)   # students, classes, assignments, quizzes, activities
+    result_id = Column(Integer, nullable=True)
+    searched_at = Column(String)
+
+    user = relationship("User", foreign_keys=[user_id])

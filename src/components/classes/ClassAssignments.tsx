@@ -61,7 +61,7 @@ interface ClassAssignmentsProps {
 }
 
 export default function ClassAssignments({ classId }: ClassAssignmentsProps) {
-    const { token } = useAuth();
+    const { token, isTeacher } = useAuth();
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -396,19 +396,21 @@ export default function ClassAssignments({ classId }: ClassAssignmentsProps) {
                 <div>
                     {/* Optional Header Text */}
                 </div>
-                <button
-                    onClick={() => { resetForm(); setShowCreateModal(true); }}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: '8px',
-                        padding: '10px 18px', borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
-                        color: 'white', fontWeight: 600, fontSize: '14px', border: 'none', cursor: 'pointer',
-                        boxShadow: '0 4px 14px rgba(139, 92, 246, 0.2)',
-                    }}
-                >
-                    <Plus size={18} />
-                    Tạo bài tập
-                </button>
+                {isTeacher && (
+                    <button
+                        onClick={() => { resetForm(); setShowCreateModal(true); }}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            padding: '10px 18px', borderRadius: '10px',
+                            background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
+                            color: 'white', fontWeight: 600, fontSize: '14px', border: 'none', cursor: 'pointer',
+                            boxShadow: '0 4px 14px rgba(139, 92, 246, 0.2)',
+                        }}
+                    >
+                        <Plus size={18} />
+                        Tạo bài tập
+                    </button>
+                )}
             </div>
 
             {/* Assignment List */}
@@ -458,52 +460,56 @@ export default function ClassAssignments({ classId }: ClassAssignmentsProps) {
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 {getStatusBadge(a.status)}
-                                <button
-                                    onClick={() => viewSubmissions(a)}
-                                    title="Xem bài nộp"
-                                    style={{
-                                        padding: '8px', borderRadius: '8px',
-                                        backgroundColor: '#0f172a', color: '#cbd5e1',
-                                        border: 'none', cursor: 'pointer',
-                                    }}
-                                >
-                                    <Eye size={16} />
-                                </button>
-                                {a.status === 'active' && (
-                                    <button
-                                        onClick={() => handleClose(a.id)}
-                                        title="Kết thúc sớm"
-                                        style={{
-                                            padding: '8px', borderRadius: '8px',
-                                            backgroundColor: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24',
-                                            border: 'none', cursor: 'pointer',
-                                        }}
-                                    >
-                                        <Lock size={16} />
-                                    </button>
+                                {isTeacher && (
+                                    <>
+                                        <button
+                                            onClick={() => viewSubmissions(a)}
+                                            title="Xem bài nộp"
+                                            style={{
+                                                padding: '8px', borderRadius: '8px',
+                                                backgroundColor: '#0f172a', color: '#cbd5e1',
+                                                border: 'none', cursor: 'pointer',
+                                            }}
+                                        >
+                                            <Eye size={16} />
+                                        </button>
+                                        {a.status === 'active' && (
+                                            <button
+                                                onClick={() => handleClose(a.id)}
+                                                title="Kết thúc sớm"
+                                                style={{
+                                                    padding: '8px', borderRadius: '8px',
+                                                    backgroundColor: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24',
+                                                    border: 'none', cursor: 'pointer',
+                                                }}
+                                            >
+                                                <Lock size={16} />
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => handleEdit(a)}
+                                            title="Chỉnh sửa"
+                                            style={{
+                                                padding: '8px', borderRadius: '8px',
+                                                backgroundColor: 'rgba(96, 165, 250, 0.15)', color: '#60a5fa',
+                                                border: 'none', cursor: 'pointer',
+                                            }}
+                                        >
+                                            <Edit size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(a.id)}
+                                            title="Xóa"
+                                            style={{
+                                                padding: '8px', borderRadius: '8px',
+                                                backgroundColor: 'rgba(248, 113, 113, 0.15)', color: '#f87171',
+                                                border: 'none', cursor: 'pointer',
+                                            }}
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </>
                                 )}
-                                <button
-                                    onClick={() => handleEdit(a)}
-                                    title="Chỉnh sửa"
-                                    style={{
-                                        padding: '8px', borderRadius: '8px',
-                                        backgroundColor: 'rgba(96, 165, 250, 0.15)', color: '#60a5fa',
-                                        border: 'none', cursor: 'pointer',
-                                    }}
-                                >
-                                    <Edit size={16} />
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(a.id)}
-                                    title="Xóa"
-                                    style={{
-                                        padding: '8px', borderRadius: '8px',
-                                        backgroundColor: 'rgba(248, 113, 113, 0.15)', color: '#f87171',
-                                        border: 'none', cursor: 'pointer',
-                                    }}
-                                >
-                                    <Trash2 size={16} />
-                                </button>
                             </div>
                         </div>
                     ))

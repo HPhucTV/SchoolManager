@@ -380,6 +380,15 @@ export const adminApi = {
             throw new Error(errorData.detail || 'Failed to change password');
         }
         return await response.json();
+    },
+    resetPassword: async (userId: number) => {
+        const response = await fetch(`${API_URL}/api/auth/users/${userId}/reset-password`, {
+            method: 'POST',
+            headers: getHeaders()
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || 'Failed to reset password');
+        return data;
     }
 };
 
@@ -610,4 +619,28 @@ export const aiGradingApi = {
         const res = await fetch(`${API_URL}/api/assignments/${assignmentId}/ai-grade/${submissionId}`, { method: 'POST', headers: getHeaders() });
         if (!res.ok) throw new Error('Failed'); return res.json();
     }
+};
+
+export const searchApi = {
+    search: async (query: string, type: string = 'all', limit: number = 20) => {
+        const params = new URLSearchParams({ q: query, type, limit: limit.toString() });
+        const res = await fetch(`${API_URL}/api/search?${params}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+    },
+    getSuggestions: async (query: string = '') => {
+        const params = new URLSearchParams({ q: query });
+        const res = await fetch(`${API_URL}/api/search/suggestions?${params}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+    },
+    logClick: async (data: { query: string; result_type: string; result_id: number }) => {
+        const res = await fetch(`${API_URL}/api/search/log-click`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+    },
 };

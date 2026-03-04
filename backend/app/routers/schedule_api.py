@@ -28,7 +28,7 @@ class ScheduleResponse(ScheduleBase):
     class_id: int
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 @router.get("/my-schedule", response_model=List[ScheduleResponse])
 async def get_my_schedule(
@@ -83,7 +83,7 @@ async def create_schedule_item(
     if current_user.role not in ["teacher", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized")
         
-    db_schedule = models.Schedule(**schedule.dict())
+    db_schedule = models.Schedule(**schedule.model_dump())
     
     # If no teacher_id provided, assume current user is the teacher if they are a teacher?
     # Or just leave it null? Let's leave it null unless specified.
@@ -110,7 +110,7 @@ async def update_schedule(
     if not db_schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
         
-    for key, value in schedule_update.dict().items():
+    for key, value in schedule_update.model_dump().items():
         setattr(db_schedule, key, value)
         
     db.commit()

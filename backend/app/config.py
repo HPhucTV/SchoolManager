@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     # ChatGPT/Gemini APIs are no longer used.  Keep dataset-based logic only.
 
     # Redis
-    REDIS_HOST: str = "localhost"
+    REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
     REDIS_PASSWORD: Optional[str] = None

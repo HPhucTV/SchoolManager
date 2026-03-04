@@ -17,8 +17,11 @@ import {
     Swords,
     TrendingUp,
     MoreHorizontal,
+    Search,
+    Command,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import GlobalSearch from './GlobalSearch';
 
 const mainNavItems = [
     { href: '/teacher', label: 'Tổng quan', icon: LayoutDashboard },
@@ -41,7 +44,20 @@ export default function Header() {
     const pathname = usePathname();
     const { logout } = useAuth();
     const [moreOpen, setMoreOpen] = useState(false);
+    const [searchOpen, setSearchOpen] = useState(false);
     const moreRef = useRef<HTMLDivElement>(null);
+
+    // Ctrl+K shortcut
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                setSearchOpen(prev => !prev);
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, []);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -91,6 +107,44 @@ export default function Header() {
                     </div>
                     <span style={{ fontSize: '15px', fontWeight: 700, color: '#e2e8f0' }}>SchoolManager</span>
                 </Link>
+
+                {/* Search Trigger */}
+                <button
+                    onClick={() => setSearchOpen(true)}
+                    title="Tìm kiếm (Ctrl+K)"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '5px 14px',
+                        borderRadius: '8px',
+                        border: '1px solid #334155',
+                        background: 'rgba(148,163,184,0.06)',
+                        color: '#64748b',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        whiteSpace: 'nowrap',
+                    }}
+                >
+                    <Search style={{ width: '14px', height: '14px' }} />
+                    <span>Tìm kiếm...</span>
+                    <span style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '2px',
+                        marginLeft: '4px',
+                        background: 'rgba(148,163,184,0.12)',
+                        border: '1px solid #334155',
+                        borderRadius: '4px',
+                        padding: '1px 5px',
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        color: '#475569',
+                    }}>
+                        <Command style={{ width: '10px', height: '10px' }} />K
+                    </span>
+                </button>
 
                 {/* Navigation */}
                 <nav style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
@@ -223,6 +277,9 @@ export default function Header() {
                     </button>
                 </div>
             </div>
+
+            {/* Global Search Modal */}
+            {searchOpen && <GlobalSearch onClose={() => setSearchOpen(false)} />}
         </header>
     );
 }

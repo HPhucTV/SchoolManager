@@ -14,7 +14,7 @@ interface ClassQuizzesProps {
 }
 
 export default function ClassQuizzes({ classId }: ClassQuizzesProps) {
-    const { token } = useAuth();
+    const { token, isTeacher } = useAuth();
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -264,19 +264,21 @@ export default function ClassQuizzes({ classId }: ClassQuizzesProps) {
         <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <div />
-                <button
-                    onClick={() => setShowCreateModal(true)}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: '8px',
-                        padding: '10px 18px', borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
-                        color: 'white', fontWeight: 600, fontSize: '14px', border: 'none', cursor: 'pointer',
-                        boxShadow: '0 4px 14px rgba(79, 70, 229, 0.2)',
-                    }}
-                >
-                    <Plus size={18} />
-                    Tạo bài kiểm tra AI
-                </button>
+                {isTeacher && (
+                    <button
+                        onClick={() => setShowCreateModal(true)}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            padding: '10px 18px', borderRadius: '10px',
+                            background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
+                            color: 'white', fontWeight: 600, fontSize: '14px', border: 'none', cursor: 'pointer',
+                            boxShadow: '0 4px 14px rgba(79, 70, 229, 0.2)',
+                        }}
+                    >
+                        <Plus size={18} />
+                        Tạo bài kiểm tra AI
+                    </button>
+                )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
@@ -335,16 +337,18 @@ export default function ClassQuizzes({ classId }: ClassQuizzesProps) {
                             >
                                 <Eye size={16} /> Chi tiết
                             </button>
-                            <button
-                                onClick={() => handleDelete(quiz.id)}
-                                style={{
-                                    padding: '10px', borderRadius: '10px',
-                                    backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
-                                    border: 'none', cursor: 'pointer'
-                                }}
-                            >
-                                <Trash2 size={18} />
-                            </button>
+                            {isTeacher && (
+                                <button
+                                    onClick={() => handleDelete(quiz.id)}
+                                    style={{
+                                        padding: '10px', borderRadius: '10px',
+                                        backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
+                                        border: 'none', cursor: 'pointer'
+                                    }}
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            )}
                         </div>
                     </div>
                 ))}

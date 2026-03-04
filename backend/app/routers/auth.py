@@ -403,6 +403,21 @@ async def delete_user(user_id: int, db: Session = Depends(get_db), current_user:
     
     return {"message": "User deleted successfully"}
 
+@router.post("/users/{user_id}/reset-password")
+async def reset_user_password(user_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Chỉ admin mới có quyền đặt lại mật khẩu")
+    
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+    
+    default_password = "test123"
+    user.hashed_password = security.get_password_hash(default_password)
+    db.commit()
+    
+    return {"message": f"Đã đặt lại mật khẩu cho {user.name} thành '{default_password}'"}
+
 @router.put("/users/{user_id}", response_model=UserResponse)
 async def update_user(user_id: int, user_update: UserCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
