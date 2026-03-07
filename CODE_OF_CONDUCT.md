@@ -52,7 +52,7 @@ individual is officially representing the project in public spaces.
 ## Enforcement
 
 Instances of abusive or harassing behavior may be reported to
-**conduct@happy-schools.local** or via GitHub Issues. All complaints will be
+**conduct@schoolmanager.id.vn** or via GitHub Issues. All complaints will be
 reviewed and investigated promptly and fairly.
 
 ## Attribution
