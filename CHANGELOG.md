@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.1] - 2026-03-07
+
+### Fixed
+
+- **Quiz Creation (500 Error)**: Fix thiếu cột `allow_retake` ở database PostgreSQL/SQLite làm crash app khi tạo bài kiểm tra. Thêm lightweight migration tự động vào `main.py`
+- **Infinite Loading on Student Pages**: Fix lỗi load vĩnh viễn ở trang thông báo và các trang học sinh do thiếu dependency array ở `useEffect` hooks
+- **Closed Quiz UI**: Fix ẩn nút "Làm bài" với học sinh khi bài kiểm tra đã đóng hạn (giáo viên vẫn xem được chi tiết)
+- **Option Text Color**: Cải thiện độ rõ nét của text các đáp án chữ xám trên nền trắng trong giao diện làm bài kiểm tra và bài tập
+
+---
+
 ## [1.1.0] - 2026-03-04
 
 ### Added
