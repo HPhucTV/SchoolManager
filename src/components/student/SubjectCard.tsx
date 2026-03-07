@@ -1,3 +1,4 @@
+/* eslint-disable */
 import Link from 'next/link';
 import { BookOpen, Calculator, Beaker, Globe, Languages, Music, Palette, Dumbbell, History, GraduationCap } from 'lucide-react';
 

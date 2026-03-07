@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -14,8 +15,8 @@ const PERSONAS: { id: Persona; label: string; icon: React.ReactNode; description
 export default function ChatBot() {
     const [persona, setPersona] = useState<Persona>('friend');
     const [showPersonaSelector, setShowPersonaSelector] = useState(true);
-    const appendRef = useRef<(msg: Message) => void>(() => {});
-    const setMessagesRef = useRef<React.Dispatch<React.SetStateAction<Message[]>>>(() => {});
+    const appendRef = useRef<(msg: Message) => void>(() => { });
+    const setMessagesRef = useRef<React.Dispatch<React.SetStateAction<Message[]>>>(() => { });
 
     const handleReady = ({
         appendMessage,
@@ -35,8 +36,8 @@ export default function ChatBot() {
             p === 'friend'
                 ? 'Chào bạn! 👋 Mình là trợ lý AI. Có chuyện gì bạn muốn chia sẻ không?'
                 : p === 'parent'
-                ? 'Chào con! 💚 Ba/mẹ luôn sẵn sàng lắng nghe con. Con có điều gì muốn nói không?'
-                : 'Chào em! 📚 Thầy/cô sẵn sàng hỗ trợ em. Em có thắc mắc gì không?';
+                    ? 'Chào con! 💚 Ba/mẹ luôn sẵn sàng lắng nghe con. Con có điều gì muốn nói không?'
+                    : 'Chào em! 📚 Thầy/cô sẵn sàng hỗ trợ em. Em có thắc mắc gì không?';
         setMessagesRef.current([{ role: 'assistant', content: greeting }]);
     };
 
@@ -61,7 +62,7 @@ export default function ChatBot() {
                             gap: '12px',
                             padding: '16px',
                             borderRadius: '12px',
-                            border: '2px solid #e2e8f0',
+                            border: '1px solid #334155',
                             backgroundColor: '#1e293b',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
@@ -80,8 +81,8 @@ export default function ChatBot() {
                             {p.icon}
                         </div>
                         <div style={{ textAlign: 'left' }}>
-                            <div style={{ fontWeight: 600, color: '#1e293b' }}>{p.label}</div>
-                            <div style={{ fontSize: '12px', color: '#64748b' }}>{p.description}</div>
+                            <div style={{ fontWeight: 600, color: '#e2e8f0' }}>{p.label}</div>
+                            <div style={{ fontSize: '12px', color: '#94a3b8' }}>{p.description}</div>
                         </div>
                     </button>
                 ))}

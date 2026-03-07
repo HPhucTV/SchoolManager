@@ -265,12 +265,8 @@ function FloatingItems() {
 
 /* ─── Main Login Page ─── */
 export default function LoginPage() {
-    const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [name, setName] = useState('');
-    const [role, setRole] = useState('student');
-    // const [confirmPassword, setConfirmPassword] = useState(''); // Removed: Simple register for now
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -278,7 +274,7 @@ export default function LoginPage() {
     const containerRef = useRef<HTMLDivElement>(null);
     const [isMobile, setIsMobile] = useState(false);
 
-    const { login, register } = useAuth();
+    const { login } = useAuth();
     const router = useRouter();
 
     // Handle resize to fix hydration mismatch
@@ -347,11 +343,7 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            if (activeTab === 'login') {
-                await login(email, password);
-            } else {
-                await register(name, email, password, role);
-            }
+            await login(email, password);
 
             const savedUser = localStorage.getItem('user');
             if (savedUser) {
@@ -361,7 +353,7 @@ export default function LoginPage() {
                 else router.push('/teacher');
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Thao tác thất bại');
+            setError(err instanceof Error ? err.message : 'Đăng nhập thất bại');
         } finally {
             setIsLoading(false);
         }
@@ -504,39 +496,16 @@ export default function LoginPage() {
                 </div>
 
                 <div className="w-full max-w-md relative z-10 pb-8">
-                    {/* Tabs */}
-                    <div className="flex bg-slate-800/50 p-1 rounded-xl mb-6 relative">
-                        <div
-                            className="absolute inset-y-1 bg-indigo-600 rounded-lg transition-all duration-300 shadow-lg"
-                            style={{
-                                left: activeTab === 'login' ? '4px' : '50%',
-                                width: 'calc(50% - 4px)',
-                            }}
-                        />
-                        <button
-                            onClick={() => setActiveTab('login')}
-                            className={`flex-1 py-2 text-sm font-medium z-10 transition-colors ${activeTab === 'login' ? 'text-white' : 'text-slate-400 hover:text-white'}`}
-                        >
-                            Đăng nhập
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('signup')}
-                            className={`flex-1 py-2 text-sm font-medium z-10 transition-colors ${activeTab === 'signup' ? 'text-white' : 'text-slate-400 hover:text-white'}`}
-                        >
-                            Đăng ký
-                        </button>
-                    </div>
-
                     {/* Logo icon */}
                     <div className="text-center mb-6 md:mb-8">
                         <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30 mb-4 transform hover:scale-110 hover:rotate-3 transition-all duration-300 animate-jump-in">
                             <span className="text-2xl md:text-3xl animate-wiggle">🏫</span>
                         </div>
                         <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight animate-jump-in" style={{ animationDelay: '0.2s' }}>
-                            {activeTab === 'login' ? 'Chào mừng trở lại!' : 'Tạo tài khoản mới'}
+                            Chào mừng trở lại!
                         </h1>
                         <p className="text-slate-400 text-sm md:text-base animate-jump-in" style={{ animationDelay: '0.4s' }}>
-                            {activeTab === 'login' ? 'Vui lòng nhập thông tin đăng nhập' : 'Tham gia cộng đồng học tập ngay hôm nay'}
+                            Vui lòng nhập thông tin đăng nhập
                         </p>
                     </div>
 
@@ -549,21 +518,6 @@ export default function LoginPage() {
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 animate-jump-in" style={{ animationDelay: '0.8s' }}>
-                        {activeTab === 'signup' && (
-                            <div className="space-y-2 animate-in slide-in-from-left-4 fade-in duration-300">
-                                <label className="text-sm font-medium text-slate-300 ml-1">Họ và tên</label>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onFocus={handleInputFocus}
-                                    onBlur={handleInputBlur}
-                                    onChange={(e) => setName(e.target.value)}
-                                    placeholder="Nguyễn Văn A"
-                                    required
-                                    className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all hover:bg-slate-800"
-                                />
-                            </div>
-                        )}
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-300 ml-1">Email</label>
                             <input
@@ -601,35 +555,11 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        {activeTab === 'signup' && (
-                            <div className="space-y-2 animate-in slide-in-from-right-4 fade-in duration-300">
-                                <label className="text-sm font-medium text-slate-300 ml-1">Bạn là...</label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setRole('student')}
-                                        className={`py-3 px-4 rounded-xl border font-medium transition-all ${role === 'student' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800/50 border-white/10 text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-                                    >
-                                        👨‍🎓 Học sinh
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setRole('teacher')}
-                                        className={`py-3 px-4 rounded-xl border font-medium transition-all ${role === 'teacher' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800/50 border-white/10 text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-                                    >
-                                        👩‍🏫 Giáo viên
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'login' && (
-                            <div className="flex justify-end">
-                                <a href="#" className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
-                                    Quên mật khẩu?
-                                </a>
-                            </div>
-                        )}
+                        <div className="flex justify-end">
+                            <a href="#" className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
+                                Quên mật khẩu?
+                            </a>
+                        </div>
 
                         <button
                             type="submit"
@@ -640,7 +570,7 @@ export default function LoginPage() {
                                 }`}
                         >
                             {isLoading && <Loader2 size={18} className="animate-spin" />}
-                            {isLoading ? 'Đang xử lý...' : (activeTab === 'login' ? 'Đăng nhập ngay' : 'Tạo tài khoản')}
+                            {isLoading ? 'Đang xử lý...' : 'Đăng nhập ngay'}
                         </button>
                     </form>
 

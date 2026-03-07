@@ -74,6 +74,21 @@ async def get_class_schedule(
     ).all()
     return schedules
 
+def check_schedule_conflict(db: Session, class_id: int, day_of_week: str, start_time: str, end_time: str, exclude_id: int = None):
+    schedules = db.query(models.Schedule).filter(
+        models.Schedule.class_id == class_id,
+        models.Schedule.day_of_week == day_of_week
+    ).all()
+    
+    for sch in schedules:
+        if exclude_id and sch.id == exclude_id:
+            continue
+        if start_time < sch.end_time and sch.start_time < end_time:
+            teacher = db.query(models.User).filter(models.User.id == sch.teacher_id).first()
+            teacher_name = teacher.full_name if teacher else "Giáo viên khác"
+            return f"Bị trùng lịch với môn {sch.subject} do {teacher_name} dạy ({sch.start_time} - {sch.end_time})"
+    return None
+
 @router.post("/", response_model=ScheduleResponse)
 async def create_schedule_item(
     schedule: ScheduleCreate,
@@ -83,13 +98,11 @@ async def create_schedule_item(
     if current_user.role not in ["teacher", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized")
         
+    conflict = check_schedule_conflict(db, schedule.class_id, schedule.day_of_week, schedule.start_time, schedule.end_time)
+    if conflict:
+        raise HTTPException(status_code=409, detail=conflict)
+        
     db_schedule = models.Schedule(**schedule.model_dump())
-    
-    # If no teacher_id provided, assume current user is the teacher if they are a teacher?
-    # Or just leave it null? Let's leave it null unless specified.
-    # Actually, for a class schedule, usually we want to know who teaches. 
-    # If not provided, maybe default to class homeroom teacher? 
-    # For now, let's keep it simple.
     
     db.add(db_schedule)
     db.commit()
@@ -109,6 +122,14 @@ async def update_schedule(
     db_schedule = db.query(models.Schedule).filter(models.Schedule.id == schedule_id).first()
     if not db_schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
+        
+    # Check for conflicts
+    new_day = schedule_update.day_of_week
+    new_start = schedule_update.start_time
+    new_end = schedule_update.end_time
+    conflict = check_schedule_conflict(db, db_schedule.class_id, new_day, new_start, new_end, exclude_id=schedule_id)
+    if conflict:
+        raise HTTPException(status_code=409, detail=conflict)
         
     for key, value in schedule_update.model_dump().items():
         setattr(db_schedule, key, value)

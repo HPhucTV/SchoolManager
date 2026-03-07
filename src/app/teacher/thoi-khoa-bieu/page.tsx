@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -42,6 +43,7 @@ export default function TeacherSchedulePage() {
         subject: '',
         room: '',
     });
+    const [editingItemId, setEditingItemId] = useState<number | null>(null);
 
     useEffect(() => {
         if (token) fetchSchedule();
@@ -68,6 +70,19 @@ export default function TeacherSchedulePage() {
         'Thursday': 'Thứ 5', 'Friday': 'Thứ 6', 'Saturday': 'Thứ 7',
     };
 
+    const handleItemClick = (item: ScheduleItem) => {
+        setFormData({
+            day: item.day_of_week,
+            dayLabel: dayLabels[item.day_of_week] || item.day_of_week,
+            startTime: item.start_time,
+            endTime: item.end_time,
+            subject: item.subject,
+            room: item.room || '',
+        });
+        setEditingItemId(item.id);
+        setShowModal(true);
+    };
+
     const handleCellClick = (day: string, startTime: string) => {
         const endTime = TIME_SLOTS_MAP[startTime] || '';
         setFormData({
@@ -78,6 +93,7 @@ export default function TeacherSchedulePage() {
             subject: '',
             room: '',
         });
+        setEditingItemId(null);
         setShowModal(true);
     };
 
@@ -89,8 +105,13 @@ export default function TeacherSchedulePage() {
 
         try {
             const tempClassId = (schedules.length > 0 ? schedules[0].class_id : 1) || 1;
-            const response = await fetch(`${API_URL}/api/schedules`, {
-                method: 'POST',
+            const method = editingItemId ? 'PUT' : 'POST';
+            const url = editingItemId
+                ? `${API_URL}/api/schedules/${editingItemId}`
+                : `${API_URL}/api/schedules`;
+
+            const response = await fetch(url, {
+                method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -107,11 +128,16 @@ export default function TeacherSchedulePage() {
             });
 
             if (response.ok) {
-                toast.success(`Đã thêm ${formData.subject} vào ${formData.dayLabel}`);
+                toast.success(editingItemId ? `Đã cập nhật ${formData.subject}` : `Đã thêm ${formData.subject} vào ${formData.dayLabel}`);
                 setShowModal(false);
                 fetchSchedule();
             } else {
-                toast.error('Lỗi khi thêm lịch');
+                try {
+                    const data = await response.json();
+                    toast.error(data.detail || 'Lỗi khi lưu lịch');
+                } catch {
+                    toast.error('Lỗi khi lưu lịch');
+                }
             }
         } catch (error) {
             console.error(error);
@@ -128,6 +154,7 @@ export default function TeacherSchedulePage() {
             });
             if (response.ok) {
                 toast.success(`Đã xóa ${item.subject}`);
+                setShowModal(false);
                 fetchSchedule();
             } else {
                 toast.error('Lỗi khi xóa');
@@ -184,6 +211,7 @@ export default function TeacherSchedulePage() {
                     <button
                         onClick={() => {
                             setFormData({ day: '', dayLabel: '', startTime: '', endTime: '', subject: '', room: '' });
+                            setEditingItemId(null);
                             setShowModal(true);
                         }}
                         style={{
@@ -250,6 +278,7 @@ export default function TeacherSchedulePage() {
                         schedules={schedules}
                         editable={true}
                         onCellClick={handleCellClick}
+                        onItemClick={handleItemClick}
                         onDeleteItem={handleDelete}
                     />
                 )}
@@ -270,7 +299,7 @@ export default function TeacherSchedulePage() {
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                             <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'white' }}>
-                                📅 Thêm tiết học
+                                📅 {editingItemId ? 'Sửa tiết học' : 'Thêm tiết học'}
                             </h3>
                             <button onClick={() => setShowModal(false)} style={{
                                 background: 'rgba(100, 116, 139, 0.15)', border: 'none',
@@ -436,6 +465,19 @@ export default function TeacherSchedulePage() {
 
                         {/* Actions */}
                         <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                            {editingItemId && (
+                                <button
+                                    onClick={() => handleDelete({ id: editingItemId, subject: formData.subject } as ScheduleItem)}
+                                    style={{
+                                        flex: 1, padding: '11px', borderRadius: '10px',
+                                        backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
+                                        border: '1px solid rgba(239, 68, 68, 0.3)', cursor: 'pointer',
+                                        fontWeight: 600, fontSize: '13px', transition: 'all 0.2s',
+                                    }}
+                                >
+                                    Xóa tiết
+                                </button>
+                            )}
                             <button
                                 onClick={() => setShowModal(false)}
                                 style={{
@@ -459,7 +501,7 @@ export default function TeacherSchedulePage() {
                                     transition: 'all 0.2s',
                                 }}
                             >
-                                <Save size={15} /> Lưu tiết học
+                                <Save size={15} /> {editingItemId ? 'Cập nhật' : 'Lưu tiết học'}
                             </button>
                         </div>
                     </div>

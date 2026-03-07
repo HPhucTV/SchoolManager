@@ -167,6 +167,7 @@ class Quiz(Base):
     total_questions = Column(Integer, default=0)
     deadline = Column(String, nullable=True)
     allow_retake = Column(Boolean, default=False)
+    show_answers = Column(Boolean, default=True)
     status = Column(String, default="draft") # draft, active, closed
     created_at = Column(String)
 

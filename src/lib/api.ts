@@ -71,6 +71,7 @@ export interface Quiz {
     total_questions: number;
     deadline?: string;
     allow_retake: boolean;
+    show_answers: boolean;
     class_id: number;
     questions?: Question[];
     created_at?: string;
@@ -557,6 +558,10 @@ export const analyticsApi = {
     },
     getClassReport: async (classId: number) => {
         const res = await fetch(`${API_URL}/api/analytics/class-report/${classId}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed'); return res.json();
+    },
+    getMissingWork: async () => {
+        const res = await fetch(`${API_URL}/api/analytics/missing-work`, { headers: getHeaders() });
         if (!res.ok) throw new Error('Failed'); return res.json();
     }
 };

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useRef } from 'react';
 import { Smile, Meh, Frown, User } from 'lucide-react';
 

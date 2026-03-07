@@ -121,14 +121,15 @@ def _generate_generic_fallback(topic: str, difficulty: str, count: int, start_in
 
 class QuizBase(BaseModel):
     title: str
-    subject: str
-    topic: str
+    subject: Optional[str] = None
+    topic: Optional[str] = None
     class_id: int
     easy_count: int = 3
     medium_count: int = 4
     hard_count: int = 3
     deadline: Optional[str] = None
     allow_retake: bool = False
+    show_answers: bool = True
 
 class QuizQuestionCreate(BaseModel):
     question_text: str
@@ -159,9 +160,9 @@ class QuizQuestionResponse(BaseModel):
 
 class QuizResponse(QuizBase):
     id: int
-    status: str
+    status: Optional[str] = None
     total_questions: int
-    created_at: str
+    created_at: Optional[str] = None
     questions: List[QuizQuestionResponse] = []
     class Config:
         from_attributes = True
@@ -206,6 +207,7 @@ async def create_quiz(quiz_data: QuizCreate, db: Session = Depends(get_db), curr
         total_questions=total_q,
         deadline=quiz_data.deadline,
         allow_retake=quiz_data.allow_retake,
+        show_answers=quiz_data.show_answers,
         created_at=datetime.now().isoformat(),
         status="draft"
     )
@@ -417,7 +419,8 @@ async def submit_quiz(quiz_id: int, submit_data: QuizSubmit, db: Session = Depen
         "score": score,
         "total_questions": total,
         "percentage": percentage,
-        "completed_at": new_result.completed_at
+        "completed_at": new_result.completed_at,
+        "show_answers": quiz.show_answers
     }
 
 @router.post("/upload-docx")
@@ -436,7 +439,7 @@ async def upload_docx(file: UploadFile = File(...), current_user: models.User = 
         doc = docx.Document(io.BytesIO(contents))
         
         questions = []
-        current_q = None
+        current_q = {}
         
         for p in doc.paragraphs:
             text = p.text.strip()
@@ -464,24 +467,24 @@ async def upload_docx(file: UploadFile = File(...), current_user: models.User = 
                 
             # Detect Options (A., B., C., D.)
             elif text.startswith("A.") or text.startswith("A "):
-                 if current_q is not None:
+                 if current_q:
                      current_q["option_a"] = text[2:].strip()
                      # Basic check for correct answer (e.g. if it has underline/bold, but plain text is hard)
                      # For now, let's just rely on standard extraction
             elif text.startswith("B.") or text.startswith("B "):
-                 if current_q is not None:
+                 if current_q:
                      current_q["option_b"] = text[2:].strip()
             elif text.startswith("C.") or text.startswith("C "):
-                 if current_q is not None:
+                 if current_q:
                      current_q["option_c"] = text[2:].strip()
             elif text.startswith("D.") or text.startswith("D "):
-                 if current_q is not None:
+                 if current_q:
                      current_q["option_d"] = text[2:].strip()
                      
             # Try to infer correct answer from text
             # E.g. "Đáp án: A"
             elif text.lower().startswith("đáp án:") or text.lower().startswith("đáp án "):
-                 if current_q is not None:
+                 if current_q:
                       ans = text.split(":")[1].strip().upper() if ":" in text else text.split()[2].strip().upper()
                       if ans in ["A", "B", "C", "D"]:
                           current_q["correct_answer"] = ans

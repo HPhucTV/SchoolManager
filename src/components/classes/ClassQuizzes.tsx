@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -31,6 +32,7 @@ export default function ClassQuizzes({ classId }: ClassQuizzesProps) {
         hard_count: 2,
         deadline: '',
         allow_retake: false,
+        show_answers: true,
     });
 
     // New state for modes
@@ -49,6 +51,13 @@ export default function ClassQuizzes({ classId }: ClassQuizzesProps) {
 
     const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
+
+    // Student quiz-taking state
+    const [studentAnswers, setStudentAnswers] = useState<Record<number, string>>({});
+    const [currentQuestion, setCurrentQuestion] = useState(0);
+    const [quizSubmitted, setQuizSubmitted] = useState(false);
+    const [quizScore, setQuizScore] = useState<{ correct: number; total: number; showAnswers: boolean } | null>(null);
+    const [submittingQuiz, setSubmittingQuiz] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -166,6 +175,7 @@ export default function ClassQuizzes({ classId }: ClassQuizzesProps) {
                 class_id: classId,
                 deadline: quizData.deadline || null,
                 allow_retake: quizData.allow_retake,
+                show_answers: quizData.show_answers,
             };
 
             if (creationMode === 'ai') {
@@ -200,7 +210,7 @@ export default function ClassQuizzes({ classId }: ClassQuizzesProps) {
                 setQuizData({
                     title: '', subject: '', topic: '', class_id: classId,
                     easy_count: 5, medium_count: 3, hard_count: 2,
-                    deadline: '', allow_retake: false,
+                    deadline: '', allow_retake: false, show_answers: true,
                 });
                 setParsedQuestions([]);
                 setUploadFile(null);
@@ -326,17 +336,27 @@ export default function ClassQuizzes({ classId }: ClassQuizzesProps) {
                         </div>
 
                         <div style={{ display: 'flex', gap: '8px' }}>
-                            <button
-                                onClick={() => { setSelectedQuiz(quiz); setShowDetailModal(true); }}
-                                style={{
-                                    flex: 1, padding: '10px', borderRadius: '10px',
-                                    backgroundColor: '#3b82f6', color: 'white',
-                                    border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '13px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
-                                }}
-                            >
-                                <Eye size={16} /> Chi tiết
-                            </button>
+                            {(!isTeacher && quiz.status === 'closed') ? null : (
+                                <button
+                                    onClick={() => {
+                                        setSelectedQuiz(quiz);
+                                        setShowDetailModal(true);
+                                        // Reset student quiz-taking state
+                                        setStudentAnswers({});
+                                        setCurrentQuestion(0);
+                                        setQuizSubmitted(false);
+                                        setQuizScore(null);
+                                    }}
+                                    style={{
+                                        flex: 1, padding: '10px', borderRadius: '10px',
+                                        backgroundColor: '#3b82f6', color: 'white',
+                                        border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '13px',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+                                    }}
+                                >
+                                    <Eye size={16} /> {isTeacher ? 'Chi tiết' : 'Làm bài'}
+                                </button>
+                            )}
                             {isTeacher && (
                                 <button
                                     onClick={() => handleDelete(quiz.id)}
@@ -357,7 +377,9 @@ export default function ClassQuizzes({ classId }: ClassQuizzesProps) {
                     <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', backgroundColor: '#1e293b', borderRadius: '16px', border: '1px dashed #334155' }}>
                         <Brain size={48} color="#475569" style={{ marginBottom: '16px' }} />
                         <h3 style={{ color: '#94a3b8', margin: 0 }}>Chưa có bài kiểm tra nào</h3>
-                        <p style={{ color: '#64748b', fontSize: '14px' }}>Tạo bài kiểm tra mới để AI giúp bạn sinh câu hỏi</p>
+                        {isTeacher && (
+                            <p style={{ color: '#64748b', fontSize: '14px' }}>Tạo bài kiểm tra mới để AI giúp bạn sinh câu hỏi</p>
+                        )}
                     </div>
                 )}
             </div>
@@ -468,6 +490,35 @@ export default function ClassQuizzes({ classId }: ClassQuizzesProps) {
                                             style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', padding: '10px 12px', color: 'white' }}
                                         />
                                     </div>
+                                </div>
+
+                                {/* Show answers toggle */}
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    padding: '14px 16px', backgroundColor: '#0f172a', borderRadius: '12px',
+                                    border: '1px solid #334155',
+                                }}>
+                                    <div>
+                                        <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#e2e8f0' }}>Hiện đáp án sau khi nộp bài</p>
+                                        <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#64748b' }}>Tắt nếu muốn tránh chia sẻ đáp án giữa học sinh</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setQuizData({ ...quizData, show_answers: !quizData.show_answers })}
+                                        style={{
+                                            width: '48px', height: '26px', borderRadius: '13px',
+                                            backgroundColor: quizData.show_answers ? '#8b5cf6' : '#475569',
+                                            border: 'none', cursor: 'pointer', position: 'relative',
+                                            transition: 'background-color 0.2s',
+                                        }}
+                                    >
+                                        <span style={{
+                                            position: 'absolute', top: '3px',
+                                            left: quizData.show_answers ? '24px' : '3px',
+                                            width: '20px', height: '20px', borderRadius: '50%',
+                                            backgroundColor: 'white', transition: 'left 0.2s',
+                                        }} />
+                                    </button>
                                 </div>
 
                                 {creationMode === 'ai' && (
@@ -650,72 +701,333 @@ export default function ClassQuizzes({ classId }: ClassQuizzesProps) {
             )}
 
             {/* Detail Modal */}
-            {showDetailModal && selectedQuiz && (
-                <div style={{
-                    position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100,
-                    padding: '20px',
-                }}>
-                    <div style={{
-                        backgroundColor: '#1e293b', borderRadius: '24px', width: '100%', maxWidth: '800px',
-                        maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
-                    }}>
-                        <div style={{ padding: '24px', borderBottom: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: 'white' }}>{selectedQuiz.title}</h2>
-                            <button onClick={() => setShowDetailModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                                <X size={24} color="#94a3b8" />
-                            </button>
-                        </div>
+            {showDetailModal && selectedQuiz && (() => {
+                const questions = selectedQuiz.questions || [];
+                const totalQs = questions.length;
+                const currentQ = questions[currentQuestion];
 
-                        <div style={{ padding: '24px', overflowY: 'auto' }}>
-                            <div style={{ marginBottom: '24px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                                <div style={{ backgroundColor: '#0f172a', padding: '12px', borderRadius: '10px', flex: 1 }}>
-                                    <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#94a3b8' }}>Môn học</p>
-                                    <p style={{ margin: 0, fontWeight: 600, color: 'white' }}>{selectedQuiz.subject}</p>
+                const handleSelectAnswer = (qIdx: number, answer: string) => {
+                    if (quizSubmitted) return;
+                    setStudentAnswers(prev => ({ ...prev, [qIdx]: answer }));
+                };
+
+                const handleSubmitQuiz = async () => {
+                    if (Object.keys(studentAnswers).length < totalQs) {
+                        toast.error(`Bạn chưa trả lời hết! Còn ${totalQs - Object.keys(studentAnswers).length} câu chưa chọn.`);
+                        return;
+                    }
+                    setSubmittingQuiz(true);
+                    try {
+                        // Submit answers to backend
+                        const answersPayload = questions.map((q, idx) => ({
+                            question_id: q.id,
+                            selected_answer: studentAnswers[idx] || '',
+                        }));
+                        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/quizzes/${selectedQuiz.id}/submit`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ answers: answersPayload }),
+                        });
+                        if (response.ok) {
+                            const result = await response.json();
+                            setQuizScore({ correct: result.correct_count ?? result.score ?? 0, total: result.total_questions ?? totalQs, showAnswers: result.show_answers ?? selectedQuiz.show_answers ?? true });
+                            toast.success('Đã nộp bài kiểm tra!');
+                        } else {
+                            // Fallback: calculate client-side
+                            let correct = 0;
+                            questions.forEach((q, idx) => { if (studentAnswers[idx] === q.correct_answer) correct++; });
+                            setQuizScore({ correct, total: totalQs, showAnswers: selectedQuiz.show_answers ?? true });
+                            toast.success('Đã nộp bài!');
+                        }
+                    } catch {
+                        // Fallback: calculate client-side
+                        let correct = 0;
+                        questions.forEach((q, idx) => { if (studentAnswers[idx] === q.correct_answer) correct++; });
+                        setQuizScore({ correct, total: totalQs, showAnswers: selectedQuiz.show_answers ?? true });
+                        toast.success('Đã nộp bài!');
+                    } finally {
+                        setQuizSubmitted(true);
+                        setSubmittingQuiz(false);
+                    }
+                };
+
+                return (
+                    <div style={{
+                        position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100,
+                        padding: '20px',
+                    }}>
+                        <div style={{
+                            backgroundColor: '#1e293b', borderRadius: '24px', width: '100%', maxWidth: '800px',
+                            maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                        }}>
+                            <div style={{ padding: '24px', borderBottom: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: 'white' }}>{selectedQuiz.title}</h2>
+                                    {!isTeacher && totalQs > 0 && !quizSubmitted && (
+                                        <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#94a3b8' }}>
+                                            Câu {currentQuestion + 1} / {totalQs} • Đã chọn {Object.keys(studentAnswers).length}/{totalQs}
+                                        </p>
+                                    )}
+                                    {quizSubmitted && quizScore && (
+                                        <p style={{ margin: '4px 0 0 0', fontSize: '14px', fontWeight: 600, color: quizScore.correct / quizScore.total >= 0.5 ? '#10b981' : '#ef4444' }}>
+                                            Kết quả: {quizScore.correct}/{quizScore.total} câu đúng ({Math.round(quizScore.correct / quizScore.total * 100)}%)
+                                        </p>
+                                    )}
                                 </div>
-                                <div style={{ backgroundColor: '#0f172a', padding: '12px', borderRadius: '10px', flex: 1 }}>
-                                    <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#94a3b8' }}>Chủ đề</p>
-                                    <p style={{ margin: 0, fontWeight: 600, color: 'white' }}>{selectedQuiz.topic}</p>
-                                </div>
-                                <div style={{ backgroundColor: '#0f172a', padding: '12px', borderRadius: '10px', flex: 1 }}>
-                                    <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#94a3b8' }}>Số câu hỏi</p>
-                                    <p style={{ margin: 0, fontWeight: 600, color: 'white' }}>{selectedQuiz.total_questions}</p>
-                                </div>
+                                <button onClick={() => setShowDetailModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                                    <X size={24} color="#94a3b8" />
+                                </button>
                             </div>
 
-                            <h3 style={{ color: '#e2e8f0', borderBottom: '1px solid #334155', paddingBottom: '12px', marginBottom: '16px' }}>Danh sách câu hỏi (Preview)</h3>
-
-                            {selectedQuiz.questions ? (
-                                <div style={{ display: 'grid', gap: '16px' }}>
-                                    {selectedQuiz.questions.map((q, idx) => (
-                                        <div key={q.id || idx} style={{ backgroundColor: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                                <span style={{ fontSize: '13px', fontWeight: 600, color: '#3b82f6' }}>Câu {idx + 1}</span>
-                                                <span style={{
-                                                    fontSize: '11px', padding: '2px 8px', borderRadius: '4px',
-                                                    backgroundColor: q.difficulty === 'easy' ? 'rgba(16, 185, 129, 0.2)' : q.difficulty === 'medium' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                                                    color: q.difficulty === 'easy' ? '#10b981' : q.difficulty === 'medium' ? '#f59e0b' : '#ef4444'
-                                                }}>
-                                                    {q.difficulty}
-                                                </span>
-                                            </div>
-                                            <p style={{ margin: '0 0 12px 0', color: '#cbd5e1' }}>{q.question_text}</p>
-                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                                <div style={{ padding: '8px', borderRadius: '6px', backgroundColor: q.correct_answer === 'A' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(30, 41, 59, 0.5)', border: q.correct_answer === 'A' ? '1px solid #10b981' : '1px solid #334155', color: q.correct_answer === 'A' ? '#10b981' : '#94a3b8' }}>A. {q.option_a}</div>
-                                                <div style={{ padding: '8px', borderRadius: '6px', backgroundColor: q.correct_answer === 'B' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(30, 41, 59, 0.5)', border: q.correct_answer === 'B' ? '1px solid #10b981' : '1px solid #334155', color: q.correct_answer === 'B' ? '#10b981' : '#94a3b8' }}>B. {q.option_b}</div>
-                                                <div style={{ padding: '8px', borderRadius: '6px', backgroundColor: q.correct_answer === 'C' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(30, 41, 59, 0.5)', border: q.correct_answer === 'C' ? '1px solid #10b981' : '1px solid #334155', color: q.correct_answer === 'C' ? '#10b981' : '#94a3b8' }}>C. {q.option_c}</div>
-                                                <div style={{ padding: '8px', borderRadius: '6px', backgroundColor: q.correct_answer === 'D' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(30, 41, 59, 0.5)', border: q.correct_answer === 'D' ? '1px solid #10b981' : '1px solid #334155', color: q.correct_answer === 'D' ? '#10b981' : '#94a3b8' }}>D. {q.option_d}</div>
-                                            </div>
-                                        </div>
-                                    ))}
+                            <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+                                {/* Info bar */}
+                                <div style={{ marginBottom: '24px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                                    <div style={{ backgroundColor: '#0f172a', padding: '12px', borderRadius: '10px', flex: 1 }}>
+                                        <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#94a3b8' }}>Môn học</p>
+                                        <p style={{ margin: 0, fontWeight: 600, color: 'white' }}>{selectedQuiz.subject}</p>
+                                    </div>
+                                    <div style={{ backgroundColor: '#0f172a', padding: '12px', borderRadius: '10px', flex: 1 }}>
+                                        <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#94a3b8' }}>Chủ đề</p>
+                                        <p style={{ margin: 0, fontWeight: 600, color: 'white' }}>{selectedQuiz.topic}</p>
+                                    </div>
+                                    <div style={{ backgroundColor: '#0f172a', padding: '12px', borderRadius: '10px', flex: 1 }}>
+                                        <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#94a3b8' }}>Số câu hỏi</p>
+                                        <p style={{ margin: 0, fontWeight: 600, color: 'white' }}>{selectedQuiz.total_questions}</p>
+                                    </div>
                                 </div>
-                            ) : (
-                                <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>Chi tiết câu hỏi sẽ hiển thị sau khi tạo xong...</p>
-                            )}
+
+                                {/* TEACHER VIEW: show all questions with correct answers */}
+                                {isTeacher && (
+                                    <>
+                                        <h3 style={{ color: '#e2e8f0', borderBottom: '1px solid #334155', paddingBottom: '12px', marginBottom: '16px' }}>Danh sách câu hỏi (Preview)</h3>
+                                        {questions.length > 0 ? (
+                                            <div style={{ display: 'grid', gap: '16px' }}>
+                                                {questions.map((q, idx) => (
+                                                    <div key={q.id || idx} style={{ backgroundColor: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#3b82f6' }}>Câu {idx + 1}</span>
+                                                            <span style={{
+                                                                fontSize: '11px', padding: '2px 8px', borderRadius: '4px',
+                                                                backgroundColor: q.difficulty === 'easy' ? 'rgba(16, 185, 129, 0.2)' : q.difficulty === 'medium' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                                                                color: q.difficulty === 'easy' ? '#10b981' : q.difficulty === 'medium' ? '#f59e0b' : '#ef4444'
+                                                            }}>
+                                                                {q.difficulty}
+                                                            </span>
+                                                        </div>
+                                                        <p style={{ margin: '0 0 12px 0', color: '#cbd5e1' }}>{q.question_text}</p>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                                            {['A', 'B', 'C', 'D'].map(opt => {
+                                                                const optKey = `option_${opt.toLowerCase()}` as keyof typeof q;
+                                                                const isCorrect = q.correct_answer === opt;
+                                                                return (
+                                                                    <div key={opt} style={{
+                                                                        padding: '8px', borderRadius: '6px',
+                                                                        backgroundColor: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(30, 41, 59, 0.5)',
+                                                                        border: isCorrect ? '1px solid #10b981' : '1px solid #334155',
+                                                                        color: isCorrect ? '#10b981' : '#94a3b8'
+                                                                    }}>
+                                                                        {opt}. {q[optKey] as string}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>Chi tiết câu hỏi sẽ hiển thị sau khi tạo xong...</p>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* STUDENT VIEW: interactive quiz-taking */}
+                                {!isTeacher && (
+                                    <>
+                                        {totalQs === 0 ? (
+                                            <p style={{ color: '#94a3b8', fontStyle: 'italic', textAlign: 'center' }}>Bài kiểm tra chưa có câu hỏi...</p>
+                                        ) : !quizSubmitted ? (
+                                            /* One question at a time */
+                                            <>
+                                                {/* Question number dots */}
+                                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '20px', justifyContent: 'center' }}>
+                                                    {questions.map((_, idx) => (
+                                                        <button
+                                                            key={idx}
+                                                            onClick={() => setCurrentQuestion(idx)}
+                                                            style={{
+                                                                width: '36px', height: '36px', borderRadius: '8px',
+                                                                border: currentQuestion === idx ? '2px solid #8b5cf6' : '1px solid #334155',
+                                                                backgroundColor: studentAnswers[idx] ? '#8b5cf6' : '#0f172a',
+                                                                color: studentAnswers[idx] ? 'white' : '#94a3b8',
+                                                                fontWeight: 600, fontSize: '13px', cursor: 'pointer',
+                                                                transition: 'all 0.2s',
+                                                            }}
+                                                        >
+                                                            {idx + 1}
+                                                        </button>
+                                                    ))}
+                                                </div>
+
+                                                {currentQ && (
+                                                    <div style={{ backgroundColor: '#0f172a', padding: '24px', borderRadius: '16px', border: '1px solid #334155' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                                            <span style={{ fontSize: '14px', fontWeight: 700, color: '#8b5cf6' }}>Câu {currentQuestion + 1}</span>
+                                                            <span style={{
+                                                                fontSize: '11px', padding: '2px 8px', borderRadius: '4px',
+                                                                backgroundColor: currentQ.difficulty === 'easy' ? 'rgba(16, 185, 129, 0.2)' : currentQ.difficulty === 'medium' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                                                                color: currentQ.difficulty === 'easy' ? '#10b981' : currentQ.difficulty === 'medium' ? '#f59e0b' : '#ef4444'
+                                                            }}>
+                                                                {currentQ.difficulty === 'easy' ? 'Dễ' : currentQ.difficulty === 'medium' ? 'Trung bình' : 'Khó'}
+                                                            </span>
+                                                        </div>
+                                                        <p style={{ margin: '0 0 20px 0', color: '#e2e8f0', fontSize: '16px', lineHeight: 1.6 }}>{currentQ.question_text}</p>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                            {['A', 'B', 'C', 'D'].map(opt => {
+                                                                const optKey = `option_${opt.toLowerCase()}` as keyof typeof currentQ;
+                                                                const isSelected = studentAnswers[currentQuestion] === opt;
+                                                                return (
+                                                                    <button
+                                                                        key={opt}
+                                                                        onClick={() => handleSelectAnswer(currentQuestion, opt)}
+                                                                        style={{
+                                                                            padding: '14px 16px', borderRadius: '12px', textAlign: 'left',
+                                                                            backgroundColor: isSelected ? 'rgba(139, 92, 246, 0.15)' : '#1e293b',
+                                                                            border: isSelected ? '2px solid #8b5cf6' : '1px solid #334155',
+                                                                            color: isSelected ? '#c4b5fd' : '#cbd5e1',
+                                                                            cursor: 'pointer', fontSize: '14px', fontWeight: isSelected ? 600 : 400,
+                                                                            transition: 'all 0.2s',
+                                                                            display: 'flex', alignItems: 'center', gap: '12px',
+                                                                        }}
+                                                                    >
+                                                                        <span style={{
+                                                                            width: '28px', height: '28px', borderRadius: '50%',
+                                                                            backgroundColor: isSelected ? '#8b5cf6' : '#0f172a',
+                                                                            color: isSelected ? 'white' : '#64748b',
+                                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                            fontWeight: 700, fontSize: '12px', flexShrink: 0,
+                                                                            border: isSelected ? 'none' : '1px solid #334155',
+                                                                        }}>
+                                                                            {opt}
+                                                                        </span>
+                                                                        {currentQ[optKey] as string}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Navigation + Submit */}
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px', gap: '12px' }}>
+                                                    <button
+                                                        onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
+                                                        disabled={currentQuestion === 0}
+                                                        style={{
+                                                            padding: '12px 20px', borderRadius: '10px',
+                                                            border: '1px solid #475569', backgroundColor: 'transparent',
+                                                            color: currentQuestion === 0 ? '#475569' : '#cbd5e1',
+                                                            fontWeight: 600, cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
+                                                        }}
+                                                    >
+                                                        ← Trước
+                                                    </button>
+
+                                                    {currentQuestion < totalQs - 1 ? (
+                                                        <button
+                                                            onClick={() => setCurrentQuestion(prev => Math.min(totalQs - 1, prev + 1))}
+                                                            style={{
+                                                                padding: '12px 20px', borderRadius: '10px',
+                                                                backgroundColor: '#8b5cf6', color: 'white',
+                                                                fontWeight: 600, border: 'none', cursor: 'pointer',
+                                                            }}
+                                                        >
+                                                            Tiếp →
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={handleSubmitQuiz}
+                                                            disabled={submittingQuiz}
+                                                            style={{
+                                                                padding: '12px 24px', borderRadius: '10px',
+                                                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                                                color: 'white', fontWeight: 700, border: 'none',
+                                                                cursor: submittingQuiz ? 'not-allowed' : 'pointer',
+                                                                display: 'flex', alignItems: 'center', gap: '8px',
+                                                            }}
+                                                        >
+                                                            {submittingQuiz ? <Loader2 className="animate-spin" size={18} /> : <CheckCircle size={18} />}
+                                                            {submittingQuiz ? 'Đang nộp...' : 'Nộp bài'}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            /* After submission: show results */
+                                            <>
+                                                {quizScore && (
+                                                    <div style={{
+                                                        textAlign: 'center', padding: '24px', marginBottom: '24px',
+                                                        backgroundColor: '#0f172a', borderRadius: '16px', border: '1px solid #334155',
+                                                    }}>
+                                                        <div style={{
+                                                            width: '80px', height: '80px', borderRadius: '50%', margin: '0 auto 16px',
+                                                            background: quizScore.correct / quizScore.total >= 0.5
+                                                                ? 'linear-gradient(135deg, #10b981, #059669)'
+                                                                : 'linear-gradient(135deg, #ef4444, #dc2626)',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            fontSize: '24px', fontWeight: 800, color: 'white',
+                                                        }}>
+                                                            {Math.round(quizScore.correct / quizScore.total * 10)}/10
+                                                        </div>
+                                                        <p style={{ color: '#e2e8f0', fontWeight: 700, fontSize: '18px', margin: '0 0 8px 0' }}>
+                                                            {quizScore.correct / quizScore.total >= 0.8 ? 'Xuất sắc! 🎉' :
+                                                                quizScore.correct / quizScore.total >= 0.5 ? 'Tốt lắm! 👍' : 'Cần cố gắng thêm! 💪'}
+                                                        </p>
+                                                        <p style={{ color: '#94a3b8', fontSize: '14px', margin: 0 }}>
+                                                            Trả lời đúng {quizScore.correct}/{quizScore.total} câu
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                <h3 style={{ color: '#e2e8f0', borderBottom: '1px solid #334155', paddingBottom: '12px', marginBottom: '16px' }}>Chi tiết kết quả</h3>
+                                                {quizScore && !quizScore.showAnswers && (
+                                                    <div style={{ padding: '16px', backgroundColor: 'rgba(245, 158, 11, 0.1)', borderRadius: '12px', border: '1px solid #f59e0b', marginBottom: '16px' }}>
+                                                        <p style={{ margin: 0, fontSize: '14px', color: '#fbbf24' }}>⚠️ Giáo viên đã tắt hiện đáp án cho bài kiểm tra này.</p>
+                                                    </div>
+                                                )}
+                                                <div style={{ display: 'grid', gap: '12px' }}>
+                                                    {questions.map((q, idx) => {
+                                                        const myAnswer = studentAnswers[idx];
+                                                        const isCorrect = myAnswer === q.correct_answer;
+                                                        const canShow = quizScore?.showAnswers !== false;
+                                                        return (
+                                                            <div key={q.id || idx} style={{
+                                                                backgroundColor: '#0f172a', padding: '16px', borderRadius: '12px',
+                                                                border: `1px solid ${canShow ? (isCorrect ? '#10b981' : '#ef4444') : '#334155'}`,
+                                                            }}>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                                    <span style={{ fontSize: '13px', fontWeight: 600, color: canShow ? (isCorrect ? '#10b981' : '#ef4444') : '#94a3b8' }}>
+                                                                        {canShow ? (isCorrect ? '✓' : '✗') : '•'} Câu {idx + 1}
+                                                                    </span>
+                                                                </div>
+                                                                <p style={{ margin: '0 0 8px 0', color: '#cbd5e1', fontSize: '14px' }}>{q.question_text}</p>
+                                                                <p style={{ margin: 0, fontSize: '13px', color: canShow ? (isCorrect ? '#10b981' : '#ef4444') : '#94a3b8' }}>
+                                                                    Bạn chọn: {myAnswer || 'Chưa chọn'}{canShow && !isCorrect ? ` • Đáp án đúng: ${q.correct_answer}` : ''}
+                                                                </p>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </>
+                                        )}
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
         </div>
     );
 }

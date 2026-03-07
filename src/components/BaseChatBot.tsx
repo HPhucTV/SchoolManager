@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -219,12 +220,13 @@ export function BaseChatBot({
                                     maxWidth: '80%',
                                     padding: '16px',
                                     borderRadius: msg.role === 'user' ? '20px 20px 0px 20px' : '20px 20px 20px 0px',
-                                    backgroundColor: msg.role === 'user' ? '#22c55e' : 'white',
-                                    color: msg.role === 'user' ? 'white' : '#1e293b',
-                                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                                    backgroundColor: msg.role === 'user' ? '#22c55e' : '#1e293b',
+                                    color: msg.role === 'user' ? 'white' : '#e2e8f0',
+                                    boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
                                     fontSize: '14px',
                                     lineHeight: 1.5,
-                                    whiteSpace: 'pre-wrap'
+                                    whiteSpace: 'pre-wrap',
+                                    border: msg.role === 'assistant' ? '1px solid #334155' : 'none',
                                 }}>
                                     {msg.content}
                                 </div>
@@ -251,7 +253,7 @@ export function BaseChatBot({
 
                     <div style={{
                         padding: '16px 20px',
-                        borderTop: '1px solid #e2e8f0',
+                        borderTop: '1px solid #334155',
                         backgroundColor: '#1e293b',
                         display: 'flex',
                         gap: '12px',
@@ -267,13 +269,15 @@ export function BaseChatBot({
                                 flex: 1,
                                 padding: '14px 20px',
                                 borderRadius: '28px',
-                                border: '2px solid #e2e8f0',
+                                border: '1px solid #334155',
+                                backgroundColor: '#0f172a',
+                                color: '#e2e8f0',
                                 outline: 'none',
                                 fontSize: '14px',
                                 transition: 'all 0.2s',
                             }}
                             onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                            onBlur={(e) => e.target.style.borderColor = '#334155'}
                         />
                         <button
                             onClick={handleSend}

@@ -10,7 +10,7 @@ from typing import Optional, List
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, desc
 
 from app.database import get_db
 from app.routers.auth import get_current_user
@@ -199,14 +199,14 @@ def global_search(
             )
         ).limit(limit).all()
 
-        max_sub = db.query(func.count(Submission.id)).group_by(Submission.assignment_id).order_by(
-            func.count(Submission.id).desc()
-        ).first()
-        max_sub_count = max_sub[0] if max_sub else 0
+        max_sub = db.query(Submission.assignment_id).group_by(Submission.assignment_id).order_by(
+            Submission.assignment_id.desc()
+        ).count()
+        max_sub_count = max_sub if max_sub else 0
 
         items = []
         for a in assignments:
-            sub_count = db.query(func.count(Submission.id)).filter(Submission.assignment_id == a.id).scalar() or 0
+            sub_count = db.query(Submission).filter(Submission.assignment_id == a.id).count()
             tr = text_relevance(query_norm, a.title, a.description or "")
             rec = recency_score(a.created_at, a.deadline)
             per = personalization_score(a.class_id, current_user)
@@ -232,14 +232,14 @@ def global_search(
             )
         ).limit(limit).all()
 
-        max_qr = db.query(func.count(QuizResult.id)).group_by(QuizResult.quiz_id).order_by(
-            func.count(QuizResult.id).desc()
-        ).first()
-        max_qr_count = max_qr[0] if max_qr else 0
+        max_qr = db.query(QuizResult.quiz_id).group_by(QuizResult.quiz_id).order_by(
+            QuizResult.quiz_id.desc()
+        ).count()
+        max_qr_count = max_qr if max_qr else 0
 
         items = []
         for qz in quizzes:
-            qr_count = db.query(func.count(QuizResult.id)).filter(QuizResult.quiz_id == qz.id).scalar() or 0
+            qr_count = db.query(QuizResult).filter(QuizResult.quiz_id == qz.id).count()
             tr = text_relevance(query_norm, qz.title, f"{qz.subject} {qz.topic}")
             rec = recency_score(qz.created_at, qz.deadline)
             per = personalization_score(qz.class_id, current_user)

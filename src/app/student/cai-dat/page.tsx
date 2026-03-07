@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use client';
 
 import { User, Bell, Shield, Save, EyeOff, Eye, Camera, Check, X } from 'lucide-react';

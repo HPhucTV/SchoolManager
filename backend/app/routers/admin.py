@@ -25,10 +25,10 @@ async def get_admin_stats(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(require_admin),
 ):
-    total_teachers = db.query(func.count(models.User.id)).filter(models.User.role == "teacher").scalar()
-    total_students = db.query(func.count(models.User.id)).filter(models.User.role == "student").scalar()
-    total_classes = db.query(func.count(models.Class.id)).scalar()
-    total_quizzes = db.query(func.count(models.Quiz.id)).scalar()
+    total_teachers = db.query(models.User).filter(models.User.role == "teacher").count()
+    total_students = db.query(models.User).filter(models.User.role == "student").count()
+    total_classes = db.query(models.Class).count()
+    total_quizzes = db.query(models.Quiz).count()
 
     recent_users = (
         db.query(models.User)
@@ -140,9 +140,9 @@ async def import_students_from_excel(
             results["errors"].append(f"Dòng {row_num}: Lỗi tạo user - {str(e)}")
 
     # Update student count
-    count = db.query(func.count(models.User.id)).filter(
+    count = db.query(models.User).filter(
         models.User.class_id == class_id, models.User.role == "student"
-    ).scalar()
+    ).count()
     target_class.student_count = count or 0
 
     db.commit()

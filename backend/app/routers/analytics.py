@@ -233,3 +233,82 @@ async def get_class_report(
             "name": s.name, "xp": s.xp_points, "level": s.level
         } for s in top_students]
     }
+
+@router.get("/missing-work")
+async def get_missing_work(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Find students who haven't submitted active assignments or quizzes."""
+    if current_user.role not in ["teacher", "admin"]:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+        
+    missing_list = []
+    
+    # Get teacher's classes
+    classes = db.query(models.Class).filter(models.Class.teacher_id == current_user.id).all()
+    class_ids = [c.id for c in classes]
+    
+    if not class_ids:
+        return []
+        
+    students = db.query(models.User).filter(
+        models.User.class_id.in_(class_ids),
+        models.User.role == "student"
+    ).all()
+    
+    student_dict = {s.id: s for s in students}
+
+    # 1. Missing Assignments
+    active_assignments = db.query(models.Assignment).filter(
+        models.Assignment.class_id.in_(class_ids),
+        models.Assignment.status == "active"
+    ).all()
+    
+    for assignment in active_assignments:
+        # Get all submission student IDs for this assignment
+        submitted_student_ids = [
+            sub.student_id for sub in 
+            db.query(models.Submission).filter(models.Submission.assignment_id == assignment.id).all()
+        ]
+        
+        # Students in the class who haven't submitted
+        class_students = [s for s in students if s.class_id == assignment.class_id]
+        for student in class_students:
+            if student.id not in submitted_student_ids:
+                cls = db.query(models.Class).filter(models.Class.id == assignment.class_id).first()
+                missing_list.append({
+                    "student_name": student.name,
+                    "student_id": student.id,
+                    "class_name": cls.name if cls else "N/A",
+                    "item_title": assignment.title,
+                    "type": "assignment"
+                })
+
+    # 2. Missing Quizzes
+    active_quizzes = db.query(models.Quiz).filter(
+        models.Quiz.class_id.in_(class_ids),
+        models.Quiz.status == "active"
+    ).all()
+    
+    for quiz in active_quizzes:
+        # Get all completed quiz student IDs
+        completed_student_ids = [
+            qr.student_id for qr in 
+            db.query(models.QuizResult).filter(models.QuizResult.quiz_id == quiz.id).all()
+        ]
+        
+        # Students in the class who haven't completed the quiz
+        class_students = [s for s in students if s.class_id == quiz.class_id]
+        for student in class_students:
+            if student.id not in completed_student_ids:
+                cls = db.query(models.Class).filter(models.Class.id == quiz.class_id).first()
+                missing_list.append({
+                    "student_name": student.name,
+                    "student_id": student.id,
+                    "class_name": cls.name if cls else "N/A",
+                    "item_title": quiz.title,
+                    "type": "quiz"
+                })
+                
+    return missing_list

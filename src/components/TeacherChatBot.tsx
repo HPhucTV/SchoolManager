@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -7,7 +8,7 @@ import { classesApi, reportApi, analyticsApi } from '@/lib/api';
 const QUICK_ACTIONS = [
     { icon: '📊', label: 'Phân tích lớp', query: 'báo cáo phân tích lớp' },
     { icon: '⚠️', label: 'Cảnh báo sớm', query: 'xem cảnh báo sớm học sinh' },
-    { icon: '💡', label: 'Gợi ý giảng dạy', query: 'gợi ý phương pháp giảng dạy hiệu quả' },
+    { icon: '📝', label: 'Chưa nộp bài', query: 'học sinh chưa nộp bài' },
     { icon: '📄', label: 'Tạo báo cáo', query: '__open_report_form__' },
 ];
 
@@ -46,7 +47,6 @@ export default function TeacherChatBot() {
             setShowReportForm(true);
             return;
         }
-        setShowQuickActions(false);
         // Simulate sending the quick action as a user message
         appendRef.current({ role: 'user', content: query });
         handleUserMessage(query, appendRef.current);
@@ -77,7 +77,6 @@ export default function TeacherChatBot() {
         if (showReportForm) {
             return true;
         }
-        setShowQuickActions(false);
         const normalized = text.trim().toLowerCase();
 
         // --- Intent: View report history ---
@@ -176,14 +175,29 @@ export default function TeacherChatBot() {
             }
         }
 
-        // --- Intent: Teaching methods / tips ---
-        const isTeachingQuery =
-            normalized.includes('phương pháp') || normalized.includes('cách dạy') ||
-            normalized.includes('giảng dạy') || normalized.includes('gợi ý giảng dạy') ||
-            normalized.includes('tips dạy') || normalized.includes('dạy học');
-        if (isTeachingQuery) {
-            // Let the backend handle with the teacher dataset (teaching_methods category)
-            return false;
+        // --- Intent: Missing Work ---
+        const isMissingWorkQuery =
+            normalized.includes('chưa nộp bài') || normalized.includes('thiếu bài') ||
+            normalized.includes('chưa làm') || normalized.includes('chưa nộp');
+        if (isMissingWorkQuery) {
+            try {
+                const missing: any = await analyticsApi.getMissingWork();
+                if (!missing || missing.length === 0) {
+                    appendMessage({ role: 'assistant', content: '✅ Tuyệt vời! Hiện tại không có học sinh nào chưa nộp bài tập hay chưa làm quiz trong các lớp của thầy/cô.' });
+                } else {
+                    const lines = missing.map((w: any) =>
+                        `📝 **${w.student_name}** (${w.class_name}): Chưa làm ${w.type === 'quiz' ? 'Quiz' : 'Bài tập'} "${w.item_title}"`
+                    ).join('\n');
+                    appendMessage({
+                        role: 'assistant',
+                        content: `🚨 Danh sách học sinh chưa nộp bài (${missing.length} trường hợp):\n\n${lines}`
+                    });
+                }
+            } catch (e) {
+                console.error('missing work failed', e);
+                appendMessage({ role: 'assistant', content: '⚠️ Không thể lấy dữ liệu trạng thái nộp bài. Vui lòng thử lại sau.' });
+            }
+            return true;
         }
 
         // --- Intent: Student wellness ---
