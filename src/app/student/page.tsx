@@ -5,12 +5,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link'; // Keep Link for potential future use or if any part of the modals uses it
 import { useAuth } from '@/lib/auth';
-import { Smile, Heart, Brain, LogOut, User, Settings, Video, X, Upload, Camera, Bell, BellOff, Save, ArrowRight, Gamepad2 as GamepadIcon, Calendar, BookOpen } from 'lucide-react'; // Updated icons based on new usage and retained modals
+import { Smile, Heart, Brain, LogOut, User, Settings, Video, X, Upload, Camera, Bell, BellOff, Save, ArrowRight, Gamepad2 as GamepadIcon, Calendar, BookOpen, Zap } from 'lucide-react';
 import ChatBot from '@/components/ChatBot'; // Keep if ChatBot is still used, though not explicitly in new snippet
 import StudentNotifications from '@/components/StudentNotifications';
 import SubjectCard from '@/components/student/SubjectCard'; // New import
 
-import { API_URL } from '@/lib/api';
+import { API_URL, gamificationApi } from '@/lib/api';
 // const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8001').replace('localhost', '127.0.0.1');
 
 interface StudentDashboardData {
@@ -42,6 +42,10 @@ export default function StudentDashboard() {
     const [data, setData] = useState<StudentDashboardData | null>(null);
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [loading, setLoading] = useState(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [gamStats, setGamStats] = useState<any>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [checkInResult, setCheckInResult] = useState<any>(null);
 
 
     // Survey State (retained from original)
@@ -330,6 +334,14 @@ export default function StudentDashboard() {
                     }
                 }
 
+                // Fetch Gamification Stats
+                try {
+                    const gamData = await gamificationApi.getMyStats();
+                    setGamStats(gamData);
+                } catch (e) {
+                    console.error('Failed to fetch gamification stats:', e);
+                }
+
             } catch (err) {
                 console.error('Failed to fetch dashboard:', err);
             } finally {
@@ -550,6 +562,89 @@ export default function StudentDashboard() {
                         ))}
                     </div>
                 </div>
+
+                {/* Gamification Stats Bar */}
+                {gamStats && (
+                    <div style={{
+                        backgroundColor: '#1e293b', borderRadius: '20px', padding: '20px 24px',
+                        marginTop: '24px',
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                        border: '1px solid rgba(245, 158, 11, 0.2)',
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fbbf24', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Zap size={20} /> Gamification
+                            </h3>
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        const result = await gamificationApi.checkIn();
+                                        setCheckInResult(result);
+                                        // refresh stats
+                                        const newStats = await gamificationApi.getMyStats();
+                                        setGamStats(newStats);
+                                        setTimeout(() => setCheckInResult(null), 4000);
+                                    } catch (e) { console.error(e); }
+                                }}
+                                style={{
+                                    padding: '8px 20px',
+                                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                    color: 'white', border: 'none', borderRadius: '10px',
+                                    cursor: 'pointer', fontWeight: 700, fontSize: '14px',
+                                    boxShadow: '0 4px 12px rgba(245,158,11,0.3)',
+                                    display: 'flex', alignItems: 'center', gap: '6px'
+                                }}
+                            >
+                                🔥 Điểm danh
+                            </button>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
+                            {[
+                                { label: 'Level', value: gamStats.level, icon: '⭐', color: '#f59e0b' },
+                                { label: 'XP', value: gamStats.xp, icon: '✨', color: '#8b5cf6' },
+                                { label: 'Xu', value: gamStats.coins, icon: '🪙', color: '#f97316' },
+                                { label: 'Streak', value: `${gamStats.streak} ngày`, icon: '🔥', color: '#ef4444' },
+                                { label: 'Huy hiệu', value: `${gamStats.badges_earned}/${gamStats.total_badges}`, icon: '🏆', color: '#10b981' },
+                            ].map((s, i) => (
+                                <div key={i} style={{
+                                    backgroundColor: '#0f172a', borderRadius: '14px', padding: '14px',
+                                    textAlign: 'center', border: '1px solid #334155',
+                                }}>
+                                    <div style={{ fontSize: '22px', marginBottom: '4px' }}>{s.icon}</div>
+                                    <div style={{ fontSize: '18px', fontWeight: 700, color: s.color }}>{s.value}</div>
+                                    <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500 }}>{s.label}</div>
+                                </div>
+                            ))}
+                        </div>
+                        {/* XP Progress bar */}
+                        <div style={{ marginTop: '12px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
+                                <span>Level {gamStats.level}</span>
+                                <span>{gamStats.xp_progress}/100 XP</span>
+                                <span>Level {gamStats.level + 1}</span>
+                            </div>
+                            <div style={{ width: '100%', height: '8px', background: '#334155', borderRadius: '4px' }}>
+                                <div style={{ width: `${gamStats.xp_progress}%`, height: '100%', background: 'linear-gradient(90deg, #f59e0b, #d97706)', borderRadius: '4px', transition: 'width 0.5s' }} />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Check-in Toast */}
+                {checkInResult && (
+                    <div style={{
+                        position: 'fixed', top: '20px', right: '20px',
+                        background: checkInResult.already_checked ? '#f59e0b' : 'linear-gradient(135deg, #22c55e, #16a34a)',
+                        color: 'white', padding: '16px 24px', borderRadius: '14px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 2000,
+                        animation: 'fadeIn 0.3s ease'
+                    }}>
+                        <div style={{ fontWeight: 700, fontSize: '15px' }}>{checkInResult.message}</div>
+                        {!checkInResult.already_checked && (
+                            <div style={{ fontSize: '13px', marginTop: '4px' }}>+{checkInResult.xp_earned} XP | +{checkInResult.coins_earned} xu {checkInResult.leveled_up ? '| 🎉 LEVEL UP!' : ''}</div>
+                        )}
+                    </div>
+                )}
 
                 {/* Game Center - NEW */}
                 <div style={{

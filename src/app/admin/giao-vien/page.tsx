@@ -52,7 +52,8 @@ export default function TeachersManagement() {
 
     useEffect(() => {
         fetchData();
-    }, [fetchData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const showToast = (message: string, type: 'success' | 'error') => {
         setToast({ message, type });

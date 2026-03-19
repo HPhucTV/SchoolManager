@@ -1,6 +1,7 @@
 /* eslint-disable */
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { wellnessApi } from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -30,6 +31,7 @@ interface MoodAnalytics {
 }
 
 export default function MoodJournalPage() {
+    const router = useRouter();
     const [selectedMood, setSelectedMood] = useState<number | null>(null);
     const [note, setNote] = useState('');
     const [history, setHistory] = useState<MoodEntry[]>([]);
@@ -92,6 +94,12 @@ export default function MoodJournalPage() {
     return (
         <ProtectedRoute allowedRoles={['student']}>
             <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
+                <button
+                    onClick={() => router.push('/student')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '14px', marginBottom: '16px', padding: 0 }}
+                >
+                    ← Quay lại trang chủ
+                </button>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <div>
                         <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>💚 Nhật ký cảm xúc</h1>

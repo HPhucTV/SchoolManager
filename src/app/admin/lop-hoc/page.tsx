@@ -64,7 +64,8 @@ export default function ClassesManagement() {
 
     useEffect(() => {
         fetchData();
-    }, [fetchData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const showToast = (message: string, type: 'success' | 'error') => {
         setToast({ message, type });

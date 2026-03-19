@@ -1,10 +1,12 @@
 /* eslint-disable */
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { aiTutorApi } from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function AITutorPage() {
+    const router = useRouter();
     const [analysis, setAnalysis] = useState<any>(null);
     const [recommendations, setRecommendations] = useState<any>(null);
     const [learningPath, setLearningPath] = useState<any>(null);
@@ -47,6 +49,12 @@ export default function AITutorPage() {
     return (
         <ProtectedRoute allowedRoles={['student']}>
             <div style={{ padding: '24px', maxWidth: '1000px', margin: '0 auto' }}>
+                <button
+                    onClick={() => router.push('/student')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '14px', marginBottom: '16px', padding: 0 }}
+                >
+                    ← Quay lại trang chủ
+                </button>
                 <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#e2e8f0', marginBottom: '4px' }}>🤖 AI Gia sư cá nhân</h1>
                 <p style={{ color: '#94a3b8', marginBottom: '24px' }}>Phân tích thông minh và gợi ý học tập dành riêng cho bạn</p>
 

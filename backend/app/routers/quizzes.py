@@ -307,9 +307,18 @@ async def delete_quiz(quiz_id: int, db: Session = Depends(get_db), current_user:
     elif current_user.role not in ["teacher", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Delete related results first
+    # Cascade delete: battle_answers -> battle_participants -> quiz_battles
+    battles = db.query(models.QuizBattle).filter(models.QuizBattle.quiz_id == quiz_id).all()
+    for battle in battles:
+        participants = db.query(models.BattleParticipant).filter(models.BattleParticipant.battle_id == battle.id).all()
+        for p in participants:
+            db.query(models.BattleAnswer).filter(models.BattleAnswer.participant_id == p.id).delete()
+        db.query(models.BattleParticipant).filter(models.BattleParticipant.battle_id == battle.id).delete()
+        db.query(models.BattleAnswer).filter(models.BattleAnswer.battle_id == battle.id).delete()
+    db.query(models.QuizBattle).filter(models.QuizBattle.quiz_id == quiz_id).delete()
+    
+    # Delete related results and questions
     db.query(models.QuizResult).filter(models.QuizResult.quiz_id == quiz_id).delete()
-    # Delete related questions
     db.query(models.QuizQuestion).filter(models.QuizQuestion.quiz_id == quiz_id).delete()
     # Delete the quiz
     db.delete(quiz)

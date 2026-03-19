@@ -403,7 +403,14 @@ async def delete_assignment(assignment_id: int, db: Session = Depends(get_db), c
     
     if current_user.role != "teacher" or assignment.teacher_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized")
-        
+    
+    # Cascade delete: answers -> submissions -> questions -> assignment
+    submissions = db.query(models.Submission).filter(models.Submission.assignment_id == assignment_id).all()
+    for sub in submissions:
+        db.query(models.Answer).filter(models.Answer.submission_id == sub.id).delete()
+    db.query(models.Submission).filter(models.Submission.assignment_id == assignment_id).delete()
+    db.query(models.Question).filter(models.Question.assignment_id == assignment_id).delete()
+    
     db.delete(assignment)
     db.commit()
     return {"message": "Deleted successfully"}

@@ -47,7 +47,13 @@ load_fallback()
 
 
 def get_fallback_response(message: str, persona: str) -> str:
-    """Get a fallback response from local dataset based on message keywords and persona."""
+    """Get a fallback response from local dataset based on message keywords and persona.
+
+    Improvements over the original:
+    1. Weighted keyword scoring — longer phrases score higher (more specific)
+    2. Priority categories — crisis > bullying > other, prevents misclassification
+    3. Better fallback — empathetic open-ended prompt when no match found
+    """
     # Use teacher-specific dataset for consultant persona
     if persona == "consultant":
         dataset = teacher_fallback
@@ -62,21 +68,45 @@ def get_fallback_response(message: str, persona: str) -> str:
     # Use the persona's responses, fallback to 'default' or 'friend'
     persona_responses = responses.get(persona_key)
     if not persona_responses:
-        # Fallback: try default, then friend, then first available
         persona_responses = responses.get("default", responses.get("friend", {}))
     if not persona_responses:
         return "Xin lỗi, hệ thống đang bận. Vui lòng thử lại sau."
     
-    # Detect category from message keywords
-    message_lower = message.lower()
-    detected_category = "general"
-    max_matches = 0
+    # Normalize input: lowercase, strip extra whitespace
+    message_lower = message.lower().strip()
+    # Also remove repeated spaces
+    message_lower = " ".join(message_lower.split())
+    
+    # Priority order: crisis categories must be detected first
+    PRIORITY_CATEGORIES = ["crisis", "bullying"]
+    
+    # Detect category from message keywords using WEIGHTED scoring
+    # Longer keyword phrases score higher (more specific = more weight)
+    category_scores = {}
     
     for category, keywords in keywords_map.items():
-        matches = sum(1 for kw in keywords if kw in message_lower)
-        if matches > max_matches:
-            max_matches = matches
-            detected_category = category
+        score = 0
+        for kw in keywords:
+            if kw in message_lower:
+                # Weight = length of keyword phrase (longer = more specific = higher weight)
+                # Bonus: multi-word phrases get extra weight
+                word_count = len(kw.split())
+                weight = len(kw) + (word_count - 1) * 3
+                score += weight
+        if score > 0:
+            category_scores[category] = score
+    
+    detected_category = "general"
+    
+    if category_scores:
+        # Priority categories override others even with lower score
+        for priority_cat in PRIORITY_CATEGORIES:
+            if priority_cat in category_scores:
+                detected_category = priority_cat
+                break
+        else:
+            # Pick the highest scoring non-priority category
+            detected_category = max(category_scores, key=category_scores.get)
     
     # Get responses for detected category
     category_responses = persona_responses.get(detected_category, persona_responses.get("general", []))
@@ -87,7 +117,7 @@ def get_fallback_response(message: str, persona: str) -> str:
             all_responses.extend(cat_resps)
         category_responses = all_responses
     
-    return random.choice(category_responses) if category_responses else "Tôi ở đây để hỗ trợ thầy/cô! 😊"
+    return random.choice(category_responses) if category_responses else "Tôi ở đây để hỗ trợ bạn! 😊"
 
 def update_student_sentiment(user_id: int, message_content: str):
     """
