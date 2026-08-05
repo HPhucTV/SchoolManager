@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Security
+
+- Bắt buộc JWT secret mạnh, loại certificate/private key và mật khẩu database mặc định khỏi source.
+- Thêm policy role, class scope và resource ownership cho các luồng quản trị, lớp học, bài tập, quiz, battle, lịch học, wellness và search.
+- Không còn đăng ký role công khai, plaintext password fallback, answer key cho học sinh hoặc mật khẩu reset cố định.
+- Nâng dependency backend/frontend; `pip-audit` và `npm audit` hiện không còn vulnerability đã biết.
+
+### Added
+
+- Thêm Alembic adoption baseline, 10 test authorization, CI quality gates và browser smoke test.
+- Thêm Campus Blue semantic tokens, UI primitives và shared `RoleShell`.
+- Thêm ảnh trường học gốc cho landing và login.
+
+### Changed
+
+- Thiết kế lại landing, login và Admin Overview cho bối cảnh trường học, responsive và system dark mode.
+- Seed development dùng mật khẩu ngẫu nhiên hoặc `SCHOOLMANAGER_SEED_PASSWORD`, không dùng credential chung trong repo.
+
+---
+
 ## [1.1.1] - 2026-03-07
 
 ### Fixed

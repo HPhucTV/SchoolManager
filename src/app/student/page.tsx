@@ -42,9 +42,9 @@ export default function StudentDashboard() {
     const [data, setData] = useState<StudentDashboardData | null>(null);
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [loading, setLoading] = useState(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const [gamStats, setGamStats] = useState<any>(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const [checkInResult, setCheckInResult] = useState<any>(null);
 
 
@@ -248,7 +248,7 @@ export default function StudentDashboard() {
 
                 if (error.detail) {
                     if (Array.isArray(error.detail)) {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                         errorMessage = error.detail.map((e: any) => e.msg).join(', ');
                     } else {
                         errorMessage = error.detail;

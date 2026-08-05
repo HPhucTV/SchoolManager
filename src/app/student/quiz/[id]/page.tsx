@@ -38,7 +38,7 @@ export default function QuizTakingPage({ params }: { params: Promise<{ id: strin
     const [answers, setAnswers] = useState<Record<string, string>>({});
     const [submitting, setSubmitting] = useState(false);
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const [result, setResult] = useState<any>(null);
 
     const fetchQuiz = useCallback(async () => {

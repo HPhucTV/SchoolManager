@@ -5,7 +5,7 @@ import { analyticsApi } from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function TeacherAnalyticsPage() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const [warnings, setWarnings] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
@@ -78,7 +78,7 @@ export default function TeacherAnalyticsPage() {
                             <p>Không có cảnh báo! Tất cả học sinh đều ổn.</p>
                         </div>
                     ) : (
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                         warnings?.warnings?.map((w: any, i: number) => (
                             <div key={i} style={{ display: 'flex', gap: '16px', padding: '16px', background: riskBg(w.risk_level), borderRadius: '12px', marginBottom: '10px', borderLeft: `4px solid ${riskColor(w.risk_level)}` }}>
                                 <div style={{ flex: 1 }}>

@@ -10,7 +10,8 @@ Chúng tôi cung cấp bản vá bảo mật cho các phiên bản sau:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.0.x   | ✅ Full support    |
+| 1.1.x   | ✅ Full support    |
+| 1.0.x   | ⚠️ Limited support |
 | 0.1.x   | ⚠️ Limited support |
 | < 0.1   | ❌ Not supported   |
 
@@ -59,31 +60,34 @@ Chúng tôi cam kết bảo vệ các nhà nghiên cứu bảo mật khi:
 **🔐 Authentication & Authorization:**
 
 - JWT-based authentication cho API access
-- Role-Based Access Control (RBAC) — 4 vai trò: Admin, Teacher, Student, Parent
+- Role-Based Access Control (RBAC) cho 3 vai trò: Admin, Teacher, Student
 - Password hashing bằng bcrypt với salt
-- Token expiration & refresh mechanism
-- Protected routes trên cả frontend và backend
+- Access token có thời hạn; refresh token chưa được triển khai
+- Backend thực thi role, quyền sở hữu và phạm vi lớp cho các tài nguyên trọng yếu
 
 **🌐 API Security:**
 
 - CORS configuration giới hạn origins
-- Input validation trên tất cả endpoints (Pydantic models)
+- Chỉ tin proxy forwarding headers từ danh sách host/network được cấu hình
+- Pydantic validation tại các HTTP boundary; các endpoint cũ đang tiếp tục được chuẩn hóa
 - SQL Injection prevention qua SQLAlchemy ORM (parameterized queries)
-- Request size limiting
+- Giới hạn loại và kích thước cho avatar, DOCX và tệp thông báo
 - Error handling không lộ thông tin hệ thống
+- CSP, HSTS, X-Frame-Options, Referrer-Policy và Permissions-Policy ở frontend production
 
 **🗄️ Data Protection:**
 
 - Environment variables cho tất cả credentials (`.env` files)
-- API keys được bảo vệ, không commit vào source code
+- Secret production bắt buộc được cấp qua environment và bị từ chối nếu là placeholder
 - Dữ liệu nhạy cảm không ghi vào logs
 - Database connections qua authenticated access
+- Private key và certificate đã được xóa khỏi working tree; lịch sử Git cũ vẫn phải được xem là đã lộ và cần thu hồi/cấp lại
 
 **🏗️ Infrastructure:**
 
 - Docker containerization (isolation)
-- Nginx reverse proxy với SSL termination
-- HTTPS enforcement qua Let's Encrypt certificates
+- Nginx reverse proxy có cấu hình SSL termination
+- Production phải cung cấp certificate hợp lệ bên ngoài repository trước khi bật HTTPS
 - Separate production & development configurations
 - PostgreSQL với authenticated connections
 
@@ -92,8 +96,8 @@ Chúng tôi cam kết bảo vệ các nhà nghiên cứu bảo mật khi:
 - [ ] Rate limiting cho API endpoints
 - [ ] API request logging & monitoring
 - [ ] Enhanced input sanitization (XSS prevention)
-- [ ] Security headers (CSP, HSTS, X-Frame-Options)
-- [ ] Automated dependency vulnerability scanning
+- [x] Security headers (CSP, HSTS, X-Frame-Options)
+- [x] Automated dependency vulnerability scanning trong CI
 - [ ] Security audit logging
 - [ ] Two-factor authentication (2FA)
 - [ ] Session management improvements
@@ -207,7 +211,6 @@ Chúng tôi cam kết bảo vệ các nhà nghiên cứu bảo mật khi:
 
 | Service | Dữ liệu | Authentication |
 |---------|----------|----------------|
-| OpenAI API | AI Chatbot & Quiz generation | API Key |
 | PostgreSQL | Toàn bộ application data | Username/Password |
 
 ### 🔍 Security Monitoring
@@ -247,4 +250,4 @@ Chúng tôi cảm ơn các nhà nghiên cứu bảo mật đã báo cáo có tr�
 
 ---
 
-_Last updated: 2026-02-24_
+_Last updated: 2026-08-05_

@@ -57,7 +57,7 @@ export function BaseChatBot({
     useEffect(() => {
         onReady?.({ appendMessage, setMessages });
         // we intentionally only run once on mount
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, []);
 
     const handleSend = async () => {

@@ -6,10 +6,10 @@ from app.routers.auth import get_current_user
 from ..models import Notification, User
 from typing import List, Optional
 from fastapi import Form, UploadFile, File, BackgroundTasks
-import shutil
-import os
 import uuid
+from pathlib import Path
 from app.services.email_service import send_bulk_notification_email
+from app.authorization import get_accessible_class, require_roles
 
 router = APIRouter()
 
@@ -27,25 +27,29 @@ async def create_notification(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if current_user.role != "teacher" and current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Not authorized")
+    require_roles(current_user, "teacher", "admin")
+    get_accessible_class(db, current_user, class_id)
+    if recipient_type not in {"class", "specific"}:
+        raise HTTPException(status_code=422, detail="Loại người nhận không hợp lệ")
 
     # Handle file upload
     file_url = None
     file_name = None
     if file:
-        file_name = file.filename
-        # Ensure directory exists
-        upload_dir = "static/notifications"
-        os.makedirs(upload_dir, exist_ok=True)
-        
-        # Unique filename
-        unique_filename = f"{uuid.uuid4()}_{file_name}"
-        file_path = os.path.join(upload_dir, unique_filename)
-        
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-            
+        allowed_types = {
+            "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "image/jpeg", "image/png", "image/webp",
+        }
+        if file.content_type not in allowed_types:
+            raise HTTPException(status_code=415, detail="Định dạng tệp không được hỗ trợ")
+        contents = await file.read()
+        if len(contents) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="Tệp đính kèm không được vượt quá 10 MB")
+        file_name = Path(file.filename or "attachment").name
+        upload_dir = Path("static/notifications")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        unique_filename = f"{uuid.uuid4().hex}{Path(file_name).suffix.lower()}"
+        (upload_dir / unique_filename).write_bytes(contents)
         file_url = f"/static/notifications/{unique_filename}"
 
     # Determine recipients
@@ -56,7 +60,11 @@ async def create_notification(
     elif recipient_type == "specific" and student_ids:
         try:
             ids = [int(id.strip()) for id in student_ids.split(",") if id.strip()]
-            students = db.query(User).filter(User.id.in_(ids)).all()
+            students = db.query(User).filter(
+                User.id.in_(ids),
+                User.role == "student",
+                User.class_id == class_id,
+            ).all()
             recipient_list = students
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid student_ids format")

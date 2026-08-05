@@ -16,8 +16,7 @@ interface AuthContextType {
     user: User | null;
     token: string | null;
     isLoading: boolean;
-    login: (email: string, password: string) => Promise<void>;
-    register: (name: string, email: string, password: string, role: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<User>;
     logout: () => void;
     isTeacher: boolean;
     isStudent: boolean;
@@ -73,30 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('user', JSON.stringify(data.user));
-    };
-
-    const register = async (name: string, email: string, password: string, role: string) => {
-        const response = await fetch(`${API_URL}/api/auth/users`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password, role }),
-        });
-
-        if (!response.ok) {
-            let message = 'Đăng ký thất bại';
-            try {
-                const error = await response.json();
-                message = error.detail || message;
-            } catch {
-                if (response.status === 502 || response.status === 503 || response.status === 504) {
-                    message = 'Máy chủ đang bảo trì hoặc không phản hồi. Vui lòng thử lại sau.';
-                }
-            }
-            throw new Error(message);
-        }
-
-        // Auto login after register
-        await login(email, password);
+        return data.user;
     };
 
     const router = useRouter();
@@ -114,7 +90,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         isLoading,
         login,
-        register,
         logout,
         isTeacher: user?.role === 'teacher' || user?.role === 'admin',
         isStudent: user?.role === 'student',

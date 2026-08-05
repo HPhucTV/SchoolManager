@@ -5,7 +5,7 @@ Hybrid scoring: text relevance (BM25-inspired) + recency + personalization + pop
 
 import math
 import unicodedata
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 
 from fastapi import APIRouter, Depends, Query
@@ -112,6 +112,19 @@ def personalization_score(item_class_id: Optional[int], user: User) -> float:
     return 0.3
 
 
+def accessible_class_ids(db: Session, user: User) -> Optional[list[int]]:
+    """Return the user's class scope; ``None`` means unrestricted admin access."""
+
+    if user.role == "admin":
+        return None
+    if user.role == "teacher":
+        return [
+            class_id
+            for (class_id,) in db.query(Class.id).filter(Class.teacher_id == user.id).all()
+        ]
+    return [user.class_id] if user.class_id is not None else []
+
+
 def popularity_score(count: int, max_count: int) -> float:
     """Normalised popularity (0-1) using log scale."""
     if max_count <= 0:
@@ -135,16 +148,20 @@ def global_search(
 ):
     query_norm = remove_diacritics(q.strip())
     results: dict = {}
+    class_ids = accessible_class_ids(db, current_user)
 
     # ── 1) Students ──────────────────────────────────────────
-    if type in ("all", "students"):
-        students = db.query(User).filter(
+    if type in ("all", "students") and current_user.role in ("teacher", "admin"):
+        student_query = db.query(User).filter(
             User.role == "student",
             or_(
                 func.lower(User.name).contains(q.lower()),
                 func.lower(User.email).contains(q.lower()),
             )
-        ).limit(limit).all()
+        )
+        if class_ids is not None:
+            student_query = student_query.filter(User.class_id.in_(class_ids))
+        students = student_query.limit(limit).all()
 
         items = []
         for s in students:
@@ -162,16 +179,21 @@ def global_search(
                 "url": f"/teacher/hoc-sinh",
             })
         results["students"] = sorted(items, key=lambda x: x["score"], reverse=True)
+    elif type in ("all", "students"):
+        results["students"] = []
 
     # ── 2) Classes ───────────────────────────────────────────
     if type in ("all", "classes"):
-        classes = db.query(Class).filter(
+        class_query = db.query(Class).filter(
             or_(
                 func.lower(Class.name).contains(q.lower()),
                 func.lower(Class.grade).contains(q.lower()),
                 func.lower(Class.class_code).contains(q.lower()),
             )
-        ).limit(limit).all()
+        )
+        if class_ids is not None:
+            class_query = class_query.filter(Class.id.in_(class_ids))
+        classes = class_query.limit(limit).all()
 
         items = []
         for c in classes:
@@ -192,12 +214,17 @@ def global_search(
 
     # ── 3) Assignments ───────────────────────────────────────
     if type in ("all", "assignments"):
-        assignments = db.query(Assignment).filter(
+        assignment_query = db.query(Assignment).filter(
             or_(
                 func.lower(Assignment.title).contains(q.lower()),
                 func.lower(Assignment.subject).contains(q.lower()),
             )
-        ).limit(limit).all()
+        )
+        if class_ids is not None:
+            assignment_query = assignment_query.filter(Assignment.class_id.in_(class_ids))
+        if current_user.role == "student":
+            assignment_query = assignment_query.filter(Assignment.status == "active")
+        assignments = assignment_query.limit(limit).all()
 
         max_sub = db.query(Submission.assignment_id).group_by(Submission.assignment_id).order_by(
             Submission.assignment_id.desc()
@@ -224,13 +251,18 @@ def global_search(
 
     # ── 4) Quizzes ───────────────────────────────────────────
     if type in ("all", "quizzes"):
-        quizzes = db.query(Quiz).filter(
+        quiz_query = db.query(Quiz).filter(
             or_(
                 func.lower(Quiz.title).contains(q.lower()),
                 func.lower(Quiz.subject).contains(q.lower()),
                 func.lower(Quiz.topic).contains(q.lower()),
             )
-        ).limit(limit).all()
+        )
+        if class_ids is not None:
+            quiz_query = quiz_query.filter(Quiz.class_id.in_(class_ids))
+        if current_user.role == "student":
+            quiz_query = quiz_query.filter(Quiz.status == "active")
+        quizzes = quiz_query.limit(limit).all()
 
         max_qr = db.query(QuizResult.quiz_id).group_by(QuizResult.quiz_id).order_by(
             QuizResult.quiz_id.desc()
@@ -257,12 +289,17 @@ def global_search(
 
     # ── 5) Activities ────────────────────────────────────────
     if type in ("all", "activities"):
-        activities = db.query(Activity).filter(
+        activity_query = db.query(Activity).filter(
             or_(
                 func.lower(Activity.title).contains(q.lower()),
                 func.lower(Activity.type).contains(q.lower()),
             )
-        ).limit(limit).all()
+        )
+        if class_ids is not None:
+            activity_query = activity_query.filter(
+                or_(Activity.class_id.in_(class_ids), Activity.class_id.is_(None))
+            )
+        activities = activity_query.limit(limit).all()
 
         items = []
         for act in activities:
@@ -312,7 +349,7 @@ def global_search(
     history_entry = SearchHistory(
         user_id=current_user.id,
         query=q.strip(),
-        searched_at=datetime.utcnow().isoformat(),
+        searched_at=datetime.now(timezone.utc).isoformat(),
     )
     db.add(history_entry)
     db.commit()
@@ -340,39 +377,57 @@ def search_suggestions(
     current_user: User = Depends(get_current_user),
 ):
     suggestions: List[dict] = []
+    class_ids = accessible_class_ids(db, current_user)
 
     if q.strip():
         # Autocomplete from existing titles
         query_lower = q.lower()
 
         # Class names
-        classes = db.query(Class.name).filter(
+        class_query = db.query(Class.name).filter(
             func.lower(Class.name).contains(query_lower)
-        ).limit(3).all()
+        )
+        if class_ids is not None:
+            class_query = class_query.filter(Class.id.in_(class_ids))
+        classes = class_query.limit(3).all()
         for c in classes:
             suggestions.append({"text": c[0], "type": "class"})
 
         # Assignment titles
-        assignments = db.query(Assignment.title).filter(
+        assignment_query = db.query(Assignment.title).filter(
             func.lower(Assignment.title).contains(query_lower)
-        ).limit(3).all()
+        )
+        if class_ids is not None:
+            assignment_query = assignment_query.filter(Assignment.class_id.in_(class_ids))
+        if current_user.role == "student":
+            assignment_query = assignment_query.filter(Assignment.status == "active")
+        assignments = assignment_query.limit(3).all()
         for a in assignments:
             suggestions.append({"text": a[0], "type": "assignment"})
 
         # Quiz titles
-        quizzes = db.query(Quiz.title).filter(
+        quiz_query = db.query(Quiz.title).filter(
             func.lower(Quiz.title).contains(query_lower)
-        ).limit(3).all()
+        )
+        if class_ids is not None:
+            quiz_query = quiz_query.filter(Quiz.class_id.in_(class_ids))
+        if current_user.role == "student":
+            quiz_query = quiz_query.filter(Quiz.status == "active")
+        quizzes = quiz_query.limit(3).all()
         for qz in quizzes:
             suggestions.append({"text": qz[0], "type": "quiz"})
 
         # Student names
-        students = db.query(User.name).filter(
-            User.role == "student",
-            func.lower(User.name).contains(query_lower)
-        ).limit(3).all()
-        for s in students:
-            suggestions.append({"text": s[0], "type": "student"})
+        if current_user.role in ("teacher", "admin"):
+            student_query = db.query(User.name).filter(
+                User.role == "student",
+                func.lower(User.name).contains(query_lower)
+            )
+            if class_ids is not None:
+                student_query = student_query.filter(User.class_id.in_(class_ids))
+            students = student_query.limit(3).all()
+            for s in students:
+                suggestions.append({"text": s[0], "type": "student"})
     else:
         # Return recent search history
         recent = db.query(SearchHistory).filter(

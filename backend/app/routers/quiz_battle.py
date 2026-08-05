@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
-from typing import List, Optional
+from pydantic import BaseModel, Field
+from typing import Literal
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from app.database import get_db
 from app import models
+from app.authorization import require_owner_or_admin, require_roles, require_student_membership
 from app.routers.auth import get_current_user
 from datetime import datetime
 import random
@@ -17,20 +18,86 @@ router = APIRouter()
 
 class BattleCreate(BaseModel):
     quiz_id: int
-    time_per_question: int = 30
+    time_per_question: int = Field(default=30, ge=5, le=120)
 
 class BattleJoin(BaseModel):
-    battle_code: str
+    battle_code: str = Field(min_length=6, max_length=6)
 
 class BattleAnswerSubmit(BaseModel):
-    question_index: int
-    answer: str
-    time_taken: float
+    question_index: int = Field(ge=0)
+    answer: Literal["A", "B", "C", "D"]
+    time_taken: float = Field(ge=0)
 
 # --- Endpoints ---
 
 def generate_battle_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+
+def _get_battle_participant(
+    db: Session,
+    battle_id: int,
+    user_id: int,
+) -> models.BattleParticipant | None:
+    return db.query(models.BattleParticipant).filter(
+        models.BattleParticipant.battle_id == battle_id,
+        models.BattleParticipant.user_id == user_id,
+    ).first()
+
+
+def _require_battle_access(
+    db: Session,
+    current_user: models.User,
+    battle: models.QuizBattle,
+) -> None:
+    if current_user.role == "admin" or battle.created_by == current_user.id:
+        return
+    if _get_battle_participant(db, battle.id, current_user.id) is not None:
+        return
+    raise HTTPException(status_code=403, detail="Bạn không tham gia trận đấu này")
+
+
+@router.get("/active")
+async def get_active_battles(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """List only active battles visible to the current role and class."""
+
+    query = db.query(models.QuizBattle).filter(
+        models.QuizBattle.status.in_(["waiting", "active"])
+    )
+    if current_user.role == "teacher":
+        query = query.filter(models.QuizBattle.created_by == current_user.id)
+    elif current_user.role == "student":
+        query = query.join(models.Quiz, models.Quiz.id == models.QuizBattle.quiz_id).filter(
+            models.Quiz.class_id == current_user.class_id
+        )
+    elif current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Bạn không có quyền xem Quiz Battle")
+
+    battles = query.order_by(desc(models.QuizBattle.created_at)).limit(20).all()
+    results = []
+    for battle in battles:
+        quiz = db.query(models.Quiz).filter(models.Quiz.id == battle.quiz_id).first()
+        participants_count = db.query(models.BattleParticipant).filter(
+            models.BattleParticipant.battle_id == battle.id
+        ).count()
+        joined = _get_battle_participant(db, battle.id, current_user.id) is not None
+        creator = db.query(models.User).filter(models.User.id == battle.created_by).first()
+        results.append({
+            "id": battle.id,
+            "battle_code": battle.battle_code,
+            "quiz_title": quiz.title if quiz else "",
+            "quiz_subject": quiz.subject if quiz else "",
+            "status": battle.status,
+            "participants_count": participants_count,
+            "time_per_question": battle.time_per_question,
+            "created_by": creator.name if creator else "N/A",
+            "created_at": battle.created_at,
+            "joined": joined,
+        })
+    return results
 
 @router.post("/create")
 async def create_battle(
@@ -44,6 +111,7 @@ async def create_battle(
     quiz = db.query(models.Quiz).filter(models.Quiz.id == data.quiz_id).first()
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz không tồn tại")
+    require_owner_or_admin(current_user, quiz.teacher_id)
     
     # Make sure quiz has questions
     questions = db.query(models.QuizQuestion).filter(
@@ -78,6 +146,7 @@ async def join_battle(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    require_roles(current_user, "student")
     battle = db.query(models.QuizBattle).filter(
         models.QuizBattle.battle_code == data.battle_code.upper()
     ).first()
@@ -86,6 +155,11 @@ async def join_battle(
     
     if battle.status == "finished":
         raise HTTPException(status_code=400, detail="Trận đấu đã kết thúc")
+
+    quiz = db.query(models.Quiz).filter(models.Quiz.id == battle.quiz_id).first()
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz không tồn tại")
+    require_student_membership(current_user, quiz.class_id)
     
     # Check if already joined
     existing = db.query(models.BattleParticipant).filter(
@@ -104,8 +178,6 @@ async def join_battle(
     db.commit()
     db.refresh(participant)
     
-    quiz = db.query(models.Quiz).filter(models.Quiz.id == battle.quiz_id).first()
-    
     return {
         "message": "Tham gia thành công!",
         "battle_id": battle.id,
@@ -123,8 +195,7 @@ async def start_battle(
     battle = db.query(models.QuizBattle).filter(models.QuizBattle.id == battle_id).first()
     if not battle:
         raise HTTPException(status_code=404, detail="Battle not found")
-    if battle.created_by != current_user.id:
-        raise HTTPException(status_code=403, detail="Chỉ người tạo mới bắt đầu được")
+    require_owner_or_admin(current_user, battle.created_by)
     
     battle.status = "active"
     battle.started_at = datetime.now().isoformat()
@@ -145,6 +216,7 @@ async def get_battle_status(
     battle = db.query(models.QuizBattle).filter(models.QuizBattle.id == battle_id).first()
     if not battle:
         raise HTTPException(status_code=404, detail="Battle not found")
+    _require_battle_access(db, current_user, battle)
     
     quiz = db.query(models.Quiz).filter(models.Quiz.id == battle.quiz_id).first()
     
@@ -190,6 +262,10 @@ async def get_current_question(
     
     if battle.status != "active":
         raise HTTPException(status_code=400, detail="Trận đấu chưa bắt đầu hoặc đã kết thúc")
+
+    participant = _get_battle_participant(db, battle_id, current_user.id)
+    if participant is None and battle.created_by != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Bạn chưa tham gia trận đấu")
     
     questions = db.query(models.QuizQuestion).filter(
         models.QuizQuestion.quiz_id == battle.quiz_id
@@ -201,11 +277,6 @@ async def get_current_question(
     q = questions[question_index]
     
     # Check if already answered
-    participant = db.query(models.BattleParticipant).filter(
-        models.BattleParticipant.battle_id == battle_id,
-        models.BattleParticipant.user_id == current_user.id
-    ).first()
-    
     already_answered = False
     if participant:
         existing_answer = db.query(models.BattleAnswer).filter(
@@ -238,10 +309,7 @@ async def submit_battle_answer(
     if not battle or battle.status != "active":
         raise HTTPException(status_code=400, detail="Trận đấu không hoạt động")
     
-    participant = db.query(models.BattleParticipant).filter(
-        models.BattleParticipant.battle_id == battle_id,
-        models.BattleParticipant.user_id == current_user.id
-    ).first()
+    participant = _get_battle_participant(db, battle_id, current_user.id)
     if not participant:
         raise HTTPException(status_code=403, detail="Bạn chưa tham gia trận đấu")
     
@@ -264,11 +332,10 @@ async def submit_battle_answer(
     q = questions[data.question_index]
     is_correct = data.answer.upper() == q.correct_answer.upper()
     
-    # Points: base 100 + time bonus (faster = more points)
-    points = 0
-    if is_correct:
-        time_bonus = max(0, int((battle.time_per_question - data.time_taken) / battle.time_per_question * 50))
-        points = 100 + time_bonus
+    # Client timing is informational only. It must never influence the score.
+    # A server-timed question lifecycle can reintroduce a trusted speed bonus later.
+    points = 100 if is_correct else 0
+    recorded_time = min(data.time_taken, float(battle.time_per_question))
     
     answer = models.BattleAnswer(
         battle_id=battle_id,
@@ -276,7 +343,7 @@ async def submit_battle_answer(
         question_index=data.question_index,
         answer=data.answer,
         is_correct=is_correct,
-        time_taken=data.time_taken,
+        time_taken=recorded_time,
         points_earned=points,
         answered_at=datetime.now().isoformat()
     )
@@ -329,7 +396,6 @@ async def submit_battle_answer(
     return {
         "correct": is_correct,
         "points_earned": points,
-        "correct_answer": q.correct_answer,
         "total_score": participant.score,
         "battle_finished": all_done
     }
@@ -340,6 +406,11 @@ async def get_battle_leaderboard(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    battle = db.query(models.QuizBattle).filter(models.QuizBattle.id == battle_id).first()
+    if not battle:
+        raise HTTPException(status_code=404, detail="Battle not found")
+    _require_battle_access(db, current_user, battle)
+
     participants = db.query(models.BattleParticipant).filter(
         models.BattleParticipant.battle_id == battle_id
     ).order_by(desc(models.BattleParticipant.score)).all()
@@ -352,43 +423,3 @@ async def get_battle_leaderboard(
         "total": p.answers_total,
         "is_me": p.user_id == current_user.id
     } for i, p in enumerate(participants)]
-
-@router.get("/active")
-async def get_active_battles(
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    """Get list of active/waiting battles for the student's class."""
-    battles = db.query(models.QuizBattle).filter(
-        models.QuizBattle.status.in_(["waiting", "active"])
-    ).order_by(desc(models.QuizBattle.created_at)).limit(20).all()
-    
-    results = []
-    for b in battles:
-        quiz = db.query(models.Quiz).filter(models.Quiz.id == b.quiz_id).first()
-        participants_count = db.query(models.BattleParticipant).filter(
-            models.BattleParticipant.battle_id == b.id
-        ).count()
-        
-        # Check if current user already joined
-        joined = db.query(models.BattleParticipant).filter(
-            models.BattleParticipant.battle_id == b.id,
-            models.BattleParticipant.user_id == current_user.id
-        ).first() is not None
-        
-        creator = db.query(models.User).filter(models.User.id == b.created_by).first()
-        
-        results.append({
-            "id": b.id,
-            "battle_code": b.battle_code,
-            "quiz_title": quiz.title if quiz else "",
-            "quiz_subject": quiz.subject if quiz else "",
-            "status": b.status,
-            "participants_count": participants_count,
-            "time_per_question": b.time_per_question,
-            "created_by": creator.name if creator else "N/A",
-            "created_at": b.created_at,
-            "joined": joined
-        })
-    
-    return results

@@ -203,7 +203,7 @@ export default function BaiTapPage() {
 
     const updateQuestion = (index: number, field: string, value: string | number) => {
         const updated = [...questions];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         (updated[index] as any)[field] = value;
         setQuestions(updated);
     };
@@ -778,7 +778,7 @@ export default function BaiTapPage() {
                                                             />
                                                             <input
                                                                 type="text"
-                                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                                                                 value={(q as any)[`option_${opt.toLowerCase()}`] || ''}
                                                                 onChange={e => updateQuestion(index, `option_${opt.toLowerCase()}`, e.target.value)}
                                                                 placeholder={`Đáp án ${opt}`}

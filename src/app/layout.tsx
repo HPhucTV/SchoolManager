@@ -1,17 +1,22 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "react-hot-toast";
 
-const inter = Inter({
+const beVietnam = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
-  variable: "--font-inter",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-be-vietnam",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "SchoolManager - Quản lý Thi đua trong Giáo dục",
-  description: "Ứng dụng hỗ trợ giáo viên theo dõi mức độ gắn kết, niềm vui và sức khỏe tinh thần của học sinh",
+  title: {
+    default: "SchoolManager - Quản lý trường học",
+    template: "%s | SchoolManager",
+  },
+  description: "Nền tảng mã nguồn mở giúp nhà trường quản lý lớp học, học tập và chăm sóc học sinh trong một hệ thống.",
 };
 
 export default function RootLayout({
@@ -21,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
+      <body className={beVietnam.variable} suppressHydrationWarning>
         <AuthProvider>
           {children}
           <Toaster position="top-right" />

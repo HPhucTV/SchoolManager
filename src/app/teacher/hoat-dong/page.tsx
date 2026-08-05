@@ -50,9 +50,9 @@ const ActivityForm = ({
     submitLabel,
     submitting
 }: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     formData: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     setFormData: (data: any) => void;
     onSubmit: (e: React.FormEvent) => void;
     submitLabel: string;
@@ -404,7 +404,7 @@ const ActivityDetailContent = ({ activity, onEdit, onDelete, onUpdateStatus }: {
 }) => {
     const status = statusConfig[activity.status as keyof typeof statusConfig] || statusConfig.scheduled;
     const StatusIcon = status.Icon;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const [surveyResults] = useState<any[]>([]);
     const [loadingResults, setLoadingResults] = useState(false);
 

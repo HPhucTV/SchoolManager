@@ -322,7 +322,7 @@ export default function AssignmentPage({ params }: { params: Promise<{ id: strin
                                         ) : (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                 {['A', 'B', 'C', 'D'].map(opt => {
-                                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                                                     const optionText = (q as any)[`option_${opt.toLowerCase()}`];
                                                     if (!optionText) return null;
                                                     return (

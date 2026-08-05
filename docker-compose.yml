@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: happyschools2026
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: happy_schools
     ports:
       - "5432:5432"
@@ -22,12 +22,18 @@ services:
       - ./backend/app:/app/app
       - ./backend/static:/app/static
       - ./backend/data:/app/data
-    env_file:
-      - ./backend/.env
     environment:
-      - DEBUG=false
-      - DATABASE_URL=postgresql://admin:happyschools2026@db:5432/happy_schools
-      - DATABASE_URL_SYNC=postgresql://admin:happyschools2026@db:5432/happy_schools
+      - ENVIRONMENT=production
+      - SECRET_KEY=${SECRET_KEY:?Set SECRET_KEY in .env}
+      - FRONTEND_URL=${FRONTEND_URL:-https://schoolmanager.id.vn}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://schoolmanager.id.vn}
+      - TRUSTED_PROXY_HOSTS=${TRUSTED_PROXY_HOSTS:-172.16.0.0/12}
+      - DATABASE_URL=postgresql://admin:${POSTGRES_PASSWORD}@db:5432/happy_schools
+      - DATABASE_URL_SYNC=postgresql://admin:${POSTGRES_PASSWORD}@db:5432/happy_schools
+      - SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
     depends_on:
       - db
       - redis
@@ -37,13 +43,13 @@ services:
     build:
       context: .
       args:
-        NEXT_PUBLIC_API_URL: https://api.schoolmanager.id.vn
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://127.0.0.1:8001}
 
     container_name: happy-schools-frontend
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=https://api.schoolmanager.id.vn
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://127.0.0.1:8001}
     depends_on:
       - backend
     restart: always

@@ -18,8 +18,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.1.1-blue?style=for-the-badge" alt="Version" />
   <img src="https://img.shields.io/badge/license-Apache%202.0-green?style=for-the-badge" alt="License" />
-  <img src="https://img.shields.io/badge/Next.js-16.1.6-black?style=for-the-badge&logo=next.js" alt="Next.js" />
-  <img src="https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/Next.js-16.2.12-black?style=for-the-badge&logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/FastAPI-0.139.2-009688?style=for-the-badge&logo=fastapi" alt="FastAPI" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python" alt="Python" />
 </p>
@@ -50,7 +50,6 @@ Chúng tôi rất vui khi bạn quan tâm đến dự án! Trước khi đóng g
 - [SchoolManager là gì?](#schoolmanager-là-gì)
 - [Tính năng chính](#-tính-năng-chính)
 - [Bắt đầu nhanh](#-bắt-đầu-nhanh)
-- [Tài khoản Demo](#-tài-khoản-demo)
 - [Công nghệ sử dụng](#️-công-nghệ-sử-dụng)
 - [Cấu trúc dự án](#-cấu-trúc-dự-án)
 - [Tài liệu](#-tài-liệu)
@@ -141,8 +140,8 @@ SchoolManager là giải pháp **quản lý trường học thế hệ mới**, 
 
 ```
 ✅ Docker Desktop       # https://www.docker.com/
-✅ Node.js 18+          # https://nodejs.org/
-✅ Python 3.10+         # https://python.org/
+✅ Node.js 20.9+        # https://nodejs.org/
+✅ Python 3.12          # https://python.org/
 ✅ RAM tối thiểu 4GB
 ```
 
@@ -155,17 +154,20 @@ cd SchoolManager
 ```
 
 ```bash
-# 2. Chạy Backend (mở Terminal 1)
+# 2. Chạy Backend (PowerShell, mở Terminal 1)
 cd backend
-python -m venv venv
-venv\Scripts\activate           # Linux/Mac: source venv/bin/activate
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+$env:SECRET_KEY = python -c "import secrets; print(secrets.token_urlsafe(48))"
+$env:DATABASE_URL_SYNC = "sqlite:///./sql_app.db"
+alembic -c alembic.ini upgrade head
 uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
 ```bash
 # 3. Chạy Frontend (mở Terminal 2)
-npm install
+npm ci
 echo NEXT_PUBLIC_API_URL=http://127.0.0.1:8001 > .env.local
 npm run dev
 ```
@@ -180,21 +182,14 @@ npm run dev
 |--------|-----------|
 | Docker build fail | Kiểm tra Docker Desktop đang chạy, đủ RAM |
 | Database connection error | Đảm bảo PostgreSQL đang chạy: `docker-compose up db` |
-| Frontend build error | Xóa `.next` và chạy lại: `rm -rf .next && npm run build` |
-| API 500 error | Kiểm tra `backend/.env` và seed database: `python seed_db.py` |
+| Frontend build error | Xóa `.next`, chạy `npm ci`, rồi `npm run build` |
+| API không khởi động | Kiểm tra `SECRET_KEY` có ít nhất 32 ký tự và `DATABASE_URL_SYNC` hợp lệ |
 
 ---
 
-## 🔑 Tài khoản Demo
+## 🔑 Dữ liệu development tùy chọn
 
-| Vai trò | Email | Password |
-|---------|-------|----------|
-| Admin | `admin@happyschools.vn` | `test123` |
-| Giáo viên | `gv.thao@happyschools.vn` | `test123` |
-| Giáo viên | `gv.minh@happyschools.vn` | `test123` |
-| Học sinh | `hs.an0@happyschools.vn` | `test123` |
-
-> **Lưu ý:** Tài khoản demo được tạo tự động bởi script `scripts/seed_db.py`.
+Chạy `backend\.venv\Scripts\python scripts\seed_db.py` từ thư mục gốc để tạo dữ liệu local. Script tạo mật khẩu ngẫu nhiên, in một lần ở terminal và không dùng credential chung trong source. Có thể đặt `SCHOOLMANAGER_SEED_PASSWORD` cho database development riêng; không dùng mật khẩu này trong production.
 
 ---
 
@@ -204,7 +199,7 @@ npm run dev
 
 | Công nghệ | Phiên bản | Mục đích |
 |-----------|-----------|----------|
-| Next.js | 16.1.6 | Framework React SSR/SSG |
+| Next.js | 16.2.12 | Framework React SSR/SSG |
 | React | 19.2.3 | UI Library |
 | TypeScript | 5.x | Type safety |
 | Tailwind CSS | 4.x | Styling framework |
@@ -218,7 +213,7 @@ npm run dev
 | FastAPI | Web framework (async) |
 | SQLAlchemy | ORM & database management |
 | PostgreSQL / SQLite | Database (production / development) |
-| OpenAI API | AI Chatbot & Quiz generation |
+| Dataset nội bộ | Gợi ý học tập, câu đố và fallback hội thoại |
 | JWT + bcrypt | Authentication & password hashing |
 | Python-docx | Word document processing |
 

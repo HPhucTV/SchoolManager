@@ -6,9 +6,10 @@ from app.database import get_db
 from app import models
 from app.routers.auth import get_current_user
 from datetime import datetime
-import shutil
-import os
-from pydantic import BaseModel
+from pathlib import Path
+import uuid
+from pydantic import BaseModel, EmailStr, Field
+from app.authorization import require_roles
 
 router = APIRouter()
 
@@ -204,9 +205,9 @@ async def join_class(
     }
 
 class ProfileUpdate(BaseModel):
-    name: str
-    email: str
-    phone: Optional[str] = None
+    name: str = Field(min_length=1, max_length=100)
+    email: EmailStr
+    phone: Optional[str] = Field(default=None, max_length=30)
 
 # Profile & Upload
 @router.post("/avatar")
@@ -215,15 +216,18 @@ async def upload_avatar(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    if not os.path.exists("static/avatars"):
-        os.makedirs("static/avatars")
-    
-    file_ext = os.path.splitext(file.filename)[1]
-    file_name = f"avatar_{current_user.id}{file_ext}"
-    file_path = os.path.join("static/avatars", file_name)
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    require_roles(current_user, "student")
+    allowed_types = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
+    extension = allowed_types.get(file.content_type or "")
+    if extension is None:
+        raise HTTPException(status_code=415, detail="Ảnh đại diện phải là JPEG, PNG hoặc WebP")
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Ảnh đại diện không được vượt quá 5 MB")
+    upload_dir = Path("static/avatars")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    file_name = f"avatar_{current_user.id}_{uuid.uuid4().hex}{extension}"
+    (upload_dir / file_name).write_bytes(contents)
     
     avatar_url = f"/static/avatars/{file_name}"
     current_user.avatar_url = avatar_url
@@ -233,6 +237,7 @@ async def upload_avatar(
 
 @router.get("/profile")
 async def get_profile(current_user: models.User = Depends(get_current_user)):
+    require_roles(current_user, "student")
     return {
         "name": current_user.name,
         "email": current_user.email,
@@ -246,6 +251,13 @@ async def update_profile(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    require_roles(current_user, "student")
+    duplicate_email = db.query(models.User).filter(
+        models.User.email == data.email,
+        models.User.id != current_user.id,
+    ).first()
+    if duplicate_email:
+        raise HTTPException(status_code=409, detail="Email đã được sử dụng")
     current_user.name = data.name
     current_user.email = data.email
     current_user.phone_number = data.phone

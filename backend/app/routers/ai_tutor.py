@@ -4,6 +4,7 @@ from sqlalchemy import func, desc
 from app.database import get_db
 from app import models
 from app.routers.auth import get_current_user
+from app.authorization import require_roles
 from typing import Optional
 import json
 import os
@@ -38,6 +39,7 @@ load_tutor_advice()
 @router.post("/advice/reload")
 def reload_advice(current_user: models.User = Depends(get_current_user)):
     """Reload AI tutor advice dataset from disk."""
+    require_roles(current_user, "admin")
     load_tutor_advice()
     return {"status": "ok"}
 

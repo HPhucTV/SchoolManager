@@ -5,6 +5,7 @@ from sqlalchemy import func
 from app.database import get_db
 from app import models
 from app.routers.auth import get_current_user
+from app.authorization import require_roles
 
 router = APIRouter()
 
@@ -13,6 +14,7 @@ async def get_dashboard_metrics(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    require_roles(current_user, "teacher", "admin")
     # Base query for students
     student_query = db.query(models.User).filter(models.User.role == "student")
     activity_query = db.query(models.Activity)
@@ -29,6 +31,9 @@ async def get_dashboard_metrics(
                 "activities": {"value": "0/0", "subtitle": "✓ Hoàn thành 0%"}
             }
         student_query = student_query.filter(models.User.class_id.in_(class_ids))
+        activity_query = activity_query.filter(
+            (models.Activity.class_id.in_(class_ids)) | (models.Activity.class_id.is_(None))
+        )
     
     # Calculate averages from students
     student_list = student_query.all()

@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from .. import models, database
 from . import auth
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from app.authorization import get_accessible_class, require_roles
 
 router = APIRouter()
 
@@ -27,8 +28,7 @@ class ScheduleResponse(ScheduleBase):
     id: int
     class_id: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 @router.get("/my-schedule", response_model=List[ScheduleResponse])
 async def get_my_schedule(
@@ -65,10 +65,8 @@ async def get_class_schedule(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
-    # Allow teachers and admins to view any class schedule
-    if current_user.role not in ["teacher", "admin"]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-        
+    require_roles(current_user, "teacher", "admin")
+    get_accessible_class(db, current_user, class_id)
     schedules = db.query(models.Schedule).filter(
         models.Schedule.class_id == class_id
     ).all()
@@ -95,14 +93,20 @@ async def create_schedule_item(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
-    if current_user.role not in ["teacher", "admin"]:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    require_roles(current_user, "teacher", "admin")
+    get_accessible_class(db, current_user, schedule.class_id)
+
+    if current_user.role == "teacher" and schedule.teacher_id not in (None, current_user.id):
+        raise HTTPException(status_code=403, detail="Giáo viên chỉ có thể tạo tiết dạy của mình")
         
     conflict = check_schedule_conflict(db, schedule.class_id, schedule.day_of_week, schedule.start_time, schedule.end_time)
     if conflict:
         raise HTTPException(status_code=409, detail=conflict)
         
-    db_schedule = models.Schedule(**schedule.model_dump())
+    schedule_data = schedule.model_dump()
+    if current_user.role == "teacher":
+        schedule_data["teacher_id"] = current_user.id
+    db_schedule = models.Schedule(**schedule_data)
     
     db.add(db_schedule)
     db.commit()
@@ -116,12 +120,14 @@ async def update_schedule(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
-    if current_user.role not in ["teacher", "admin"]:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    require_roles(current_user, "teacher", "admin")
         
     db_schedule = db.query(models.Schedule).filter(models.Schedule.id == schedule_id).first()
     if not db_schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
+    get_accessible_class(db, current_user, db_schedule.class_id)
+    if current_user.role == "teacher" and schedule_update.teacher_id not in (None, current_user.id):
+        raise HTTPException(status_code=403, detail="Giáo viên chỉ có thể sửa tiết dạy của mình")
         
     # Check for conflicts
     new_day = schedule_update.day_of_week
@@ -131,7 +137,10 @@ async def update_schedule(
     if conflict:
         raise HTTPException(status_code=409, detail=conflict)
         
-    for key, value in schedule_update.model_dump().items():
+    update_data = schedule_update.model_dump()
+    if current_user.role == "teacher":
+        update_data["teacher_id"] = current_user.id
+    for key, value in update_data.items():
         setattr(db_schedule, key, value)
         
     db.commit()
@@ -144,12 +153,12 @@ async def delete_schedule(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
-    if current_user.role not in ["teacher", "admin"]:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    require_roles(current_user, "teacher", "admin")
         
     db_schedule = db.query(models.Schedule).filter(models.Schedule.id == schedule_id).first()
     if not db_schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
+    get_accessible_class(db, current_user, db_schedule.class_id)
         
     db.delete(db_schedule)
     db.commit()

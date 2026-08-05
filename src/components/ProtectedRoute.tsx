@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { BrandMark } from '@/components/ui/BrandMark';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -37,26 +38,14 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     // Show loading
     if (isLoading) {
         return (
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minHeight: '100vh',
-                background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
-            }}>
-                <div style={{
-                    width: '48px',
-                    height: '48px',
-                    border: '4px solid rgba(255,255,255,0.3)',
-                    borderTopColor: 'white',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite',
-                }} />
-                <style jsx>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
+            <div className="grid min-h-[100dvh] place-items-center bg-canvas px-4" role="status" aria-live="polite">
+                <div className="flex flex-col items-center">
+                    <BrandMark />
+                    <div className="mt-6 h-1.5 w-40 overflow-hidden rounded-full bg-surface-subtle">
+                        <div className="h-full w-1/2 animate-pulse rounded-full bg-brand" />
+                    </div>
+                    <p className="mt-3 text-sm font-semibold text-ink-soft">Đang chuẩn bị không gian làm việc</p>
+                </div>
             </div>
         );
     }

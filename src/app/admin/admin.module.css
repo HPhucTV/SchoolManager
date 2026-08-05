@@ -1,32 +1,31 @@
-/* ===== Admin Design System ===== */
-/* Dark glassmorphism theme for Happy Schools Admin */
+/* Admin compatibility layer. New screens use shared semantic primitives. */
 
 /* --- CSS Custom Properties --- */
 :root {
-    --admin-bg: #0b0f1a;
-    --admin-sidebar: rgba(15, 23, 42, 0.85);
-    --admin-sidebar-border: rgba(148, 163, 184, 0.08);
-    --admin-card: rgba(30, 41, 59, 0.6);
-    --admin-card-border: rgba(148, 163, 184, 0.1);
-    --admin-card-hover: rgba(30, 41, 59, 0.8);
-    --admin-input-bg: rgba(15, 23, 42, 0.5);
-    --admin-input-border: rgba(148, 163, 184, 0.15);
-    --admin-input-focus: rgba(16, 185, 129, 0.4);
-    --admin-accent: #10b981;
-    --admin-accent-2: #06b6d4;
-    --admin-accent-glow: rgba(16, 185, 129, 0.2);
-    --admin-text: #e2e8f0;
-    --admin-text-secondary: #94a3b8;
-    --admin-text-muted: #64748b;
-    --admin-danger: #ef4444;
-    --admin-danger-bg: rgba(239, 68, 68, 0.12);
-    --admin-warning: #f59e0b;
-    --admin-success: #10b981;
-    --admin-success-bg: rgba(16, 185, 129, 0.12);
-    --admin-blue: #3b82f6;
-    --admin-blue-bg: rgba(59, 130, 246, 0.12);
-    --admin-purple: #8b5cf6;
-    --admin-purple-bg: rgba(139, 92, 246, 0.12);
+    --admin-bg: var(--canvas);
+    --admin-sidebar: var(--surface);
+    --admin-sidebar-border: var(--line);
+    --admin-card: var(--surface);
+    --admin-card-border: var(--line);
+    --admin-card-hover: var(--surface-subtle);
+    --admin-input-bg: var(--surface);
+    --admin-input-border: var(--line);
+    --admin-input-focus: color-mix(in srgb, var(--brand) 52%, transparent);
+    --admin-accent: var(--brand);
+    --admin-accent-2: var(--teal);
+    --admin-accent-glow: var(--brand-soft);
+    --admin-text: var(--ink);
+    --admin-text-secondary: var(--ink-soft);
+    --admin-text-muted: #6b7890;
+    --admin-danger: var(--danger);
+    --admin-danger-bg: #fff0ef;
+    --admin-warning: var(--warning);
+    --admin-success: var(--success);
+    --admin-success-bg: #e8f7f1;
+    --admin-blue: var(--brand);
+    --admin-blue-bg: var(--brand-soft);
+    --admin-purple: #6557a9;
+    --admin-purple-bg: #f0edfb;
 }
 
 /* --- Layout --- */
@@ -39,8 +38,6 @@
 .sidebar {
     width: 260px;
     background: var(--admin-sidebar);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border-right: 1px solid var(--admin-sidebar-border);
     padding: 24px 16px;
     display: flex;
@@ -84,9 +81,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 32px;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--admin-sidebar);
     border-bottom: 1px solid var(--admin-sidebar-border);
     position: sticky;
     top: 0;
@@ -191,7 +186,7 @@
     width: 34px;
     height: 34px;
     border-radius: 10px;
-    background: linear-gradient(135deg, var(--admin-accent), var(--admin-accent-2));
+    background: var(--admin-accent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -230,12 +225,8 @@
 .logoTitle {
     font-size: 18px;
     font-weight: 800;
-    color: white;
+    color: var(--admin-text);
     margin: 0;
-    background: linear-gradient(135deg, var(--admin-accent), var(--admin-accent-2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
 }
 
 .logoSub {
@@ -275,11 +266,11 @@
 
 .navItemActive {
     composes: navItem;
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.1));
+    background: var(--admin-blue-bg);
     color: var(--admin-accent);
-    border-color: rgba(16, 185, 129, 0.2);
+    border-color: color-mix(in srgb, var(--admin-accent) 22%, transparent);
     font-weight: 600;
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.08);
+    box-shadow: none;
 }
 
 .navBadge {
@@ -348,10 +339,8 @@
 /* --- Card --- */
 .card {
     background: var(--admin-card);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--admin-card-border);
-    border-radius: 16px;
+    border-radius: 14px;
     padding: 24px;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -626,13 +615,13 @@
 
 .btnPrimary {
     composes: btn;
-    background: linear-gradient(135deg, var(--admin-accent), var(--admin-accent-2));
+    background: var(--admin-accent);
     color: white;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 20px rgba(21, 87, 176, 0.18);
 }
 
 .btnPrimary:hover {
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    box-shadow: 0 10px 24px rgba(21, 87, 176, 0.22);
     transform: translateY(-1px);
 }
 
@@ -764,7 +753,7 @@
 .modalOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(15, 23, 42, 0.48);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     display: flex;
@@ -776,10 +765,8 @@
 
 .modal {
     background: var(--admin-sidebar);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--admin-card-border);
-    border-radius: 20px;
+    border-radius: 14px;
     padding: 32px;
     width: 440px;
     max-height: 90vh;

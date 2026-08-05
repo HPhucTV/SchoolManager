@@ -195,7 +195,7 @@ export default function DashboardDemo() {
     );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function MetricCardMock({ title, value, change, icon: Icon, color, bg }: any) {
     return (
         <div className="bg-[#1e293b] p-3 rounded-xl border border-slate-700 shadow-sm hover:border-slate-600 transition-colors">

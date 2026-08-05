@@ -3,16 +3,17 @@ from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List
-from pydantic import BaseModel
-from jose import JWTError, jwt
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+import jwt
 from app.database import get_db
 from app import models
 from app import security
 from app.config import get_settings
-import os
+from app.authorization import get_accessible_class, require_roles, validate_role
+from pathlib import Path
+import secrets
 import uuid
 import json
-import shutil
 from app.services.cache_service import redis_service
 
 router = APIRouter()
@@ -23,8 +24,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login
 # --- Pydantic Schemas ---
 
 class LoginRequest(BaseModel):
-    email: str
-    password: str
+    email: EmailStr
+    password: str = Field(min_length=1, max_length=72)
 
 class UserResponse(BaseModel):
     id: int
@@ -42,8 +43,7 @@ class UserResponse(BaseModel):
     notify_activities: bool = True
     notify_surveys: bool = True
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class LoginResponse(BaseModel):
     access_token: str
@@ -52,9 +52,14 @@ class LoginResponse(BaseModel):
 
 class UserCreate(BaseModel):
     name: str
-    email: str
-    password: str
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=72)
     role: str
+    class_id: Optional[int] = None
+
+class AdminUserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
     class_id: Optional[int] = None
 
 class UserUpdate(BaseModel):
@@ -74,7 +79,7 @@ class ClassCreate(BaseModel):
 
 class PasswordChangeRequest(BaseModel):
     current_password: str
-    new_password: str
+    new_password: str = Field(min_length=8, max_length=72)
 
 # --- Dependency ---
 
@@ -89,7 +94,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
-    except JWTError:
+    except jwt.InvalidTokenError:
         raise credentials_exception
         
     user = db.query(models.User).filter(models.User.email == email).first()
@@ -111,24 +116,8 @@ async def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     if len(credentials.password.encode('utf-8')) > 72:
         raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không đúng")
     
-    # Verify password with fallback for legacy/seeded plaintext passwords
-    verified = False
-    try:
-        verified = security.verify_password(credentials.password, user.hashed_password)
-    except Exception:
-        # passlib raises UnknownHashError if the hash is not a valid format (e.g. plaintext "test123")
-        verified = False
-
-    if not verified:
-        if user.hashed_password != credentials.password:
-             raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không đúng")
-        else:
-            # Upgrade legacy plaintext password to hash
-            try:
-                user.hashed_password = security.get_password_hash(credentials.password)
-                db.commit()
-            except Exception:
-                pass # Fail silently on upgrade, but allow login
+    if not security.verify_password(credentials.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không đúng")
 
     class_name = None
     if user.class_id:
@@ -228,16 +217,22 @@ async def change_password(
 
 @router.post("/users/me/avatar")
 async def upload_avatar(file: UploadFile = File(...), current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    UPLOAD_DIR = "static/avatars"
-    if not os.path.exists(UPLOAD_DIR):
-        os.makedirs(UPLOAD_DIR)
-        
-    file_extension = file.filename.split(".")[-1]
-    file_name = f"{current_user.id}_{uuid.uuid4()}.{file_extension}"
-    file_path = f"{UPLOAD_DIR}/{file_name}"
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    allowed_types = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+    }
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=415, detail="Chỉ chấp nhận ảnh JPEG, PNG hoặc WebP")
+
+    contents = await file.read(5 * 1024 * 1024 + 1)
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Ảnh không được vượt quá 5 MB")
+
+    upload_dir = Path("static/avatars")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    file_name = f"{current_user.id}_{uuid.uuid4().hex}.{allowed_types[file.content_type]}"
+    (upload_dir / file_name).write_bytes(contents)
         
     # Update DB
     # URL should be absolute or relative depending on frontend needs. 
@@ -255,6 +250,10 @@ async def upload_avatar(file: UploadFile = File(...), current_user: models.User 
 # But let's verify get_users
 @router.get("/users", response_model=List[UserResponse])
 async def get_users(role: Optional[str] = None, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    require_roles(current_user, "admin")
+    if role is not None:
+        validate_role(role)
+
     # Try cache first
     cache_key = f"users:{role}" if role else "users:all"
     cached_data = redis_service.get(cache_key)
@@ -307,6 +306,7 @@ async def get_users(role: Optional[str] = None, db: Session = Depends(get_db), c
 
 @router.get("/classes")
 async def get_classes(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)): 
+    require_roles(current_user, "admin", "teacher")
     query = db.query(models.Class)
     if current_user.role == "teacher":
         query = query.filter(models.Class.teacher_id == current_user.id)
@@ -331,16 +331,22 @@ async def get_classes(db: Session = Depends(get_db), current_user: models.User =
 
 @router.post("/users", response_model=UserResponse)
 async def create_user(user: UserCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    print(f"DEBUG: create_user called for {user.email}")
+    require_roles(current_user, "admin")
+    validate_role(user.role)
+
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
+
+    if user.role == "student":
+        if user.class_id is None:
+            raise HTTPException(status_code=422, detail="Học sinh phải được gán vào một lớp")
+        get_accessible_class(db, current_user, user.class_id)
+    elif user.class_id is not None:
+        raise HTTPException(status_code=422, detail="Chỉ học sinh mới có class_id")
     
     try:
-        print("DEBUG: Hashing password...")
         hashed_pw = security.get_password_hash(user.password)
-        print(f"DEBUG: Hash created (len={len(hashed_pw)})")
-        
         new_user = models.User(
             email=user.email,
             hashed_password=hashed_pw,
@@ -348,17 +354,14 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db), current_u
             role=user.role,
             class_id=user.class_id if user.role == "student" else None
         )
-        print("DEBUG: Adding user to DB session...")
         db.add(new_user)
-        print("DEBUG: Committing...")
         db.commit()
-        print("DEBUG: Commit successful.")
         db.refresh(new_user)
-    except Exception as e:
-        print(f"DEBUG: Create User Exception: {e}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Không thể tạo người dùng")
     
     if user.role == 'student' and user.class_id:
         cls = db.query(models.Class).filter(models.Class.id == user.class_id).first()
@@ -386,9 +389,16 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db), current_u
 
 @router.delete("/users/{user_id}")
 async def delete_user(user_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    require_roles(current_user, "admin")
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Bạn không thể xóa chính tài khoản đang đăng nhập")
+
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    if user.role == "admin" and db.query(models.User).filter(models.User.role == "admin").count() <= 1:
+        raise HTTPException(status_code=400, detail="Không thể xóa quản trị viên cuối cùng")
     
     if user.role == 'student' and user.class_id:
         cls = db.query(models.Class).filter(models.Class.id == user.class_id).first()
@@ -405,31 +415,50 @@ async def delete_user(user_id: int, db: Session = Depends(get_db), current_user:
 
 @router.post("/users/{user_id}/reset-password")
 async def reset_user_password(user_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Chỉ admin mới có quyền đặt lại mật khẩu")
+    require_roles(current_user, "admin")
     
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
     
-    default_password = "test123"
-    user.hashed_password = security.get_password_hash(default_password)
+    temporary_password = secrets.token_urlsafe(12)
+    user.hashed_password = security.get_password_hash(temporary_password)
     db.commit()
     
-    return {"message": f"Đã đặt lại mật khẩu cho {user.name} thành '{default_password}'"}
+    return {
+        "message": f"Mật khẩu tạm thời của {user.name}: {temporary_password}",
+        "requires_password_change": True,
+    }
 
 @router.put("/users/{user_id}", response_model=UserResponse)
-async def update_user(user_id: int, user_update: UserCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+async def update_user(user_id: int, user_update: AdminUserUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    require_roles(current_user, "admin")
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    if user_update.email is not None:
+        existing = db.query(models.User).filter(
+            models.User.email == user_update.email,
+            models.User.id != user_id,
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already registered")
+
     old_class_id = user.class_id
-    new_class_id = user_update.class_id
-    
-    user.name = user_update.name
-    user.email = user_update.email
-    user.class_id = new_class_id
+    new_class_id = user_update.class_id if user_update.class_id is not None else old_class_id
+
+    if user.role == "student" and new_class_id is not None:
+        get_accessible_class(db, current_user, new_class_id)
+    elif user.role != "student" and user_update.class_id is not None:
+        raise HTTPException(status_code=422, detail="Chỉ học sinh mới có class_id")
+
+    if user_update.name is not None:
+        user.name = user_update.name
+    if user_update.email is not None:
+        user.email = user_update.email
+    if user.role == "student":
+        user.class_id = new_class_id
     
     if user.role == 'student' and old_class_id != new_class_id:
         if old_class_id:
@@ -462,9 +491,17 @@ async def update_user(user_id: int, user_update: UserCreate, db: Session = Depen
 
 @router.post("/classes")
 async def create_class(class_data: ClassCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    require_roles(current_user, "admin")
     db_class = db.query(models.Class).filter(models.Class.name == class_data.name).first()
     if db_class:
          raise HTTPException(status_code=400, detail="Class name already exists")
+    if class_data.teacher_id is not None:
+        teacher = db.query(models.User).filter(
+            models.User.id == class_data.teacher_id,
+            models.User.role == "teacher",
+        ).first()
+        if not teacher:
+            raise HTTPException(status_code=422, detail="Giáo viên phụ trách không hợp lệ")
 
     new_class = models.Class(
         name=class_data.name,
@@ -492,9 +529,23 @@ async def create_class(class_data: ClassCreate, db: Session = Depends(get_db), c
 
 @router.put("/classes/{class_id}")
 async def update_class(class_id: int, class_data: ClassCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    require_roles(current_user, "admin")
     cls = db.query(models.Class).filter(models.Class.id == class_id).first()
     if not cls:
         raise HTTPException(status_code=404, detail="Class not found")
+    duplicate = db.query(models.Class).filter(
+        models.Class.name == class_data.name,
+        models.Class.id != class_id,
+    ).first()
+    if duplicate:
+        raise HTTPException(status_code=400, detail="Class name already exists")
+    if class_data.teacher_id is not None:
+        teacher = db.query(models.User).filter(
+            models.User.id == class_data.teacher_id,
+            models.User.role == "teacher",
+        ).first()
+        if not teacher:
+            raise HTTPException(status_code=422, detail="Giáo viên phụ trách không hợp lệ")
         
     cls.name = class_data.name
     cls.grade = class_data.grade

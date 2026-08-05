@@ -1,45 +1,140 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+@theme inline {
+  --font-sans: var(--font-be-vietnam);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-teal: var(--teal);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
 }
 
 :root {
-  --background: #0f172a;
-  --foreground: #e2e8f0;
-  --card-bg: #1e293b;
-  --card-border: #334155;
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --subtle-bg: #0f172a;
-  --hover-bg: #263248;
-  --accent-teacher: #14b8a6;
-  --accent-teacher-light: rgba(20, 184, 166, 0.15);
-  --accent-student: #818cf8;
-  --accent-student-light: rgba(129, 140, 248, 0.15);
-  --danger: #f87171;
-  --success: #34d399;
-  --warning: #fbbf24;
+  color-scheme: light dark;
+  --canvas: #f5f7fb;
+  --surface: #ffffff;
+  --surface-subtle: #edf2f8;
+  --ink: #17233b;
+  --ink-soft: #52627a;
+  --line: #d9e2ee;
+  --brand: #1557b0;
+  --brand-strong: #0d438e;
+  --brand-soft: #e7f0fb;
+  --teal: #0f766e;
+  --danger: #b42318;
+  --success: #087a55;
+  --warning: #9a5b00;
+
+  /* Compatibility aliases for legacy screens during the staged migration. */
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --card-bg: var(--surface);
+  --card-border: var(--line);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
+  --text-muted: #6b7890;
+  --subtle-bg: var(--surface-subtle);
+  --hover-bg: #e5ecf5;
+  --accent-teacher: var(--teal);
+  --accent-teacher-light: #e2f4f1;
+  --accent-student: var(--brand);
+  --accent-student-light: var(--brand-soft);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #0f1725;
+    --surface: #162136;
+    --surface-subtle: #1c2940;
+    --ink: #edf3fb;
+    --ink-soft: #a8b7ca;
+    --line: #2d3b52;
+    --brand: #4b8fdf;
+    --brand-strong: #71a9e8;
+    --brand-soft: #172e4d;
+    --teal: #47b3a8;
+    --danger: #ff8178;
+    --success: #53c69c;
+    --warning: #e6a94f;
+    --text-muted: #8190a5;
+    --hover-bg: #223149;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100dvh;
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Scrollbar styling for dark theme */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand) 70%, transparent);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--brand);
+  color: #ffffff;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
+  height: 10px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: var(--canvas);
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
+  border: 2px solid var(--canvas);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink-soft) 52%, transparent);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

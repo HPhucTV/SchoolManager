@@ -4,14 +4,12 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
-from app import models
+from app import models, security
 from app.routers.auth import get_current_user
-from passlib.context import CryptContext
 import openpyxl
 from io import BytesIO
 
 router = APIRouter()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def require_admin(current_user: models.User = Depends(get_current_user)):
@@ -129,7 +127,7 @@ async def import_students_from_excel(
             new_user = models.User(
                 name=name,
                 email=email,
-                hashed_password=pwd_context.hash(password),
+                hashed_password=security.get_password_hash(password),
                 role="student",
                 class_id=class_id,
             )

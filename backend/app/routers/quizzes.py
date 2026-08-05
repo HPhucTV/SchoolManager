@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile
 from sqlalchemy.orm import Session
-from typing import List, Optional
-from pydantic import BaseModel
+from typing import List, Literal, Optional
+from pydantic import BaseModel, ConfigDict, Field
 from app.database import get_db
 from app import models
+from app.authorization import require_owner_or_admin, require_roles, require_student_membership, require_teacher_class
 from app.routers.auth import get_current_user
 from datetime import datetime
 
@@ -133,18 +134,18 @@ class QuizBase(BaseModel):
 
 class QuizQuestionCreate(BaseModel):
     question_text: str
-    difficulty: str
+    difficulty: Literal["easy", "medium", "hard"]
     option_a: str
     option_b: str
     option_c: str
     option_d: str
-    correct_answer: str
+    correct_answer: Literal["A", "B", "C", "D"]
 
 class QuizCreate(QuizBase):
     questions: Optional[List[QuizQuestionCreate]] = None
 
 class QuizUpdate(BaseModel):
-    status: Optional[str] = None
+    status: Optional[Literal["draft", "active", "closed"]] = None
 
 class QuizQuestionResponse(BaseModel):
     id: int
@@ -154,18 +155,24 @@ class QuizQuestionResponse(BaseModel):
     option_b: str
     option_c: str
     option_d: str
-    correct_answer: str
-    class Config:
-        from_attributes = True
+    correct_answer: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
 
 class QuizResponse(QuizBase):
     id: int
     status: Optional[str] = None
     total_questions: int
     created_at: Optional[str] = None
-    questions: List[QuizQuestionResponse] = []
-    class Config:
-        from_attributes = True
+    questions: List[QuizQuestionResponse] = Field(default_factory=list)
+    model_config = ConfigDict(from_attributes=True)
+
+
+def _quiz_response(quiz: models.Quiz, *, include_answers: bool) -> QuizResponse:
+    response = QuizResponse.model_validate(quiz)
+    if not include_answers:
+        for question in response.questions:
+            question.correct_answer = None
+    return response
 
 # --- Generate questions from bank ---
 async def generate_ai_questions(topic: str, difficulty: str, count: int, start_index: int) -> List[dict]:
@@ -179,15 +186,20 @@ async def get_quizzes(db: Session = Depends(get_db), current_user: models.User =
     if current_user.role == "student":
         # Students see all quizzes assigned to their class
         quizzes = db.query(models.Quiz).filter(models.Quiz.class_id == current_user.class_id).all()
-    else:
+    elif current_user.role == "teacher":
         # Teachers see quizzes they created
         quizzes = db.query(models.Quiz).filter(models.Quiz.teacher_id == current_user.id).all()
-    return quizzes
+    elif current_user.role == "admin":
+        quizzes = db.query(models.Quiz).all()
+    else:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền xem bài kiểm tra")
+    return [_quiz_response(quiz, include_answers=current_user.role != "student") for quiz in quizzes]
 
 @router.post("", response_model=QuizResponse)
 async def create_quiz(quiz_data: QuizCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     if current_user.role != "teacher":
         raise HTTPException(status_code=403, detail="Only teachers can create quizzes")
+    require_teacher_class(db, current_user, quiz_data.class_id)
     
     # Calculate total questions
     if quiz_data.questions:
@@ -282,12 +294,12 @@ async def create_quiz(quiz_data: QuizCreate, db: Session = Depends(get_db), curr
 
 @router.put("/{quiz_id}", response_model=QuizResponse)
 async def update_quiz(quiz_id: int, quiz_data: QuizUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    require_roles(current_user, "teacher")
     quiz = db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
         
-    if quiz.teacher_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    require_owner_or_admin(current_user, quiz.teacher_id, owner_roles=("teacher",))
         
     if quiz_data.status:
         quiz.status = quiz_data.status
@@ -336,21 +348,24 @@ async def get_quiz_details(quiz_id: int, db: Session = Depends(get_db), current_
         raise HTTPException(status_code=404, detail="Quiz not found")
         
     if current_user.role == "student":
-        if quiz.class_id != current_user.class_id:
-             raise HTTPException(status_code=403, detail="Not authorized for this class")
-        # if quiz.status != "active":
-        #      raise HTTPException(status_code=403, detail="Quiz is not active")
-        # Allow viewing if attempting (status might be active)
-    elif current_user.role == "teacher":
-        if quiz.teacher_id != current_user.id:
-             raise HTTPException(status_code=403, detail="Not authorized")
+        require_student_membership(current_user, quiz.class_id)
+        if quiz.status != "active":
+            raise HTTPException(status_code=403, detail="Bài kiểm tra chưa được mở")
+    elif current_user.role in ("teacher", "admin"):
+        require_owner_or_admin(current_user, quiz.teacher_id)
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized")
              
-    return quiz
+    return _quiz_response(quiz, include_answers=current_user.role != "student")
 
 @router.get("/{quiz_id}/my-result")
 async def get_my_result(quiz_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     if current_user.role != "student":
         return {"attempted": False}
+    quiz = db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    require_student_membership(current_user, quiz.class_id)
         
     result = db.query(models.QuizResult).filter(
         models.QuizResult.quiz_id == quiz_id,
@@ -368,7 +383,7 @@ async def get_my_result(quiz_id: int, db: Session = Depends(get_db), current_use
     return {"attempted": False}
 
 class QuizSubmit(BaseModel):
-    answers: dict[int, str] # question_id -> option (A, B, C, D)
+    answers: dict[int, Literal["A", "B", "C", "D"]]
 
 @router.post("/{quiz_id}/submit")
 async def submit_quiz(quiz_id: int, submit_data: QuizSubmit, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
@@ -378,6 +393,9 @@ async def submit_quiz(quiz_id: int, submit_data: QuizSubmit, db: Session = Depen
     quiz = db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
+    require_student_membership(current_user, quiz.class_id)
+    if quiz.status != "active":
+        raise HTTPException(status_code=400, detail="Bài kiểm tra hiện không mở")
         
     # Check if already submitted
     existing = db.query(models.QuizResult).filter(
@@ -437,14 +455,16 @@ async def upload_docx(file: UploadFile = File(...), current_user: models.User = 
     if current_user.role != "teacher":
         raise HTTPException(status_code=403, detail="Only teachers can upload quiz files")
         
-    if not file.filename.endswith(".docx"):
+    if not file.filename or not file.filename.lower().endswith(".docx"):
         raise HTTPException(status_code=400, detail="Only .docx files are supported")
         
     try:
         import docx
         import io
         
-        contents = await file.read()
+        contents = await file.read(5 * 1024 * 1024 + 1)
+        if len(contents) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="File không được vượt quá 5 MB")
         doc = docx.Document(io.BytesIO(contents))
         
         questions = []
@@ -506,6 +526,8 @@ async def upload_docx(file: UploadFile = File(...), current_user: models.User = 
             
         return questions
         
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error parse docx: {e}")
         raise HTTPException(status_code=500, detail="Failed to parse document. Please ensure standard format.")

@@ -230,7 +230,10 @@ class RiddleRevealRequest(BaseModel):
 
 @router.post("/word-chain", response_model=WordChainResponse)
 @router.post("/word-chain/test", response_model=WordChainResponse)
-async def check_word_chain(request: WordChainRequest):
+async def check_word_chain(
+    request: WordChainRequest,
+    current_user: models.User = Depends(get_current_user),
+):
     """
     Validate user's word and provide AI response.
     Supports both authenticated and test endpoints.
@@ -245,17 +248,26 @@ async def check_word_chain(request: WordChainRequest):
     )
 
 @router.post("/riddles/next")
-async def get_next_riddle(request: RiddleNextRequest):
+async def get_next_riddle(
+    request: RiddleNextRequest,
+    current_user: models.User = Depends(get_current_user),
+):
     riddle = riddle_service.get_next_riddle(request.history)
     return {"riddle": riddle}
 
 @router.post("/riddles/check")
-async def check_riddle_answer(request: RiddleCheckRequest):
+async def check_riddle_answer(
+    request: RiddleCheckRequest,
+    current_user: models.User = Depends(get_current_user),
+):
     result = riddle_service.check_answer(request.riddle_id, request.answer)
     return {"result": result}
 
 @router.post("/riddles/reveal")
-async def reveal_riddle_answer(request: RiddleRevealRequest):
+async def reveal_riddle_answer(
+    request: RiddleRevealRequest,
+    current_user: models.User = Depends(get_current_user),
+):
     riddle = riddle_service.get_riddle_by_id(request.riddle_id)
     if not riddle:
         raise HTTPException(status_code=404, detail="Riddle not found")

@@ -1,12 +1,15 @@
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models
+from app.authorization import get_accessible_class, require_roles
+from app.routers.auth import get_current_user
 from datetime import datetime
 import json
+from sqlalchemy import or_
 from app.services.cache_service import redis_service
 
 router = APIRouter()
@@ -23,8 +26,7 @@ class Activity(BaseModel):
     participants_count: int
     progress: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ActivityCreate(BaseModel):
     title: str
@@ -44,10 +46,35 @@ class ActivityUpdate(BaseModel):
 
 # --- Endpoints ---
 
+def _require_activity_access(
+    db: Session,
+    current_user: models.User,
+    activity: models.Activity,
+    *,
+    write: bool,
+) -> None:
+    if current_user.role == "admin":
+        return
+    if activity.class_id is None:
+        if not write:
+            return
+        raise HTTPException(status_code=403, detail="Chỉ admin mới quản lý hoạt động toàn trường")
+    if current_user.role == "teacher":
+        get_accessible_class(db, current_user, activity.class_id)
+        return
+    if not write and current_user.role == "student" and current_user.class_id == activity.class_id:
+        return
+    raise HTTPException(status_code=403, detail="Bạn không có quyền truy cập hoạt động này")
+
+
 @router.get("", response_model=List[Activity])
-async def get_activities(limit: int = 100, db: Session = Depends(get_db)):
+async def get_activities(
+    limit: int = Query(default=100, ge=1, le=200),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     # Try Cache
-    cache_key = f"activities:limit:{limit}"
+    cache_key = f"activities:user:{current_user.id}:limit:{limit}"
     cached = redis_service.get(cache_key)
     if cached:
         try:
@@ -55,7 +82,16 @@ async def get_activities(limit: int = 100, db: Session = Depends(get_db)):
         except:
             pass
 
-    activities = db.query(models.Activity).limit(limit).all()
+    query = db.query(models.Activity)
+    if current_user.role == "teacher":
+        owned_class_ids = db.query(models.Class.id).filter(models.Class.teacher_id == current_user.id)
+        query = query.filter(or_(models.Activity.class_id.in_(owned_class_ids), models.Activity.class_id.is_(None)))
+    elif current_user.role == "student":
+        query = query.filter(or_(models.Activity.class_id == current_user.class_id, models.Activity.class_id.is_(None)))
+    elif current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Bạn không có quyền xem hoạt động")
+
+    activities = query.limit(limit).all()
     
     # Set Cache
     try:
@@ -70,7 +106,18 @@ async def get_activities(limit: int = 100, db: Session = Depends(get_db)):
     return activities
 
 @router.post("", response_model=Activity)
-async def create_activity(activity: ActivityCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+async def create_activity(
+    activity: ActivityCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    require_roles(current_user, "admin", "teacher")
+    if current_user.role == "teacher" and activity.class_id is None:
+        raise HTTPException(status_code=422, detail="Giáo viên phải chọn lớp cho hoạt động")
+    if activity.class_id is not None:
+        get_accessible_class(db, current_user, activity.class_id)
+
     new_activity = models.Activity(
         title=activity.title,
         type=activity.type,
@@ -139,10 +186,21 @@ async def create_activity(activity: ActivityCreate, background_tasks: Background
 
 @router.put("/{activity_id}", response_model=Activity)
 @router.patch("/{activity_id}", response_model=Activity)
-async def update_activity(activity_id: int, activity_update: ActivityUpdate, db: Session = Depends(get_db)):
+async def update_activity(
+    activity_id: int,
+    activity_update: ActivityUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    require_roles(current_user, "admin", "teacher")
     activity = db.query(models.Activity).filter(models.Activity.id == activity_id).first()
     if not activity:
         raise HTTPException(status_code=404, detail="Không tìm thấy hoạt động")
+    _require_activity_access(db, current_user, activity, write=True)
+
+    if activity_update.class_id is not None:
+        get_accessible_class(db, current_user, activity_update.class_id)
+        activity.class_id = activity_update.class_id
     
     if activity_update.title: activity.title = activity_update.title
     if activity_update.type: activity.type = activity_update.type
@@ -159,10 +217,16 @@ async def update_activity(activity_id: int, activity_update: ActivityUpdate, db:
     return activity
 
 @router.delete("/{activity_id}")
-async def delete_activity(activity_id: int, db: Session = Depends(get_db)):
+async def delete_activity(
+    activity_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    require_roles(current_user, "admin", "teacher")
     activity = db.query(models.Activity).filter(models.Activity.id == activity_id).first()
     if not activity:
         raise HTTPException(status_code=404, detail="Không tìm thấy hoạt động")
+    _require_activity_access(db, current_user, activity, write=True)
     
     db.delete(activity)
     db.commit()
@@ -172,6 +236,14 @@ async def delete_activity(activity_id: int, db: Session = Depends(get_db)):
     return {"message": "Đã xóa hoạt động thành công"}
 
 @router.get("/{activity_id}/results")
-async def get_activity_results(activity_id: int, db: Session = Depends(get_db)):
+async def get_activity_results(
+    activity_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    activity = db.query(models.Activity).filter(models.Activity.id == activity_id).first()
+    if not activity:
+        raise HTTPException(status_code=404, detail="Không tìm thấy hoạt động")
+    _require_activity_access(db, current_user, activity, write=False)
     # Dummy implementation for now to avoid 404
     return {"results": []}

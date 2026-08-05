@@ -4,11 +4,17 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
 from app import models
+from app.authorization import require_roles
+from app.routers.auth import get_current_user
 
 router = APIRouter()
 
 @router.get("")
-async def get_statistics(db: Session = Depends(get_db)):
+async def get_statistics(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    require_roles(current_user, "admin", "teacher")
     # Reuse student stats logic or extend
     total = db.query(models.User).filter(models.User.role == "student").count()
     # Mock extensive stats for now based on aggregation
@@ -40,8 +46,15 @@ async def get_statistics(db: Session = Depends(get_db)):
     }
 
 @router.get("/classes")
-async def get_classes_stats(db: Session = Depends(get_db)):
-    classes = db.query(models.Class).all()
+async def get_classes_stats(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    require_roles(current_user, "admin", "teacher")
+    query = db.query(models.Class)
+    if current_user.role == "teacher":
+        query = query.filter(models.Class.teacher_id == current_user.id)
+    classes = query.all()
     results = []
     
     for cls in classes:

@@ -4,6 +4,7 @@ from sqlalchemy import func, desc
 from app.database import get_db
 from app import models
 from app.routers.auth import get_current_user
+from app.authorization import get_accessible_class, require_roles
 from datetime import datetime, timedelta
 
 router = APIRouter()
@@ -15,9 +16,20 @@ async def get_student_trends(
     current_user: models.User = Depends(get_current_user)
 ):
     """Get score trends for a student over time."""
-    # Verify access 
-    if current_user.role == "student" and current_user.id != student_id:
-        raise HTTPException(status_code=403, detail="Unauthorized")
+    student = db.query(models.User).filter(
+        models.User.id == student_id,
+        models.User.role == "student",
+    ).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Không tìm thấy học sinh")
+    if current_user.role == "student":
+        if current_user.id != student_id:
+            raise HTTPException(status_code=403, detail="Bạn chỉ có thể xem kết quả của mình")
+    else:
+        require_roles(current_user, "teacher", "admin")
+        if student.class_id is None:
+            raise HTTPException(status_code=403, detail="Học sinh chưa thuộc lớp nào")
+        get_accessible_class(db, current_user, student.class_id)
     
     quiz_results = db.query(models.QuizResult).filter(
         models.QuizResult.student_id == student_id
@@ -73,8 +85,7 @@ async def get_early_warnings(
     current_user: models.User = Depends(get_current_user)
 ):
     """Detect students at risk based on declining scores and mental health."""
-    if current_user.role not in ["teacher", "admin"]:
-        raise HTTPException(status_code=403, detail="Unauthorized")
+    require_roles(current_user, "teacher", "admin")
     
     # Get teacher's classes
     if current_user.role == "teacher":
@@ -188,12 +199,8 @@ async def get_class_report(
     current_user: models.User = Depends(get_current_user)
 ):
     """Comprehensive class report with analytics."""
-    if current_user.role not in ["teacher", "admin"]:
-        raise HTTPException(status_code=403, detail="Unauthorized")
-    
-    cls = db.query(models.Class).filter(models.Class.id == class_id).first()
-    if not cls:
-        raise HTTPException(status_code=404, detail="Class not found")
+    require_roles(current_user, "teacher", "admin")
+    cls = get_accessible_class(db, current_user, class_id)
     
     students = db.query(models.User).filter(
         models.User.class_id == class_id,
@@ -240,13 +247,15 @@ async def get_missing_work(
     current_user: models.User = Depends(get_current_user)
 ):
     """Find students who haven't submitted active assignments or quizzes."""
-    if current_user.role not in ["teacher", "admin"]:
-        raise HTTPException(status_code=403, detail="Unauthorized")
+    require_roles(current_user, "teacher", "admin")
         
     missing_list = []
     
     # Get teacher's classes
-    classes = db.query(models.Class).filter(models.Class.teacher_id == current_user.id).all()
+    classes_query = db.query(models.Class)
+    if current_user.role == "teacher":
+        classes_query = classes_query.filter(models.Class.teacher_id == current_user.id)
+    classes = classes_query.all()
     class_ids = [c.id for c in classes]
     
     if not class_ids:

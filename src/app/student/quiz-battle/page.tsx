@@ -78,7 +78,7 @@ export default function QuizBattlePage() {
             setSelectedAnswer(null);
             setResult(null);
             setTimeLeft(q.time_limit);
-            // eslint-disable-next-line react-hooks/purity
+
             startTimeRef.current = Date.now();
 
             if (timerRef.current) clearInterval(timerRef.current);
@@ -111,7 +111,7 @@ export default function QuizBattlePage() {
 
     const handleChoose = (answer: string) => {
         if (selectedAnswer) return;
-        // eslint-disable-next-line react-hooks/purity
+
         const timeTaken = (Date.now() - startTimeRef.current) / 1000;
         submitAnswer(battleId!, questionIndex, answer, timeTaken);
     };

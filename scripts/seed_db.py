@@ -1,15 +1,13 @@
 """
-SchoolManager — Comprehensive Demo Seed Script
+SchoolManager - Comprehensive Demo Seed Script
 Populates ALL features with realistic Vietnamese data for demo presentation.
 
 Usage:  cd SchoolManager && python scripts/seed_db.py
-Login:  admin@happyschools.vn / test123
-        gv.thao@happyschools.vn / test123
-        gv.minh@happyschools.vn / test123
-        hs.an@happyschools.vn / test123  (or any student)
+The script generates one local-only password and prints it once after seeding.
+Set SCHOOLMANAGER_SEED_PASSWORD to choose your own development password.
 """
 
-import sys, os, random, json, string
+import sys, os, random, json, string, secrets
 from datetime import datetime, timedelta
 
 # Fix Windows console encoding for Vietnamese/emoji
@@ -36,7 +34,8 @@ def future_ts(days_ahead: int = 0) -> str:
 def rand_code(length: int = 6) -> str:
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
-PW = security.get_password_hash("test123")
+SEED_PASSWORD = os.environ.get("SCHOOLMANAGER_SEED_PASSWORD") or secrets.token_urlsafe(12)
+PW = security.get_password_hash(SEED_PASSWORD)
 
 # ─── Main ────────────────────────────────────────────────────────
 
@@ -549,13 +548,14 @@ def seed_data():
     # ═══════════════════════════════════════════════════════════════
     db.close()
     print("\n" + "=" * 55)
-    print("🎉 SEEDING COMPLETE! Tài khoản demo:")
+    print("🎉 SEEDING COMPLETE! Tài khoản local:")
     print("=" * 55)
-    print(f"  👑 Admin:    admin@happyschools.vn / test123")
-    print(f"  👩‍🏫 Giáo viên: gv.thao@happyschools.vn / test123")
-    print(f"  👨‍🏫 Giáo viên: gv.minh@happyschools.vn / test123")
-    print(f"  👧 Học sinh:  hs.an0@happyschools.vn / test123")
-    print(f"  👦 Học sinh:  hs.binh1@happyschools.vn / test123")
+    print(f"  👑 Admin:      admin@happyschools.vn / {SEED_PASSWORD}")
+    print(f"  👩‍🏫 Giáo viên: gv.thao@happyschools.vn / {SEED_PASSWORD}")
+    print(f"  👨‍🏫 Giáo viên: gv.minh@happyschools.vn / {SEED_PASSWORD}")
+    print(f"  👧 Học sinh:   hs.an0@happyschools.vn / {SEED_PASSWORD}")
+    print(f"  👦 Học sinh:   hs.binh1@happyschools.vn / {SEED_PASSWORD}")
+    print("  Mật khẩu chỉ dành cho database development này. Không dùng trong production.")
     print("=" * 55)
     print(f"\n📊 Tổng kết dữ liệu:")
     print(f"   • {len(classes)} lớp học, {len(teachers)} giáo viên, {len(all_students)} học sinh")

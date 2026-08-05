@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from app.database import get_db
 from app import models
+from app.authorization import get_accessible_class, require_roles
 from app.routers.auth import get_current_user
 from datetime import datetime
 import random
@@ -36,21 +37,21 @@ class ClassResponse(BaseModel):
     online_enabled: bool = False
     created_at: Optional[str] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Endpoints ---
 
 @router.get("", response_model=List[ClassResponse])
 async def get_classes(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)): 
-    print(f"DEBUG: get_classes called for user {current_user.email} (id={current_user.id}, role={current_user.role})")
     query = db.query(models.Class)
     if current_user.role == "teacher":
-        print(f"DEBUG: Filtering classes for teacher_id={current_user.id}")
         query = query.filter(models.Class.teacher_id == current_user.id)
+    elif current_user.role == "student":
+        query = query.filter(models.Class.id == current_user.class_id)
+    elif current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Bạn không có quyền xem danh sách lớp")
     
     classes = query.all()
-    print(f"DEBUG: Found {len(classes)} classes")
     result = []
     for c in classes:
         teacher_name = None
@@ -90,15 +91,7 @@ async def get_classes(db: Session = Depends(get_db), current_user: models.User =
 
 @router.get("/{class_id}", response_model=ClassResponse)
 async def get_class_details(class_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    query = db.query(models.Class).filter(models.Class.id == class_id)
-    if current_user.role == "teacher":
-        query = query.filter(models.Class.teacher_id == current_user.id)
-    elif current_user.role == "student":
-        query = query.filter(models.Class.id == current_user.class_id)
-    
-    c = query.first()
-    if not c:
-        raise HTTPException(status_code=404, detail="Class not found or access denied")
+    c = get_accessible_class(db, current_user, class_id, allow_student=True)
         
     teacher_name = None
     if c.teacher_id:
@@ -136,17 +129,8 @@ async def get_class_details(class_id: int, db: Session = Depends(get_db), curren
 
 @router.get("/{class_id}/students")
 async def get_class_students(class_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    # Check if teacher owns the class or is admin
-    cls = db.query(models.Class).filter(models.Class.id == class_id).first()
-    if not cls:
-        raise HTTPException(status_code=404, detail="Class not found")
-        
-    if current_user.role == "teacher" and cls.teacher_id != current_user.id:
-        # Allow if admin or teacher owner
-        # For now strict check
-        raise HTTPException(status_code=403, detail="Not authorized to view this class")
-    elif current_user.role == "student" and current_user.class_id != class_id:
-        raise HTTPException(status_code=403, detail="Not authorized to view this class")
+    require_roles(current_user, "admin", "teacher")
+    get_accessible_class(db, current_user, class_id)
 
     students = db.query(models.User).filter(models.User.class_id == class_id, models.User.role == "student").all()
     
@@ -166,11 +150,13 @@ async def get_class_students(class_id: int, db: Session = Depends(get_db), curre
 
 @router.get("/{class_id}/timeline")
 async def get_class_timeline(class_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    get_accessible_class(db, current_user, class_id, allow_student=True)
     # Placeholder for now
     return []
 
 @router.post("", response_model=ClassResponse)
 async def create_class(class_data: ClassCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    require_roles(current_user, "admin", "teacher")
     try:
         db_class = db.query(models.Class).filter(models.Class.name == class_data.name).first()
         if db_class:
@@ -191,10 +177,19 @@ async def create_class(class_data: ClassCreate, db: Session = Depends(get_db), c
         while db.query(models.Class).filter(models.Class.class_code == class_code).first():
             class_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
+        teacher_id = class_data.teacher_id if current_user.role == "admin" else current_user.id
+        if teacher_id is not None:
+            teacher = db.query(models.User).filter(
+                models.User.id == teacher_id,
+                models.User.role == "teacher",
+            ).first()
+            if teacher is None:
+                raise HTTPException(status_code=422, detail="Giáo viên phụ trách không hợp lệ")
+
         new_class = models.Class(
             name=class_data.name,
             grade=class_data.grade,
-            teacher_id=class_data.teacher_id or current_user.id, # Default to current user if teacher
+            teacher_id=teacher_id,
             student_count=0,
             meeting_link=meeting_link,
             class_code=class_code,
@@ -225,20 +220,29 @@ async def create_class(class_data: ClassCreate, db: Session = Depends(get_db), c
             "online_enabled": new_class.online_enabled,
             "created_at": new_class.created_at
         }
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Failed to create class: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Không thể tạo lớp học")
 
 @router.put("/{class_id}", response_model=ClassResponse)
 async def update_class(class_id: int, class_data: ClassCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    cls = db.query(models.Class).filter(models.Class.id == class_id).first()
-    if not cls:
-        raise HTTPException(status_code=404, detail="Class not found")
+    require_roles(current_user, "admin", "teacher")
+    cls = get_accessible_class(db, current_user, class_id)
+
+    teacher_id = class_data.teacher_id if current_user.role == "admin" else cls.teacher_id
+    if teacher_id is not None:
+        teacher = db.query(models.User).filter(
+            models.User.id == teacher_id,
+            models.User.role == "teacher",
+        ).first()
+        if teacher is None:
+            raise HTTPException(status_code=422, detail="Giáo viên phụ trách không hợp lệ")
         
     cls.name = class_data.name
     cls.grade = class_data.grade
-    cls.teacher_id = class_data.teacher_id
+    cls.teacher_id = teacher_id
     cls.online_enabled = class_data.online_enabled
     
     # Generate meeting link if online enabled and link is missing

@@ -175,8 +175,8 @@ export default function StudentSettingsPage() {
                     setSaving(false);
                     return;
                 }
-                if (passwords.new.length < 6) {
-                    setPasswordError('Mật khẩu mới phải có ít nhất 6 ký tự');
+                if (passwords.new.length < 8) {
+                    setPasswordError('Mật khẩu mới phải có ít nhất 8 ký tự');
                     setSaving(false);
                     return;
                 }

@@ -20,7 +20,7 @@ const statusConfig = {
 
 export default function QuizPage() {
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const [classes, setClasses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -86,7 +86,7 @@ export default function QuizPage() {
             setSelectedQuiz(quiz);
             setShowDetailModal(true);
             resetForm();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         } catch (err: any) {
             alert('❌ Lỗi khi tạo bài kiểm tra: ' + (err.message || 'Unknown error'));
         } finally {
@@ -110,12 +110,12 @@ export default function QuizPage() {
 
     const handleUpdateStatus = async (quiz: Quiz, newStatus: string) => {
         try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             await quizzesApi.updateQuiz(quiz.id, { status: newStatus as any });
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             setQuizzes(quizzes.map(q => q.id === quiz.id ? { ...q, status: newStatus as any } : q));
             if (selectedQuiz?.id === quiz.id) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                 setSelectedQuiz({ ...selectedQuiz, status: newStatus as any });
             }
         } catch (err) {

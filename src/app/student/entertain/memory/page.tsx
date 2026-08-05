@@ -68,7 +68,7 @@ export default function MemoryGamePage() {
     };
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+
         initGame('easy');
     }, []);
 

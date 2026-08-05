@@ -5,7 +5,7 @@ import { wellnessApi } from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function TeacherWellnessPage() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const [alerts, setAlerts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<string | undefined>(undefined);
@@ -83,7 +83,7 @@ export default function TeacherWellnessPage() {
                             <p style={{ color: '#94a3b8' }}>Không có tín hiệu SOS</p>
                         </div>
                     ) : (
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                         alerts.map((a: any) => (
                             <div key={a.id} style={{ background: '#1e293b', borderRadius: '14px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)', borderLeft: `4px solid ${statusColors[a.status]}` }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>

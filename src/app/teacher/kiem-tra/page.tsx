@@ -36,11 +36,11 @@ export default function QuizPage() {
     const [creationMode, setCreationMode] = useState<'ai' | 'upload' | 'manual'>('ai');
     const [uploadFile, setUploadFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const [parsedQuestions, setParsedQuestions] = useState<any[]>([]);
 
     // Manual questions
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const [manualQuestions, setManualQuestions] = useState<any[]>([{
         question_text: '',
         difficulty: 'medium',
@@ -213,7 +213,7 @@ export default function QuizPage() {
             }
 
             // Prepare payload
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             const payload: any = {
                 title: formData.title,
                 subject: formData.subject || (creationMode !== 'ai' ? 'Tự chọn' : ''),

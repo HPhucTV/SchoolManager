@@ -20,26 +20,6 @@ for i in range(max_retries):
         print(f"DEBUG: Attempting to connect to database (attempt {i+1}/{max_retries})...")
         Base.metadata.create_all(bind=engine)
         print("DEBUG: Database connection and table creation successful.")
-        # Lightweight migrations for new columns
-        try:
-            from sqlalchemy import text
-            with engine.connect() as conn:
-                try:
-                    conn.execute(text("ALTER TABLE quizzes ADD COLUMN show_answers BOOLEAN DEFAULT TRUE"))
-                    conn.commit()
-                    print("DEBUG: Added show_answers column to quizzes table")
-                except Exception:
-                    pass  # Column already exists
-                
-                try:
-                    conn.execute(text("ALTER TABLE quizzes ADD COLUMN allow_retake BOOLEAN DEFAULT FALSE"))
-                    conn.commit()
-                    print("DEBUG: Added allow_retake column to quizzes table")
-                except Exception:
-                    pass  # Column already exists
-                    
-        except Exception as e:
-            print(f"DEBUG: Migration check: {e}")
         break
     except OperationalError as e:
         if i < max_retries - 1:
@@ -71,7 +51,7 @@ if settings.CORS_ORIGINS:
 
 # Trust proxy headers for HTTPS redirection (Critical for Nginx)
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=settings.TRUSTED_PROXY_HOSTS)
 
 # Include routers
 app.include_router(ai.router, prefix=f"{settings.API_V1_STR}/ai", tags=["ai"])

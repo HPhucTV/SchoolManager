@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
-from typing import List, Optional
+from pydantic import BaseModel, Field
+from typing import List, Literal, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from app.database import get_db
 from app import models
+from app.authorization import get_accessible_class, require_roles
 from app.routers.auth import get_current_user
 from datetime import datetime, timedelta
 
@@ -13,9 +14,9 @@ router = APIRouter()
 # --- Pydantic Schemas ---
 
 class MoodCreate(BaseModel):
-    mood_level: int  # 1-5
-    mood_emoji: str  # emoji
-    note: Optional[str] = None
+    mood_level: int = Field(ge=1, le=5)
+    mood_emoji: str = Field(min_length=1, max_length=16)
+    note: Optional[str] = Field(default=None, max_length=2000)
 
 class MoodResponse(BaseModel):
     id: int
@@ -28,7 +29,7 @@ class MoodResponse(BaseModel):
         from_attributes = True
 
 class SOSCreate(BaseModel):
-    message: str
+    message: str = Field(min_length=1, max_length=4000)
     is_anonymous: bool = True
 
 class SOSResponse(BaseModel):
@@ -43,8 +44,8 @@ class SOSResponse(BaseModel):
     resolved_at: Optional[str] = None
 
 class SOSUpdate(BaseModel):
-    status: str  # reviewing, resolved
-    reviewer_note: Optional[str] = None
+    status: Literal["reviewing", "resolved"]
+    reviewer_note: Optional[str] = Field(default=None, max_length=4000)
 
 # --- Mood Endpoints ---
 
@@ -54,8 +55,7 @@ async def create_mood_entry(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    if mood.mood_level < 1 or mood.mood_level > 5:
-        raise HTTPException(status_code=400, detail="Mood level must be 1-5")
+    require_roles(current_user, "student")
     
     entry = models.MoodEntry(
         student_id=current_user.id,
@@ -93,6 +93,8 @@ async def get_mood_history(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    require_roles(current_user, "student")
+    days = max(1, min(days, 90))
     cutoff = (datetime.now() - timedelta(days=days)).isoformat()
     entries = db.query(models.MoodEntry).filter(
         models.MoodEntry.student_id == current_user.id,
@@ -105,6 +107,7 @@ async def get_mood_analytics(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    require_roles(current_user, "student")
     # Last 7 days mood data
     cutoff_7 = (datetime.now() - timedelta(days=7)).isoformat()
     cutoff_30 = (datetime.now() - timedelta(days=30)).isoformat()
@@ -150,6 +153,7 @@ async def create_sos_alert(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    require_roles(current_user, "student")
     alert = models.SOSAlert(
         student_id=current_user.id,
         message=sos.message,
@@ -240,6 +244,11 @@ async def update_sos_alert(
     alert = db.query(models.SOSAlert).filter(models.SOSAlert.id == alert_id).first()
     if not alert:
         raise HTTPException(status_code=404, detail="Không tìm thấy SOS")
+    if current_user.role == "teacher":
+        student = db.query(models.User).filter(models.User.id == alert.student_id).first()
+        if student is None or student.class_id is None:
+            raise HTTPException(status_code=403, detail="Bạn không có quyền xử lý SOS này")
+        get_accessible_class(db, current_user, student.class_id)
     
     alert.status = update.status
     alert.reviewed_by = current_user.id
@@ -261,6 +270,7 @@ async def get_class_wellness(
 ):
     if current_user.role not in ["teacher", "admin"]:
         raise HTTPException(status_code=403, detail="Unauthorized")
+    get_accessible_class(db, current_user, class_id)
     
     students = db.query(models.User).filter(
         models.User.class_id == class_id,

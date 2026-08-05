@@ -68,7 +68,7 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
             // Parse real notifications from backend
             if (notifRes?.ok) {
                 const data = await notifRes.json();
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                 data.forEach((n: any) => {
                     const typeMap: Record<string, Notification['type']> = {
                         quiz: 'quiz', activity: 'activity', assignment: 'quiz',
@@ -95,7 +95,7 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
             // Parse quizzes as supplementary notifications
             if (quizzesRes?.ok) {
                 const quizzes = await quizzesRes.json();
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                 quizzes.forEach((quiz: any) => {
                     const exists = newNotifications.some(n => n.id === `notif-quiz-${quiz.id}` || n.message?.includes(quiz.title));
                     if (!exists) {
@@ -117,7 +117,7 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
             // Parse activities
             if (dashboardRes?.ok) {
                 const data = await dashboardRes.json();
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                 data.recent_activities?.forEach((activity: any) => {
                     if (activity.status !== 'completed') {
                         const exists = newNotifications.some(n => n.message?.includes(activity.title));
@@ -135,7 +135,7 @@ export default function StudentNotifications({ token, apiUrl }: Props) {
                     }
                 });
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                 data.pending_surveys?.forEach((survey: any) => {
                     if (!survey.completed) {
                         newNotifications.push({

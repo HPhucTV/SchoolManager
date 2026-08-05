@@ -65,7 +65,7 @@ export default function HocSinhPage() {
         fetchData();
     }, [page, search]);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const [classes, setClasses] = useState<any[]>([]);
 
     const getInitials = (name: string) => {
@@ -118,7 +118,7 @@ export default function HocSinhPage() {
                 console.error('Invite failed:', data);
                 setInviteError(data.detail || `Lỗi server: ${response.status} ${response.statusText}`);
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         } catch (err: any) {
             console.error('Failed to send invite:', err);
             setInviteError(`Lỗi kết nối đến ${API_URL}: ${err.message || 'Không thể kết nối'}`);

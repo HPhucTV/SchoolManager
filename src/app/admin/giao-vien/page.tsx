@@ -52,7 +52,7 @@ export default function TeachersManagement() {
 
     useEffect(() => {
         fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, []);
 
     const showToast = (message: string, type: 'success' | 'error') => {
@@ -357,7 +357,7 @@ export default function TeachersManagement() {
                         </div>
                         <h3 className={styles.confirmTitle}>Đặt lại mật khẩu?</h3>
                         <p className={styles.confirmMessage}>
-                            Mật khẩu của <strong>{showResetConfirm.name}</strong> sẽ được đặt lại thành <strong>test123</strong>.
+                            Hệ thống sẽ tạo mật khẩu tạm thời cho <strong>{showResetConfirm.name}</strong> và chỉ trả về một lần.
                         </p>
                         <div className={styles.confirmActions}>
                             <button className={styles.btnSecondary} onClick={() => setShowResetConfirm(null)}>

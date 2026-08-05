@@ -215,7 +215,7 @@ def create_script():
     # ═══════════════════════════════════════════════════════════
     add_section_title(doc, '🏛️ PHẦN 1 — QUẢN TRỊ VIÊN (ADMIN)', 'E65100')
 
-    add_action(doc, 'Đăng nhập bằng tài khoản admin@happyschools.vn / test123')
+    add_action(doc, 'Đăng nhập bằng tài khoản Admin local được seed script in trong terminal')
 
     add_speech(doc,
         'Đầu tiên em sẽ demo giao diện Quản trị viên. '
@@ -286,7 +286,7 @@ def create_script():
     # ═══════════════════════════════════════════════════════════
     add_section_title(doc, '👩‍🏫 PHẦN 2 — GIÁO VIÊN (TEACHER)', '1565C0')
 
-    add_action(doc, 'Đăng xuất Admin. Đăng nhập bằng gv.thao@happyschools.vn / test123')
+    add_action(doc, 'Đăng xuất Admin. Đăng nhập bằng tài khoản Giáo viên local được seed script tạo')
 
     add_speech(doc,
         'Bây giờ em sẽ demo giao diện dành cho Giáo viên. '
@@ -511,7 +511,7 @@ def create_script():
     # ═══════════════════════════════════════════════════════════
     add_section_title(doc, '🎓 PHẦN 3 — HỌC SINH (STUDENT)', '2E7D32')
 
-    add_action(doc, 'Đăng xuất Giáo viên. Đăng nhập bằng hs.an0@happyschools.vn / test123')
+    add_action(doc, 'Đăng xuất Giáo viên. Đăng nhập bằng tài khoản Học sinh local được seed script tạo')
 
     add_speech(doc,
         'Cuối cùng là giao diện Học sinh — '

@@ -2,9 +2,10 @@
 from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from app.database import get_db
 from app import models
+from app.authorization import require_owner_or_admin, require_roles, require_student_membership, require_teacher_class
 from app.routers.auth import get_current_user
 from datetime import datetime
 import json
@@ -25,8 +26,7 @@ class QuestionBase(BaseModel):
 
 class QuestionResponse(QuestionBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class AssignmentBase(BaseModel):
     title: str
@@ -48,8 +48,7 @@ class AssignmentResponse(AssignmentBase):
     created_at: str
     questions: List[QuestionResponse]
     submission_count: int = 0
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class AnswerBase(BaseModel):
     question_id: int
@@ -65,8 +64,7 @@ class AnswerResponse(BaseModel):
     is_correct: Optional[bool] = None
     score: float
     feedback: Optional[str] = None
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SubmissionResponse(BaseModel):
     id: int
@@ -77,16 +75,29 @@ class SubmissionResponse(BaseModel):
     submitted_at: str
     graded_at: Optional[str] = None
     answers: List[AnswerResponse]
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class GradeItem(BaseModel):
     answer_id: int
-    score: float
+    score: float = Field(ge=0)
     feedback: Optional[str] = None
 
 class GradeRequest(BaseModel):
     grades: List[GradeItem]
+
+
+def _assignment_response(
+    assignment: models.Assignment,
+    *,
+    include_answers: bool,
+    submission_count: int = 0,
+) -> AssignmentResponse:
+    response = AssignmentResponse.model_validate(assignment)
+    response.submission_count = submission_count
+    if not include_answers:
+        for question in response.questions:
+            question.correct_answer = None
+    return response
 
 # --- Endpoints ---
 
@@ -101,8 +112,11 @@ async def get_assignments(db: Session = Depends(get_db), current_user: models.Us
     
     result = []
     for a in assignments:
-        a_resp = AssignmentResponse.from_orm(a)
-        a_resp.submission_count = db.query(models.Submission).filter(models.Submission.assignment_id == a.id).count()
+        a_resp = _assignment_response(
+            a,
+            include_answers=current_user.role != "student",
+            submission_count=db.query(models.Submission).filter(models.Submission.assignment_id == a.id).count(),
+        )
         result.append(a_resp)
     return result
 
@@ -110,6 +124,7 @@ async def get_assignments(db: Session = Depends(get_db), current_user: models.Us
 async def create_assignment(assignment_data: AssignmentCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     if current_user.role != "teacher":
         raise HTTPException(status_code=403, detail="Only teachers can create assignments")
+    require_teacher_class(db, current_user, assignment_data.class_id)
     
     new_assignment = models.Assignment(
         title=assignment_data.title,
@@ -197,6 +212,7 @@ async def update_assignment(assignment_id: int, assignment_data: AssignmentUpdat
         
     if assignment.teacher_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to update this assignment")
+    require_teacher_class(db, current_user, assignment_data.class_id)
         
     # Update fields
     assignment.title = assignment_data.title
@@ -257,6 +273,12 @@ async def update_assignment(assignment_id: int, assignment_data: AssignmentUpdat
 
 @router.get("/{assignment_id}/submissions", response_model=List[SubmissionResponse])
 async def get_submissions(assignment_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    require_roles(current_user, "admin", "teacher")
+    assignment = db.query(models.Assignment).filter(models.Assignment.id == assignment_id).first()
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    require_owner_or_admin(current_user, assignment.teacher_id)
+
     submissions = db.query(models.Submission).filter(models.Submission.assignment_id == assignment_id).all()
     
     result = []
@@ -275,11 +297,22 @@ async def grade_submission(submission_id: int, grade_data: GradeRequest, db: Ses
     submission = db.query(models.Submission).filter(models.Submission.id == submission_id).first()
     if not submission:
         raise HTTPException(status_code=404, detail="Submission not found")
+
+    assignment = db.query(models.Assignment).filter(models.Assignment.id == submission.assignment_id).first()
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    require_owner_or_admin(current_user, assignment.teacher_id, owner_roles=("teacher",))
     
     total_score = 0
     for g in grade_data.grades:
-        answer = db.query(models.Answer).filter(models.Answer.id == g.answer_id).first()
+        answer = db.query(models.Answer).filter(
+            models.Answer.id == g.answer_id,
+            models.Answer.submission_id == submission.id,
+        ).first()
         if answer:
+            question = db.query(models.Question).filter(models.Question.id == answer.question_id).first()
+            if question and g.score > question.points:
+                raise HTTPException(status_code=422, detail="Điểm vượt quá điểm tối đa của câu hỏi")
             answer.score = g.score
             answer.feedback = g.feedback
             total_score += g.score
@@ -293,6 +326,13 @@ async def grade_submission(submission_id: int, grade_data: GradeRequest, db: Ses
 
 @router.post("/upload-docx")
 async def upload_docx(file: UploadFile = File(...), current_user: models.User = Depends(get_current_user)):
+    require_roles(current_user, "teacher")
+    if not file.filename or not file.filename.lower().endswith(".docx"):
+        raise HTTPException(status_code=400, detail="Chỉ chấp nhận file .docx")
+    contents = await file.read(5 * 1024 * 1024 + 1)
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="File không được vượt quá 5 MB")
+
     # Basic placeholder for DOCX parsing
     # In a real app, use python-docx to extract questions
     return [
@@ -314,16 +354,27 @@ async def get_assignment(assignment_id: int, db: Session = Depends(get_db), curr
     if not assignment:
         raise HTTPException(status_code=404, detail="Assignment not found")
     
-    # Check if student is in the class
-    if current_user.role == "student" and assignment.class_id != current_user.class_id:
+    if current_user.role == "student":
+        require_student_membership(current_user, assignment.class_id)
+    elif current_user.role in ("teacher", "admin"):
+        require_owner_or_admin(current_user, assignment.teacher_id)
+    else:
         raise HTTPException(status_code=403, detail="Not authorized to view this assignment")
     
-    a_resp = AssignmentResponse.from_orm(assignment)
-    a_resp.submission_count = db.query(models.Submission).filter(models.Submission.assignment_id == assignment.id).count()
-    return a_resp
+    return _assignment_response(
+        assignment,
+        include_answers=current_user.role != "student",
+        submission_count=db.query(models.Submission).filter(models.Submission.assignment_id == assignment.id).count(),
+    )
 
 @router.get("/{assignment_id}/my-submission", response_model=Optional[SubmissionResponse])
 async def get_my_submission(assignment_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    require_roles(current_user, "student")
+    assignment = db.query(models.Assignment).filter(models.Assignment.id == assignment_id).first()
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    require_student_membership(current_user, assignment.class_id)
+
     submission = db.query(models.Submission).filter(
         models.Submission.assignment_id == assignment_id,
         models.Submission.student_id == current_user.id
@@ -344,6 +395,9 @@ async def submit_assignment(assignment_id: int, submission_data: SubmissionCreat
     assignment = db.query(models.Assignment).filter(models.Assignment.id == assignment_id).first()
     if not assignment:
         raise HTTPException(status_code=404, detail="Assignment not found")
+    require_student_membership(current_user, assignment.class_id)
+    if assignment.status != "active":
+        raise HTTPException(status_code=400, detail="Bài tập hiện không nhận bài nộp")
         
     # Check if already submitted
     existing = db.query(models.Submission).filter(
@@ -366,7 +420,10 @@ async def submit_assignment(assignment_id: int, submission_data: SubmissionCreat
     
     total_score = 0
     for ans in submission_data.answers:
-        question = db.query(models.Question).filter(models.Question.id == ans.question_id).first()
+        question = db.query(models.Question).filter(
+            models.Question.id == ans.question_id,
+            models.Question.assignment_id == assignment_id,
+        ).first()
         if not question: continue
         
         is_correct = None
@@ -455,6 +512,7 @@ async def ai_grade_submission(
     assignment = db.query(models.Assignment).filter(models.Assignment.id == assignment_id).first()
     if not assignment:
         raise HTTPException(status_code=404, detail="Assignment not found")
+    require_owner_or_admin(current_user, assignment.teacher_id, owner_roles=("teacher",))
     
     answers = db.query(models.Answer).filter(models.Answer.submission_id == submission_id).all()
     
