@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Thêm DataTable, filter, pagination, form field, accessible dialog và confirmation flow dùng chung cho workflow nghiệp vụ.
 - Thêm 4 API integration test cho provisioning Admin, assignment submission, quiz lifecycle và schedule CRUD; tổng backend suite hiện có 14 test.
 - Thêm browser smoke Phase 2 cho cả Admin, Teacher và Student trên desktop/mobile.
+- Thêm `Coursework` và `Assessment` application interface, policy thuần và 6 interface/policy/OpenAPI test; tổng backend suite hiện có 20 test.
+- Thêm audit trail bền vững cho assignment/quiz bằng migration `20260805_0002`, ghi trong cùng transaction với thay đổi nghiệp vụ.
+- Thêm ADR-001 ghi lại quyết định modular-monolith vertical slice và lý do không tạo generic repository.
 
 ### Changed
 
@@ -32,11 +35,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrate các workflow Phase 2 sang Campus Blue: Admin giáo viên/học sinh/lớp; Teacher dashboard/lớp/bài tập/kiểm tra/thời khóa biểu; Student dashboard/lớp/môn/bài tập/quiz/thời khóa biểu.
 - Tách module API hơn 600 dòng thành client/error model và các feature `admin`, `academic`, `coursework`, `school`, `extensions`, đồng thời giữ compatibility facade cho route cũ.
 - Teacher và Student dùng chung `RoleShell`; thời khóa biểu dùng một component responsive và accessible cho cả hai vai trò.
+- Làm mỏng router assignment/quiz thành HTTP adapter; tách request schema khỏi response schema theo vai trò và chuẩn hóa application error sang HTTP status.
+- Gộp create/update/submit/grade/delete của assessment/coursework thành một transaction cho mỗi use case thay vì commit nhiều lần trong router.
 
 ### Fixed
 
 - Sửa response mapping của bài nộp trên Pydantic v2 để luồng nộp bài, xem bài nộp và chấm điểm không lỗi thiếu `student_name`.
 - Trang lớp của học sinh không còn gọi endpoint danh sách học sinh dành riêng cho Admin/Teacher, tránh lỗi 403 và không phơi dữ liệu wellbeing của bạn cùng lớp.
+- Student response của assignment/quiz giữ contract `correct_answer: null` nhưng answer key không còn được tạo từ cùng response schema với giáo viên.
 
 ---
 

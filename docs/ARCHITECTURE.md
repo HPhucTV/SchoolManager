@@ -24,6 +24,29 @@
                           └────────────┘  └────────────┘  └──────────┘
 ```
 
+## Luồng backend theo vertical slice
+
+Các domain đã migrate đi theo luồng `router -> application -> domain/SQLAlchemy`:
+
+```text
+FastAPI router
+  -> request schema + HTTP error mapping
+  -> Coursework / Assessment application interface
+  -> pure domain policy + direct SQLAlchemy access
+  -> one transaction + durable audit event
+  -> actor-specific response schema
+```
+
+Quy tắc đóng góp:
+
+- Router chỉ xử lý transport và validation tại biên HTTP; không query hoặc commit trực tiếp.
+- Application module sở hữu một use case hoàn chỉnh và là interface test chính.
+- Domain policy phải thuần để test trực tiếp, không import FastAPI/SQLAlchemy.
+- Không thêm generic repository khi SQLAlchemy vẫn là database adapter duy nhất.
+- Request schema và response schema theo vai trò không dùng chung để tránh lộ dữ liệu chấm điểm.
+
+Lý do và trade-off được ghi tại [ADR-001](decisions/ADR-001-backend-vertical-slices.md).
+
 ## Vai trò người dùng
 
 | Vai trò | Mô tả | Trang chính |

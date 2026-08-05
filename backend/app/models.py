@@ -152,6 +152,19 @@ class Answer(Base):
 
     submission = relationship("Submission", back_populates="answers")
 
+
+class AuditEvent(Base):
+    __tablename__ = "audit_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    actor_id = Column(Integer, nullable=False, index=True)
+    actor_role = Column(String, nullable=False)
+    action = Column(String, nullable=False, index=True)
+    resource_type = Column(String, nullable=False, index=True)
+    resource_id = Column(Integer, nullable=False, index=True)
+    details = Column(Text, nullable=False, default="{}")
+    created_at = Column(String, nullable=False, index=True)
+
 class Quiz(Base):
     __tablename__ = "quizzes"
 
