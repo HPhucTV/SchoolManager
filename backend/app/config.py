@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     API_V1_STR: str = "/api"
-    PROJECT_NAME: str = "Happy Schools API"
+    PROJECT_NAME: str = "SchoolManager API"
     CORS_ORIGINS: Union[List[str], str] = [
         "https://schoolmanager.id.vn", 
         "http://schoolmanager.id.vn", 

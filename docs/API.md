@@ -1,129 +1,153 @@
-# API Documentation
+# SchoolManager API
 
-## Base URL
+FastAPI sinh OpenAPI trực tiếp từ code. Khi tài liệu này và schema khác nhau, dùng schema tại `GET /api/openapi.json` làm nguồn cuối cùng.
 
-- **Development:** `http://localhost:8001`
-- **Production:** `https://api.schoolmanager.id.vn`
-- **Swagger UI:** `{BASE_URL}/docs`
-- **ReDoc:** `{BASE_URL}/redoc`
+## Base URL và công cụ
 
----
+| Môi trường | URL |
+|---|---|
+| Local | `http://127.0.0.1:8001` |
+| Swagger UI | `{BASE_URL}/docs` |
+| ReDoc | `{BASE_URL}/redoc` |
+| OpenAPI JSON | `{BASE_URL}/api/openapi.json` |
+
+Không mặc định một production hostname trong client hoặc tài liệu. Operator cấu hình `NEXT_PUBLIC_API_URL` cho từng môi trường.
 
 ## Authentication
 
-Tất cả API endpoints (trừ login) yêu cầu JWT token trong header:
+Các endpoint chứa dữ liệu trường học yêu cầu JWT Bearer token và tiếp tục kiểm tra role/class scope ở application layer.
 
+```http
+Authorization: Bearer <access_token>
 ```
-Authorization: Bearer <your_token>
-```
 
-### POST `/api/auth/login`
+Đăng nhập dùng email, không dùng username:
 
-```json
+```http
+POST /api/auth/login
+Content-Type: application/json
+
 {
-  "username": "teacher1",
-  "password": "teacher123"
+  "email": "teacher@school.example",
+  "password": "<local-or-user-password>"
 }
 ```
 
-**Response:**
+Response trả `access_token`, `token_type` và user hiện tại. Repository không cung cấp shared demo password; xem `README.md` nếu cần seed local.
+
+## Request ID và error contract
+
+Mọi HTTP response có header `X-Request-ID`. Client có thể gửi một ID gồm tối đa 128 ký tự an toàn (`A-Z`, `a-z`, `0-9`, `.`, `_`, `:`, `-`); server sẽ thay ID không hợp lệ.
+
+HTTP error do application trả về có dạng:
+
 ```json
 {
-  "access_token": "eyJ...",
-  "token_type": "bearer",
-  "user": {
-    "id": 1,
-    "username": "teacher1",
-    "role": "teacher"
-  }
+  "detail": "Thông báo an toàn cho client",
+  "request_id": "a1b2c3..."
 }
 ```
 
----
+Validation error giữ `detail` dạng danh sách FastAPI. Lỗi 500 không trả exception, SQL hoặc credential; dùng `request_id` để đối chiếu structured log.
 
-## API Endpoints Overview
+## Health checks (không cần authentication)
 
-### 🔐 Authentication (`/api/auth/`)
+| Method | Endpoint | Ý nghĩa |
+|---|---|---|
+| GET | `/health/live` | Process đang nhận request |
+| GET | `/health/ready` | Database trả lời `SELECT 1`; lỗi trả 503 |
+| GET | `/health` | Alias của readiness, không xuất hiện trong OpenAPI |
 
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| POST | `/api/auth/login` | Đăng nhập |
-| POST | `/api/auth/users` | Tạo tài khoản mới |
-| GET | `/api/auth/users` | Danh sách người dùng |
-| PUT | `/api/auth/users/{id}` | Cập nhật người dùng |
-| DELETE | `/api/auth/users/{id}` | Xóa người dùng |
-| POST | `/api/auth/change-password` | Đổi mật khẩu |
-| GET | `/api/auth/classes` | Danh sách lớp học |
-| POST | `/api/auth/classes` | Tạo lớp học |
+Không dùng liveness để quyết định đưa instance vào traffic; load balancer nên dùng readiness.
 
-### 🤖 AI (`/api/ai/`, `/api/ai-tutor/`)
+## Core vertical slices
 
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| POST | `/api/ai/chat` | Chat với AI chatbot |
-| GET | `/api/ai-tutor/analysis` | Phân tích năng lực |
-| GET | `/api/ai-tutor/recommendations` | Đề xuất học tập |
-| GET | `/api/ai-tutor/learning-path` | Lộ trình cá nhân |
+### Authentication và admin — `/api/auth`
 
-### 📝 Quizzes (`/api/quizzes/`)
+| Method | Endpoint | Scope |
+|---|---|---|
+| POST | `/login` | Public |
+| GET, PUT | `/users/me` | User hiện tại |
+| POST | `/change-password` | User hiện tại |
+| POST | `/users/me/avatar` | User hiện tại; JPEG/PNG/WebP, tối đa 5 MB |
+| GET, POST | `/users` | Admin |
+| PUT, DELETE | `/users/{user_id}` | Admin |
+| POST | `/users/{user_id}/reset-password` | Admin |
+| GET, POST | `/classes` | Admin operations dưới auth router |
+| PUT | `/classes/{class_id}` | Admin |
 
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| GET | `/api/quizzes` | Danh sách bài kiểm tra |
-| POST | `/api/quizzes` | Tạo bài kiểm tra |
-| PUT | `/api/quizzes/{id}` | Cập nhật bài kiểm tra |
-| DELETE | `/api/quizzes/{id}` | Xóa bài kiểm tra |
+### Classes và activities
 
-### ⚔️ Quiz Battle (`/api/battle/`)
+| Method | Endpoint | Ghi chú |
+|---|---|---|
+| GET, POST | `/api/classes` | List/create theo role |
+| GET, PUT | `/api/classes/{class_id}` | Class scope bắt buộc |
+| GET | `/api/classes/{class_id}/students` | Không cho student đọc lớp khác |
+| GET | `/api/classes/{class_id}/timeline` | Timeline lớp |
+| GET, POST | `/api/activities` | Authenticated |
+| PUT, PATCH, DELETE | `/api/activities/{activity_id}` | Teacher/admin policy |
 
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| POST | `/api/battle/create` | Tạo trận đấu |
-| POST | `/api/battle/join` | Tham gia trận đấu |
-| POST | `/api/battle/{id}/start` | Bắt đầu |
-| POST | `/api/battle/{id}/answer` | Gửi câu trả lời |
-| GET | `/api/battle/{id}/leaderboard` | Bảng xếp hạng |
+### Coursework — `/api/assignments`
 
-### 🎮 Gamification (`/api/gamification/`)
+| Method | Endpoint | Ghi chú |
+|---|---|---|
+| GET, POST | `/api/assignments` | Danh sách/tạo assignment |
+| GET, PUT, DELETE | `/api/assignments/{assignment_id}` | Role-specific response/policy |
+| POST | `/api/assignments/{assignment_id}/submit` | Student submit |
+| GET | `/api/assignments/{assignment_id}/my-submission` | Student |
+| GET | `/api/assignments/{assignment_id}/submissions` | Teacher của lớp |
+| PUT | `/api/assignments/submissions/{submission_id}/grade` | Teacher của lớp |
+| PATCH | `/api/assignments/{assignment_id}/close` | Teacher của lớp |
+| POST | `/api/assignments/upload-docx` | DOCX validation tại boundary |
 
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| POST | `/api/gamification/check-in` | Điểm danh hàng ngày |
-| GET | `/api/gamification/badges` | Danh sách huy hiệu |
-| GET | `/api/gamification/my-stats` | Thống kê cá nhân |
-| GET | `/api/gamification/leaderboard` | Bảng xếp hạng |
-| GET | `/api/gamification/shop` | Cửa hàng |
-| POST | `/api/gamification/shop/buy/{id}` | Mua vật phẩm |
+### Assessment — `/api/quizzes`
 
-### 💚 Wellness (`/api/wellness/`)
+| Method | Endpoint | Ghi chú |
+|---|---|---|
+| GET, POST | `/api/quizzes` | List/create quiz |
+| GET, PUT, DELETE | `/api/quizzes/{quiz_id}` | Role/class policy |
+| GET | `/api/quizzes/{quiz_id}/my-result` | Student result |
+| POST | `/api/quizzes/{quiz_id}/submit` | Student submit |
+| POST | `/api/quizzes/upload-docx` | Parse DOCX thành câu hỏi draft |
 
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| POST | `/api/wellness/mood` | Ghi nhận cảm xúc |
-| GET | `/api/wellness/mood/history` | Lịch sử cảm xúc |
-| GET | `/api/wellness/mood/analytics` | Phân tích cảm xúc |
-| POST | `/api/wellness/sos` | Gửi cảnh báo SOS |
-| GET | `/api/wellness/sos/alerts` | Danh sách SOS |
-| GET | `/api/wellness/class/{id}` | Wellness theo lớp |
+Student response không chứa đáp án trước khi policy `show_answers` cho phép.
 
-### 📊 Analytics (`/api/analytics/`)
+### Wellbeing — `/api/wellness`
 
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| GET | `/api/analytics/trends/{studentId}` | Xu hướng học sinh |
-| GET | `/api/analytics/early-warning` | Cảnh báo sớm |
-| GET | `/api/analytics/class-report/{classId}` | Báo cáo lớp |
+| Method | Endpoint | Ghi chú |
+|---|---|---|
+| POST | `/mood` | Student; emoji allow-list, note tối đa 500 ký tự |
+| GET | `/mood/history` | Student; `days` từ 1-90 |
+| GET | `/mood/analytics` | Student aggregate |
+| POST | `/sos` | Student; hỗ trợ ẩn danh |
+| GET | `/sos/alerts` | Teacher chỉ thấy lớp mình; admin theo policy |
+| PATCH | `/sos/{alert_id}` | Teacher/admin transition policy |
+| GET | `/class/{class_id}` | Summary riêng tư, không trả raw mood cá nhân |
 
-### 👨‍👩‍👧 Parent (`/api/parent/`)
+SOS ẩn danh trả `student_id: null`; audit event không ghi nội dung message.
 
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| GET | `/api/parent/children` | Danh sách con |
-| GET | `/api/parent/child/{id}/report` | Báo cáo con |
-| GET | `/api/parent/child/{id}/mood` | Cảm xúc con |
-| POST | `/api/parent/message` | Gửi tin nhắn |
-| GET | `/api/parent/messages` | Lịch sử tin nhắn |
+## Legacy/engagement route groups
 
----
+Các group sau đang tồn tại và được frontend sử dụng, nhưng chưa phải tất cả đã migrate sang vertical slice. Kiểm tra Swagger và test evidence trước khi thay contract.
 
-> **Ghi chú:** Tài liệu API đầy đủ với request/response examples có thể xem tại Swagger UI: `{BASE_URL}/docs`
+| Prefix | Chức năng |
+|---|---|
+| `/api/schedules` | Thời khóa biểu |
+| `/api/battle` | Quiz Battle |
+| `/api/gamification` | Check-in, badge, leaderboard, shop |
+| `/api/notifications` | Thông báo |
+| `/api/ai`, `/api/ai-tutor` | Chat/advice dựa trên dataset nội bộ |
+| `/api/games` | Crossword |
+| `/api/analytics` | Trends, early warning, class report |
+| `/api/search` | Search và suggestions |
+| `/api/dashboard`, `/api/statistics` | Dashboard aggregates |
+| `/api/student`, `/api/teacher/reports` | Role-specific workflows |
+
+Không có `/api/parent` router trong build hiện tại. Parent role vẫn tồn tại trong một phần model legacy nhưng chưa được công bố là public API.
+
+## Thay đổi contract
+
+- Cập nhật schema/type frontend trong `src/lib/api/` cùng PR.
+- Thêm test OpenAPI hoặc application workflow cho endpoint thay đổi.
+- Ghi migration/compatibility note trong PR template.
+- Không đưa secret, token, mood note, SOS message hay dữ liệu học sinh thật vào example/log/screenshot.

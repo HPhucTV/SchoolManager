@@ -9,12 +9,29 @@ Set SCHOOLMANAGER_SEED_PASSWORD to choose your own development password.
 
 import sys, os, random, json, string, secrets
 from datetime import datetime, timedelta
+from pathlib import Path
 
 # Fix Windows console encoding for Vietnamese/emoji
 if sys.stdout.encoding != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8")
 
-sys.path.append(os.path.join(os.getcwd(), "backend"))
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.append(str(REPO_ROOT / "backend"))
+
+if os.environ.get("ENVIRONMENT", "development").lower() == "production":
+    raise RuntimeError(
+        "scripts/seed_db.py is local demo data only; use migrations and create_admin.py in production"
+    )
+
+# Demo records are intentionally restricted to SQLite so the script cannot be
+# pointed at a production PostgreSQL database by mistake.
+configured_database = os.environ.get("DATABASE_URL_SYNC")
+if configured_database and not configured_database.startswith("sqlite:"):
+    raise RuntimeError("scripts/seed_db.py only supports a local SQLite database")
+os.environ.setdefault(
+    "DATABASE_URL_SYNC",
+    f"sqlite:///{(REPO_ROOT / 'backend' / 'sql_app.db').as_posix()}",
+)
 
 from sqlalchemy.orm import Session
 from app.database import SessionLocal, engine

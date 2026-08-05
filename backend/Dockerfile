@@ -1,5 +1,5 @@
 # Use official Python runtime as a parent image
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 # Set working directory
 WORKDIR /app
@@ -21,4 +21,4 @@ EXPOSE 8001
 
 # Command to run the application
 # Using --host 0.0.0.0 is crucial for Docker networking
-CMD ["sh", "-c", "alembic -c alembic.ini upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8001"]
+CMD ["sh", "-c", "python -m scripts.provision_schema && alembic -c alembic.ini upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8001"]

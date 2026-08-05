@@ -19,8 +19,8 @@
                                     ┌─────────────┼─────────────┐
                                     │             │             │
                           ┌─────────▼──┐  ┌───────▼────┐  ┌────▼─────┐
-                          │ PostgreSQL │  │ OpenAI API │  │ JSON     │
-                          │ Port: 5432 │  │ (AI/Chat)  │  │ Datasets │
+                          │ PostgreSQL │  │ Redis      │  │ JSON     │
+                          │ Port: 5432 │  │ Cache      │  │ Datasets │
                           └────────────┘  └────────────┘  └──────────┘
 ```
 
@@ -31,7 +31,7 @@ Các domain đã migrate đi theo luồng `router -> application -> domain/SQLAl
 ```text
 FastAPI router
   -> request schema + HTTP error mapping
-  -> Coursework / Assessment application interface
+  -> Coursework / Assessment / Wellbeing application interface
   -> pure domain policy + direct SQLAlchemy access
   -> one transaction + durable audit event
   -> actor-specific response schema
@@ -69,6 +69,41 @@ Các quyết định bảo vệ dữ liệu:
 
 Frontend engagement dùng `src/lib/api/extensions.ts` làm seam typed cho wellbeing, gamification, notifications, AI Tutor, Quiz Battle và games. Route page chỉ điều phối state và dùng UI primitives chung; polling Quiz Battle và timer game đều có cleanup khi unmount.
 
+## Operational boundary (Phase 5)
+
+HTTP boundary dùng `RequestContextMiddleware` để gắn `X-Request-ID` cho mọi response và ghi một JSON event `http_request_completed` gồm method, path, status, duration và request ID. Error handler ghi event theo status nhưng không log body, token, exception message hoặc dữ liệu học sinh; lỗi 500 chỉ trả thông báo chung và correlation ID.
+
+```text
+Client / reverse proxy
+  -> validate or generate X-Request-ID
+  -> FastAPI route + application policy
+  -> response/error with X-Request-ID
+  -> structured JSON event for correlation
+```
+
+Health contract:
+
+- `/health/live`: process liveness, không chạm database.
+- `/health/ready`: chạy `SELECT 1`, trả 503 khi database chưa sẵn sàng.
+- `/health`: alias readiness cho platform cũ.
+
+Đây là observability baseline, chưa phải metrics/tracing/alerting stack. Operator phải thu thập stdout/stderr có cấu trúc và đặt cảnh báo theo readiness/error rate ở hạ tầng triển khai.
+
+## Schema và account provisioning
+
+Application import không tự tạo bảng. Local/Docker chạy explicit bootstrap theo thứ tự:
+
+```text
+python -m scripts.provision_schema
+  -> create current SQLAlchemy schema baseline (idempotent, no data)
+alembic upgrade head
+  -> apply/adopt versioned migration deltas
+python -m scripts.create_admin
+  -> interactive first admin, no default password
+```
+
+`scripts/seed_db.py` ở root là demo seed riêng, tự chặn `ENVIRONMENT=production` và không được copy vào backend image. Alembic hiện là adoption baseline cho schema legacy, chưa phải lịch sử tạo toàn bộ database từ revision đầu tiên.
+
 ## Vai trò người dùng
 
 | Vai trò | Mô tả | Trang chính |
@@ -76,7 +111,8 @@ Frontend engagement dùng `src/lib/api/extensions.ts` làm seam typed cho wellbe
 | **Admin** | Quản trị hệ thống, CRUD users/classes | `/admin` |
 | **Teacher** | Quản lý lớp, tạo quiz, xem analytics | `/teacher` |
 | **Student** | Làm quiz, gamification, mood tracking | `/student` |
-| **Parent** | Theo dõi con, nhắn tin giáo viên | `/parent` |
+
+Parent còn xuất hiện trong một số ý tưởng/model legacy nhưng build hiện tại không có `/parent` page hoặc `/api/parent` router; không coi đây là public role contract.
 
 ## Luồng Authentication
 
@@ -102,6 +138,7 @@ Client                    Backend                   Database
 | `db` | postgres:15-alpine | 5432 | Database chính |
 | `backend` | Custom (FastAPI) | 8001 | REST API |
 | `frontend` | Custom (Next.js) | 3000 | Web UI |
+| `redis` | redis:7-alpine | internal | Cache tùy chọn; API vẫn phải degrade an toàn khi cache unavailable |
 | `nginx` | nginx:alpine | 80, 443 | Reverse proxy + SSL |
 | `certbot` | certbot/certbot | — | SSL cert renewal |
 
@@ -109,7 +146,7 @@ Client                    Backend                   Database
 
 Các bảng chính trong `backend/app/models.py`:
 
-- **User** — Tài khoản người dùng (admin, teacher, student, parent)
+- **User** — Tài khoản người dùng (public contract hiện tại: admin, teacher, student)
 - **Class** — Lớp học
 - **Student** — Thông tin học sinh (liên kết User + Class)
 - **Quiz / Question** — Bài kiểm tra & câu hỏi

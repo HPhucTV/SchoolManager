@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Thêm request correlation qua `X-Request-ID`, structured HTTP/error events và health endpoints `/health/live`, `/health/ready`.
+- Thêm explicit schema bootstrap và first-admin provisioning không có default password; tổng backend suite hiện có 30 test gồm operational readiness/provisioning.
+- Thêm issue template riêng cho database migration, Campus Blue design system và security hardening; PR template yêu cầu test evidence, screenshot và migration note.
 - Thêm Alembic adoption baseline, 10 test authorization, CI quality gates và browser smoke test.
 - Thêm Campus Blue semantic tokens, UI primitives và shared `RoleShell`.
 - Thêm ảnh trường học gốc cho landing và login.
@@ -32,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Đồng bộ README, API, architecture, contributing và deployment guide với code hiện tại; bỏ parent API/live-production claim và các trạng thái hoàn thành không có evidence.
+- Tách production provisioning khỏi demo seed: backend image không chứa demo seed, seed tự chặn production, Docker chờ database/readiness và dùng Python 3.12 như CI.
+- Retire `scripts/migrate_new_features.py` để không còn chạy ALTER/create-all/seed ad hoc; entry point cũ chỉ hướng người vận hành sang schema bootstrap và Alembic.
+- CI chạy typecheck explicit và compileall cho backend operational scripts.
 - Thiết kế lại landing, login và Admin Overview cho bối cảnh trường học, responsive và system dark mode.
 - Seed development dùng mật khẩu ngẫu nhiên hoặc `SCHOOLMANAGER_SEED_PASSWORD`, không dùng credential chung trong repo.
 - Migrate các workflow Phase 2 sang Campus Blue: Admin giáo viên/học sinh/lớp; Teacher dashboard/lớp/bài tập/kiểm tra/thời khóa biểu; Student dashboard/lớp/môn/bài tập/quiz/thời khóa biểu.

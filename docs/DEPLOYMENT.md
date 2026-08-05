@@ -1,101 +1,147 @@
-# Hướng dẫn triển khai (Deployment Guide)
+# Deployment guide
 
-## Yêu cầu hệ thống
+`docker-compose.yml` là reference deployment cho một instance SchoolManager. Nó không tự cung cấp managed database, off-site backup, centralized logging, alerting hay secret manager; operator phải bổ sung các control này trước khi dùng với dữ liệu trường thật.
 
-| Thành phần | Yêu cầu tối thiểu |
-|------------|-------------------|
-| OS | Ubuntu 20.04+ / Windows Server |
-| RAM | 4GB (khuyến nghị 8GB) |
-| Disk | 20GB |
-| Docker | 20.10+ |
-| Docker Compose | 2.0+ |
+## 1. Chuẩn bị
 
----
-
-## 1. Chuẩn bị Server
-
-```bash
-# Cập nhật hệ thống
-sudo apt update && sudo apt upgrade -y
-
-# Cài Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-
-# Cài Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-```
-
-## 2. Clone & Cấu hình
+Yêu cầu tối thiểu: Docker Engine/Compose v2, 4 GB RAM, domain/reverse-proxy policy và nơi lưu secret ngoài Git.
 
 ```bash
 git clone https://github.com/HPhucTV/SchoolManager.git
-cd SchoolManager/happy-schools
-
-# Cấu hình backend
-cp .env.example backend/.env
-nano backend/.env
+cd SchoolManager
+cp .env.example .env
 ```
 
-### Biến môi trường quan trọng
-
-```env
-# Database
-DATABASE_URL=postgresql://admin:your_password@db:5432/happy_schools
-
-# AI (optional)
-OPENAI_API_KEY=sk-...
-
-# Security
-SECRET_KEY=your-random-secret-key
-```
-
-## 3. SSL Certificate
+Thay mọi giá trị `CHANGE-THIS-*` trong `.env`. Sinh secret riêng:
 
 ```bash
-# Tạo self-signed cert (development)
-mkdir -p certs
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout certs/server.key -out certs/server.crt
-
-# Hoặc Let's Encrypt (production)
-docker-compose run certbot certonly --webroot -w /var/www/certbot \
-  -d yourdomain.com -d api.yourdomain.com
+python -c "import secrets; print(secrets.token_urlsafe(48))"
 ```
 
-## 4. Deploy
+Các biến bắt buộc cho Compose:
+
+- `POSTGRES_PASSWORD`: password riêng của instance database.
+- `SECRET_KEY`: chuỗi ngẫu nhiên tối thiểu 32 ký tự; đổi key sẽ vô hiệu JWT cũ.
+- `CORS_ORIGINS`: danh sách origin frontend chính xác, không dùng `*` với credential.
+- `TRUSTED_PROXY_HOSTS`: CIDR/host của reverse proxy thật.
+- `NEXT_PUBLIC_API_URL`: public API URL được inline lúc build frontend.
+
+SMTP là tùy chọn. Không commit `.env`, certificate/private key, dump database hoặc screenshot chứa dữ liệu thật.
+
+Kiểm tra interpolation trước khi deploy (output có thể chứa secret, không đính kèm công khai):
 
 ```bash
-# Build & khởi chạy
-docker-compose up --build -d
-
-# Xem logs
-docker-compose logs -f
-
-# Seed database
-docker exec -it happy-schools-backend python scripts/seed_db.py
+docker compose config --quiet
 ```
 
-## 5. Kiểm tra
-
-- Frontend: `https://yourdomain.com`
-- Backend API: `https://api.yourdomain.com/docs`
-- Health check: `curl https://api.yourdomain.com/health`
-
-## 6. Bảo trì
+## 2. Build và bootstrap
 
 ```bash
-# Restart services
-docker-compose restart
-
-# Update code
-git pull origin main
-docker-compose up --build -d
-
-# Backup database
-docker exec happy-schools-db pg_dump -U admin happy_schools > backup.sql
-
-# Restore database
-cat backup.sql | docker exec -i happy-schools-db psql -U admin happy_schools
+docker compose up --build -d
+docker compose ps
 ```
+
+Backend image chạy explicit:
+
+1. `python -m scripts.provision_schema` để tạo current schema baseline, không seed data.
+2. `alembic upgrade head` để apply/adopt migration delta.
+3. `uvicorn app.main:app`.
+
+Database healthcheck phải pass trước khi backend bootstrap; frontend chờ backend readiness.
+
+Tạo admin đầu tiên qua prompt ẩn password:
+
+```bash
+docker compose exec backend python -m scripts.create_admin
+```
+
+Script không có default password, không in password và không promote một non-admin account đã tồn tại. `scripts/seed_db.py` là dữ liệu demo local, bị chặn ở `ENVIRONMENT=production` và không được copy vào backend image.
+
+## 3. Health và smoke check
+
+```bash
+curl -fsS https://api.example.edu/health/live
+curl -fsS https://api.example.edu/health/ready
+curl -I https://app.example.edu/
+curl -I https://api.example.edu/docs
+```
+
+Expected:
+
+- Liveness trả `200 {"status":"ok"}`.
+- Readiness trả 200 khi database sẵn sàng, 503 với payload an toàn khi unavailable.
+- Mọi response có `X-Request-ID`.
+
+Không đưa instance vào traffic chỉ dựa trên liveness.
+
+## 4. TLS và reverse proxy
+
+Provision TLS certificate ngoài repository (Let's Encrypt, managed load balancer hoặc PKI của tổ chức). `certs/` chỉ chứa README; private key/certificate bị Git ignore. Certificate từng tồn tại trong Git history cũ phải được coi là compromised và thu hồi.
+
+Nginx phải:
+
+- terminate TLS và redirect HTTP sang HTTPS;
+- forward `X-Forwarded-For`, `X-Forwarded-Proto` và `X-Request-ID`;
+- chỉ cho phép trusted proxy range đã cấu hình;
+- giới hạn upload/body phù hợp với API (avatar 5 MB; DOCX theo policy backend).
+
+## 5. Logs và incident correlation
+
+```bash
+docker compose logs -f backend
+```
+
+Backend emit JSON event `http_request_completed` với method, path, status, duration và `request_id`. Error event không chứa body, token, database URL, SOS message hoặc exception text. Thu thập stdout/stderr vào log platform và giữ retention theo privacy policy.
+
+Khi điều tra lỗi, ghi lại thời điểm, route, status và `X-Request-ID`; không yêu cầu người dùng gửi access token.
+
+Baseline alert đề xuất ở hạ tầng:
+
+- readiness fail liên tục;
+- tỷ lệ 5xx vượt ngưỡng theo SLO;
+- p95/p99 latency tăng bất thường;
+- disk/backup failure cho PostgreSQL.
+
+Repository chưa cấu hình metrics/tracing/alert delivery; không tuyên bố chúng đã hoàn thành.
+
+## 6. Upgrade và rollback
+
+Trước upgrade:
+
+1. Đọc `CHANGELOG.md` và migration note của release/PR.
+2. Backup database và kiểm tra restore trên môi trường tách biệt.
+3. Ghi image/git revision hiện tại để rollback.
+4. Chạy quality gates và smoke test staging.
+
+```bash
+git pull --ff-only origin main
+docker compose build
+docker compose up -d
+docker compose ps
+curl -fsS https://api.example.edu/health/ready
+```
+
+Rollback application bằng image/revision trước đó. Nếu migration không backward-compatible, dùng downgrade/backfill plan đã review; không tự chạy `alembic downgrade` trên production khi chưa xác nhận data-loss risk.
+
+## 7. Backup/restore
+
+Ví dụ thủ công (thay bằng scheduled encrypted off-site backup trong production):
+
+```bash
+docker compose exec -T db pg_dump -U admin -d happy_schools > schoolmanager-backup.sql
+docker compose exec -T db psql -U admin -d happy_schools < schoolmanager-backup.sql
+```
+
+Dump chứa dữ liệu nhạy cảm: mã hóa, giới hạn access, đặt retention và không lưu trong repository. Một backup chỉ được coi là hợp lệ sau restore drill thành công.
+
+## Release checklist
+
+- [ ] Không còn placeholder/shared credential; secret nằm ngoài Git.
+- [ ] Frontend audit/lint/typecheck/build pass.
+- [ ] Backend pytest, compileall và `pip-audit` pass.
+- [ ] Migration upgrade + rollback/data plan được review.
+- [ ] Admin đầu tiên được tạo riêng, demo seed không chạy.
+- [ ] Liveness/readiness và request ID được smoke test qua reverse proxy.
+- [ ] Backup + restore drill pass.
+- [ ] Screenshot/manual test không chứa dữ liệu thật.
+- [ ] Known limitations trong README/blueprint vẫn chính xác.

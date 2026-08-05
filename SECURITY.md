@@ -6,14 +6,7 @@ Tài liệu này mô tả chính sách bảo mật và quy trình báo cáo lỗ
 
 ## Supported Versions
 
-Chúng tôi cung cấp bản vá bảo mật cho các phiên bản sau:
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.1.x   | ✅ Full support    |
-| 1.0.x   | ⚠️ Limited support |
-| 0.1.x   | ⚠️ Limited support |
-| < 0.1   | ❌ Not supported   |
+Dự án đang trong giai đoạn renovation và chưa cam kết maintenance SLA cho nhiều release line. Security fix được ưu tiên trên `main`; maintainer sẽ ghi rõ tag/backport nào được phát hành trong advisory tương ứng. Không nên giả định các tag cũ còn được hỗ trợ nếu không có advisory/release note xác nhận.
 
 ---
 
@@ -27,7 +20,7 @@ Chúng tôi cung cấp bản vá bảo mật cho các phiên bản sau:
 
 Thay vào đó, gửi báo cáo qua email: **security@schoolmanager.id.vn**
 
-Bạn sẽ nhận được phản hồi trong vòng **48 giờ**. Nếu không nhận được phản hồi, vui lòng gửi lại email để đảm bảo chúng tôi đã nhận được.
+Repository hiện không cam kết thời gian phản hồi cố định. Nếu kênh email không xác nhận đã nhận báo cáo, hãy liên hệ maintainer qua hồ sơ repository mà không đăng chi tiết khai thác công khai.
 
 ### 📋 Thông tin cần cung cấp trong báo cáo
 
@@ -72,14 +65,14 @@ Chúng tôi cam kết bảo vệ các nhà nghiên cứu bảo mật khi:
 - Pydantic validation tại các HTTP boundary; các endpoint cũ đang tiếp tục được chuẩn hóa
 - SQL Injection prevention qua SQLAlchemy ORM (parameterized queries)
 - Giới hạn loại và kích thước cho avatar, DOCX và tệp thông báo
-- Error handling không lộ thông tin hệ thống
+- Error handling không lộ thông tin hệ thống và trả `X-Request-ID` để correlation
 - CSP, HSTS, X-Frame-Options, Referrer-Policy và Permissions-Policy ở frontend production
 
 **🗄️ Data Protection:**
 
 - Environment variables cho tất cả credentials (`.env` files)
 - Secret production bắt buộc được cấp qua environment và bị từ chối nếu là placeholder
-- Dữ liệu nhạy cảm không ghi vào logs
+- Structured HTTP/error event chỉ dùng allow-list field và không ghi body, token, mood/SOS content hoặc exception text
 - Database connections qua authenticated access
 - Private key và certificate đã được xóa khỏi working tree; lịch sử Git cũ vẫn phải được xem là đã lộ và cần thu hồi/cấp lại
 
@@ -94,11 +87,13 @@ Chúng tôi cam kết bảo vệ các nhà nghiên cứu bảo mật khi:
 ### 📋 Planned Security Enhancements
 
 - [ ] Rate limiting cho API endpoints
-- [ ] API request logging & monitoring
+- [x] Request ID và structured HTTP/error event baseline
+- [ ] Centralized log collection, metrics, tracing và alert delivery
 - [ ] Enhanced input sanitization (XSS prevention)
 - [x] Security headers (CSP, HSTS, X-Frame-Options)
 - [x] Automated dependency vulnerability scanning trong CI
-- [ ] Security audit logging
+- [x] Durable audit event cho các vertical slice đã migrate
+- [ ] Mở rộng audit/redaction policy sang toàn bộ router legacy (bao gồm email service logs)
 - [ ] Two-factor authentication (2FA)
 - [ ] Session management improvements
 
@@ -215,13 +210,12 @@ Chúng tôi cam kết bảo vệ các nhà nghiên cứu bảo mật khi:
 
 ### 🔍 Security Monitoring
 
-Chúng tôi giám sát security advisories cho tất cả third-party dependencies và sẽ cập nhật tài liệu này khi có thay đổi liên quan đến bảo mật.
+CI chạy audit dependency cho pull request/push. Đây là control phát hiện baseline, không phải cam kết giám sát 24/7.
 
 ```bash
 # Kiểm tra vulnerabilities
-npm audit                    # Frontend
-pip-audit                    # Backend
-docker scan <image>          # Container
+npm audit --audit-level=high
+python -m pip_audit -r backend/requirements.txt
 ```
 
 ---
@@ -230,7 +224,7 @@ docker scan <image>          # Container
 
 - **Security Email**: security@schoolmanager.id.vn
 - **GitHub Issues**: Chỉ cho non-security bugs
-- **Response Time**: Trong vòng 48 giờ
+- **Response Time**: Không có SLA; maintainer phản hồi theo khả năng của dự án mã nguồn mở
 
 ---
 

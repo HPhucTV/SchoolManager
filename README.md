@@ -1,508 +1,117 @@
-<p align="center">
-  <img src="./public/logo.png" alt="SchoolManager Logo" width="120" />
-</p>
+<p align="center"><img src="./public/logo.png" alt="SchoolManager" width="96" /></p>
 
 <h1 align="center">SchoolManager</h1>
 
-<p align="center">
-  <strong>Nền tảng quản lý trường học thông minh tích hợp AI — hỗ trợ quản trị viên, giáo viên và học sinh</strong>
-</p>
+<p align="center">Nền tảng quản lý trường học mã nguồn mở cho quản trị viên, giáo viên và học sinh.</p>
 
-<p align="center">
-  <a href="https://schoolmanager.id.vn">🌐 Live Demo</a> •
-  <a href="https://github.com/HPhucTV/SchoolManager/issues/new?template=bug_report.yml">🐛 Báo lỗi</a> •
-  <a href="https://github.com/HPhucTV/SchoolManager/issues/new?template=feature_request.yml">✨ Đề xuất tính năng</a> •
-  <a href="#-tài-liệu">📚 Tài liệu</a>
-</p>
+<p align="center"><a href="CONTRIBUTING.md">Đóng góp</a> · <a href="docs/API.md">API</a> · <a href="docs/DEPLOYMENT.md">Triển khai</a> · <a href="SECURITY.md">Bảo mật</a></p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/version-1.1.1-blue?style=for-the-badge" alt="Version" />
-  <img src="https://img.shields.io/badge/license-Apache%202.0-green?style=for-the-badge" alt="License" />
-  <img src="https://img.shields.io/badge/Next.js-16.2.12-black?style=for-the-badge&logo=next.js" alt="Next.js" />
-  <img src="https://img.shields.io/badge/FastAPI-0.139.2-009688?style=for-the-badge&logo=fastapi" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python" alt="Python" />
-</p>
+SchoolManager kết hợp quản lý lớp, coursework, quiz, gamification và wellbeing trong một giao diện Campus Blue. Đây là dự án đang được trùng tu: các vertical slice đã có test và contract rõ ràng được ưu tiên, còn các router legacy được giữ tương thích và sẽ migrate dần.
 
----
+## Tính năng hiện có
 
-**SchoolManager** là nền tảng mã nguồn mở giúp quản lý trường học toàn diện, tích hợp AI chatbot, kiểm tra trực tuyến, phân tích học tập và chăm sóc sức khỏe tinh thần cho học sinh. Hệ thống được thiết kế dành cho **quản trị viên**, **giáo viên** và **học sinh** với giao diện hiện đại, trải nghiệm mượt mà.
+- Authentication và RBAC cho admin, teacher, student.
+- Lớp học, bài tập, quiz, nộp bài/chấm điểm và thời khóa biểu.
+- Mood journal, SOS alert và class wellness với policy riêng tư.
+- Quiz Battle, gamification, thông báo, AI Tutor/chatbot dựa trên dataset nội bộ và mini-games.
+- Frontend Next.js responsive với Campus Blue, dark mode, keyboard focus và trạng thái loading/empty/error.
 
-Chúng tôi rất vui khi bạn quan tâm đến dự án! Trước khi đóng góp, vui lòng đọc qua [hướng dẫn đóng góp](CONTRIBUTING.md) và [quy tắc ứng xử](CODE_OF_CONDUCT.md).
+Các mục trên là phạm vi code hiện tại, không phải cam kết rằng mọi router đã sẵn sàng cho production. Xem [trạng thái release](#trạng-thái-release) và [blueprint](docs/RENOVATION_BLUEPRINT.md) trước khi triển khai trường thật.
 
----
+## Bắt đầu nhanh (local)
 
-## ✨ Highlights
-
-- 🤖 **AI Chatbot** — Trợ lý AI thông minh cho giáo viên và học sinh với khả năng tạo báo cáo và tư vấn
-- 📝 **Quiz & Kiểm tra trực tuyến** — Tạo đề thi AI hoặc thủ công, hỗ trợ nhiều độ khó, có deadline
-- ⚔️ **Quiz Battle** — Chế độ thi đấu thời gian thực giữa các học sinh
-- 🎮 **Gamification** — Hệ thống điểm, huy hiệu, bảng xếp hạng, cửa hàng phần thưởng
-- 💚 **Wellness & Sức khỏe tinh thần** — Theo dõi cảm xúc, cảnh báo SOS, phân tích sức khỏe lớp
-- 🔍 **Smart Search** — Tìm kiếm toàn cục thông minh (Ctrl+K) với thuật toán BM25 + AI Ranking
-- 📊 **Dashboard & Analytics** — Thống kê toàn diện, cảnh báo sớm, báo cáo lớp chi tiết
-- 🐳 **Docker One-Click Deploy** — Triển khai toàn bộ hệ thống bằng một lệnh duy nhất
-
----
-
-## 📋 Mục lục
-
-- [SchoolManager là gì?](#schoolmanager-là-gì)
-- [Tính năng chính](#-tính-năng-chính)
-- [Bắt đầu nhanh](#-bắt-đầu-nhanh)
-- [Công nghệ sử dụng](#️-công-nghệ-sử-dụng)
-- [Cấu trúc dự án](#-cấu-trúc-dự-án)
-- [Tài liệu](#-tài-liệu)
-- [Tình huống sử dụng](#-tình-huống-sử-dụng)
-- [Trạng thái dự án](#-trạng-thái-dự-án)
-- [Đóng góp](#-đóng-góp)
-- [Giấy phép](#-giấy-phép)
-
----
-
-## SchoolManager là gì?
-
-SchoolManager là giải pháp **quản lý trường học thế hệ mới**, được xây dựng với mục tiêu chuyển đổi số toàn diện cho môi trường giáo dục. Nền tảng kết hợp:
-
-- **Quản lý lớp học** — Danh sách học sinh, thời khóa biểu, bài tập, hoạt động
-- **Kiểm tra & đánh giá** — Tạo đề tự động bằng AI hoặc thủ công, chấm điểm tức thì
-- **Trí tuệ nhân tạo** — Chatbot hỗ trợ sinh viên & giáo viên, phân tích năng lực, đề xuất lộ trình
-- **Chăm sóc sức khỏe** — Theo dõi cảm xúc hàng ngày, gửi cảnh báo SOS, báo cáo wellness
-- **Gamification** — Check-in, tích điểm, huy hiệu, bảng xếp hạng, cửa hàng phần thưởng
-- **Đa vai trò** — Giao diện riêng biệt cho Admin, Giáo viên, Học sinh
-
----
-
-## 🚀 Tính năng chính
-
-### 🤖 Trí tuệ nhân tạo
-
-| Tính năng | Mô tả |
-|-----------|-------|
-| AI Chatbot | Trợ lý AI cho giáo viên (tạo báo cáo, phân tích) và học sinh (tư vấn, hỗ trợ) |
-| AI Tutor | Phân tích điểm số, nhận diện điểm mạnh/yếu, đề xuất lộ trình học tập |
-| AI Quiz Generator | Tự động tạo đề thi từ chủ đề, phân loại độ khó (dễ/trung bình/khó) |
-| AI Grading | Chấm điểm bài tập tự động |
-
-### 📝 Kiểm tra & đánh giá
-
-| Tính năng | Mô tả |
-|-----------|-------|
-| Quiz Management | Tạo, sửa, xóa bài kiểm tra đa dạng (AI/thủ công) |
-| Quiz Battle | Thi đấu PvP thời gian thực với bảng xếp hạng |
-| Assignments | Giao bài tập, theo dõi nộp bài, chấm điểm (AI/thủ công) |
-| Word Upload | Import đề từ file `.docx` |
-
-### 🎮 Gamification & Motivation
-
-| Tính năng | Mô tả |
-|-----------|-------|
-| Daily Check-in | Check-in hàng ngày nhận XP |
-| Badges | Hệ thống huy hiệu thành tích |
-| Leaderboard | Bảng xếp hạng theo lớp / toàn trường |
-| Shop | Cửa hàng đổi thưởng bằng điểm |
-| Riddles & Word Chain | Mini-games giải trí kết hợp học tập |
-
-### 💚 Wellness & Sức khỏe tinh thần
-
-| Tính năng | Mô tả |
-|-----------|-------|
-| Mood Tracking | Theo dõi cảm xúc hàng ngày qua emoji & ghi chú |
-| SOS Alert | Gửi cảnh báo khẩn cấp (có thể ẩn danh) |
-| Class Wellness | Báo cáo sức khỏe tinh thần toàn lớp |
-| Mood Analytics | Phân tích xu hướng cảm xúc theo thời gian |
-
-### 🔍 Smart Search
-
-| Tính năng | Mô tả |
-|-----------|-------|
-| Global Search (Ctrl+K) | Tìm kiếm xuyên suốt học sinh, lớp, bài tập, kiểm tra, hoạt động, thông báo |
-| Hybrid Ranking | Thuật toán BM25 + Recency + Personalization + Popularity |
-| Search History | Lưu lịch sử tìm kiếm, gợi ý autocomplete |
-| Vietnamese Support | Hỗ trợ tìm kiếm tiếng Việt không dấu |
-
-### 📊 Analytics & Reporting
-
-| Tính năng | Mô tả |
-|-----------|-------|
-| Dashboard | Thống kê tổng quan: hạnh phúc, tham gia, sức khỏe tinh thần |
-| Early Warning | Cảnh báo sớm học sinh cần hỗ trợ |
-| Class Report | Báo cáo chi tiết theo lớp |
-| Student Trends | Theo dõi xu hướng phát triển từng học sinh |
-| Teacher Reports | Giáo viên tạo báo cáo nhanh qua chatbot |
-
-
----
-
-## 🚀 Bắt đầu nhanh
-
-### Yêu cầu
-
-```
-✅ Docker Desktop       # https://www.docker.com/
-✅ Node.js 20.9+        # https://nodejs.org/
-✅ Python 3.12          # https://python.org/
-✅ RAM tối thiểu 4GB
-```
-
-### Cài đặt nhanh
-
-```bash
-# 1. Clone repository
-git clone https://github.com/HPhucTV/SchoolManager.git
-cd SchoolManager
-```
-
-```bash
-# 2. Chạy Backend (PowerShell, mở Terminal 1)
-cd backend
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-$env:SECRET_KEY = python -c "import secrets; print(secrets.token_urlsafe(48))"
-$env:DATABASE_URL_SYNC = "sqlite:///./sql_app.db"
-alembic -c alembic.ini upgrade head
-uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
-```
-
-```bash
-# 3. Chạy Frontend (mở Terminal 2)
-npm ci
-echo NEXT_PUBLIC_API_URL=http://127.0.0.1:8001 > .env.local
-npm run dev
-```
-
-🎉 **Hoàn tất!**
-- 🌐 Frontend: `http://localhost:3000`
-- 🔧 Backend API: `http://localhost:8001/docs`
-
-### Khắc phục sự cố
-
-| Vấn đề | Giải pháp |
-|--------|-----------|
-| Docker build fail | Kiểm tra Docker Desktop đang chạy, đủ RAM |
-| Database connection error | Đảm bảo PostgreSQL đang chạy: `docker-compose up db` |
-| Frontend build error | Xóa `.next`, chạy `npm ci`, rồi `npm run build` |
-| API không khởi động | Kiểm tra `SECRET_KEY` có ít nhất 32 ký tự và `DATABASE_URL_SYNC` hợp lệ |
-
----
-
-## 🔑 Dữ liệu development tùy chọn
-
-Chạy `backend\.venv\Scripts\python scripts\seed_db.py` từ thư mục gốc để tạo dữ liệu local. Script tạo mật khẩu ngẫu nhiên, in một lần ở terminal và không dùng credential chung trong source. Có thể đặt `SCHOOLMANAGER_SEED_PASSWORD` cho database development riêng; không dùng mật khẩu này trong production.
-
----
-
-## 🛠️ Công nghệ sử dụng
-
-### Frontend
-
-| Công nghệ | Phiên bản | Mục đích |
-|-----------|-----------|----------|
-| Next.js | 16.2.12 | Framework React SSR/SSG |
-| React | 19.2.3 | UI Library |
-| TypeScript | 5.x | Type safety |
-| Tailwind CSS | 4.x | Styling framework |
-| Recharts | 3.7 | Data visualization |
-| Lucide React | 0.563 | Icon library |
+Yêu cầu: Node.js 22, Python 3.12, npm và PowerShell hoặc shell tương đương. SQLite được dùng cho local nên không cần PostgreSQL/Redis để chạy các slice chính.
 
 ### Backend
 
-| Công nghệ | Mục đích |
-|-----------|----------|
-| FastAPI | Web framework (async) |
-| SQLAlchemy | ORM & database management |
-| PostgreSQL / SQLite | Database (production / development) |
-| Dataset nội bộ | Gợi ý học tập, câu đố và fallback hội thoại |
-| JWT + bcrypt | Authentication & password hashing |
-| Python-docx | Word document processing |
-
-### Infrastructure
-
-| Công nghệ | Mục đích |
-|-----------|----------|
-| Docker & Docker Compose | Container orchestration |
-| Nginx | Reverse proxy & SSL termination |
-| Certbot / Let's Encrypt | SSL certificate management |
-| GitHub Actions | CI/CD pipeline |
-
----
-
-## 📦 Cấu trúc dự án
-
-```
-SchoolManager/
-│
-├── 📂 backend/                          # ── FastAPI Backend ──
-│   ├── app/
-│   │   ├── routers/                     # API endpoint modules (21 routers)
-│   │   │   ├── activities.py            #   Quản lý hoạt động
-│   │   │   ├── admin.py                 #   Quản trị hệ thống
-│   │   │   ├── ai.py                    #   AI Chatbot
-│   │   │   ├── ai_tutor.py              #   AI Tutor & Lộ trình học
-│   │   │   ├── analytics.py             #   Phân tích & Cảnh báo sớm
-│   │   │   ├── assignments.py           #   Bài tập & Chấm điểm
-│   │   │   ├── auth.py                  #   Authentication & User CRUD
-│   │   │   ├── classes.py               #   Quản lý lớp học
-│   │   │   ├── dashboard.py             #   Dashboard metrics
-│   │   │   ├── games.py                 #   Mini-games (Riddles, Word Chain)
-│   │   │   ├── gamification.py          #   Điểm, huy hiệu, cửa hàng
-│   │   │   ├── invitations.py           #   Lời mời tham gia
-│   │   │   ├── notifications.py         #   Thông báo hệ thống
-
-│   │   │   ├── quiz_battle.py           #   Quiz Battle PvP
-│   │   │   ├── quizzes.py               #   Quản lý đề thi / kiểm tra
-│   │   │   ├── schedule_api.py          #   Thời khóa biểu
-│   │   │   ├── statistics.py            #   Thống kê tổng quan
-│   │   │   ├── student_api.py           #   API dành cho học sinh
-│   │   │   ├── students.py              #   Quản lý danh sách học sinh
-│   │   │   ├── search.py                #   Smart Search (BM25 + AI Ranking)
-│   │   │   ├── teacher_reports.py       #   Báo cáo giáo viên
-│   │   │   └── wellness.py              #   Sức khỏe tinh thần & SOS
-│   │   │
-│   │   ├── services/                    # Business logic services
-│   │   │   ├── cache_service.py         #   Caching layer
-│   │   │   ├── email_service.py         #   Email notification
-│   │   │   ├── riddle_service.py        #   Riddle game logic
-│   │   │   └── word_service.py          #   Word chain game logic
-│   │   │
-│   │   ├── main.py                      # FastAPI application entry
-│   │   ├── models.py                    # SQLAlchemy data models
-│   │   ├── database.py                  # Database connection & session
-│   │   ├── config.py                    # Environment configuration
-│   │   └── security.py                  # JWT & password hashing
-│   │
-│   ├── data/                            # AI datasets (JSON)
-│   │   ├── chatbot_responses.json       #   Chatbot fallback responses (~1.6MB)
-│   │   ├── ai_tutor_advice.json         #   AI Tutor learning advice
-│   │   ├── quiz_bank.json               #   Quiz question bank
-│   │   ├── riddles.json                 #   Riddle game dataset
-│   │   └── word_chain_dataset.json      #   Word chain dictionary (~4.9MB)
-│   │
-│   ├── requirements.txt                 # Python dependencies
-│   ├── Dockerfile                       # Backend Docker image
-│   └── .env                             # Backend environment variables
-│
-├── 📂 src/                              # ── Next.js 16 Frontend ──
-│   ├── app/
-│   │   ├── teacher/                     # 🧑‍🏫 Teacher interface (13 pages)
-│   │   │   ├── page.tsx                 #   Teacher dashboard
-│   │   │   ├── lop-hoc/                 #   Quản lý lớp học
-│   │   │   ├── hoc-sinh/               #   Danh sách học sinh
-│   │   │   ├── kiem-tra/                #   Tạo & quản lý kiểm tra
-│   │   │   ├── bai-kiem-tra/            #   Xem bài kiểm tra
-│   │   │   ├── bai-tap/                 #   Quản lý bài tập
-│   │   │   ├── quiz-battle/             #   Thi đấu Quiz Battle
-│   │   │   ├── hoat-dong/               #   Quản lý hoạt động
-│   │   │   ├── thoi-khoa-bieu/          #   Thời khóa biểu
-│   │   │   ├── phan-tich/               #   Phân tích & analytics
-│   │   │   ├── thong-ke/                #   Thống kê chi tiết
-│   │   │   ├── suc-khoe/               #   Sức khỏe tinh thần
-│   │   │   ├── thi-dua/                 #   Thi đua & gamification
-│   │   │   └── cai-dat/                 #   Cài đặt tài khoản
-│   │   │
-│   │   ├── student/                     # 🎓 Student interface (12 pages)
-│   │   │   ├── page.tsx                 #   Student dashboard
-│   │   │   ├── quiz/                    #   Làm bài kiểm tra
-│   │   │   ├── quiz-battle/             #   Quiz Battle PvP
-│   │   │   ├── assignment/              #   Bài tập
-│   │   │   ├── subject/                 #   Môn học / lớp học
-│   │   │   ├── ai-tutor/               #   AI Tutor cá nhân
-│   │   │   ├── mood-journal/            #   Nhật ký cảm xúc
-│   │   │   ├── achievements/            #   Thành tích & huy hiệu
-│   │   │   ├── games/                   #   Mini-games
-│   │   │   ├── entertain/               #   Giải trí (Riddles, Word Chain)
-│   │   │   ├── notifications/           #   Thông báo
-│   │   │   ├── thoi-khoa-bieu/          #   Thời khóa biểu
-│   │   │   └── cai-dat/                 #   Cài đặt
-│   │   │
-│   │   ├── admin/                       # 🏛️ Admin dashboard (4 sections)
-│   │   │   ├── page.tsx                 #   Admin overview
-│   │   │   ├── hoc-sinh/               #   Quản lý học sinh
-│   │   │   ├── giao-vien/               #   Quản lý giáo viên
-│   │   │   ├── lop-hoc/                 #   Quản lý lớp học
-│   │   │   └── cai-dat/                 #   Cài đặt hệ thống
-│   │   │
-
-│   │   ├── login/                       # 🔐 Authentication
-│   │   ├── meeting/                     # 📹 Video meeting
-│   │   ├── page.tsx                     # 🏠 Landing page
-│   │   ├── layout.tsx                   # Root layout
-│   │   └── globals.css                  # Global styles
-│   │
-│   ├── components/                      # Reusable React components
-│   │   ├── BaseChatBot.tsx              #   Base chatbot component
-│   │   ├── TeacherChatBot.tsx           #   Teacher AI assistant
-│   │   ├── ChatBot.tsx                  #   Student chatbot
-│   │   ├── ProtectedRoute.tsx           #   Auth route guard
-│   │   ├── StudentNotifications.tsx     #   Notification center
-│   │   ├── dashboard/                   #   Dashboard widgets (4)
-│   │   ├── classes/                     #   Class components (2)
-│   │   ├── class-details/               #   Class detail views (3)
-│   │   ├── landing/                     #   Landing page sections
-│   │   ├── layout/                      #   Layout components (Header, GlobalSearch)
-│   │   ├── schedule/                    #   Schedule components
-│   │   └── student/                     #   Student-specific components
-│   │
-│   └── lib/                             # Shared utilities
-│       ├── api.ts                       #   API client & type definitions
-│       ├── auth.tsx                     #   Authentication context & hooks
-│       └── utils.ts                     #   Utility functions
-│
-├── 📂 scripts/                          # Utility & maintenance scripts
-│   ├── seed_db.py                       #   Database seeding
-│   ├── migrate_new_features.py          #   Database migration
-│   ├── debug_create_class.py            #   Debug: tạo lớp mẫu
-│   ├── debug_classes.py                 #   Debug: kiểm tra lớp
-│   ├── restore_dataset.py              #   Khôi phục dataset AI
-│   ├── start_backend.bat               #   Script khởi chạy backend
-│   └── test_quiz.docx                  #   File docx mẫu kiểm tra
-│
-├── 📂 docs/                             # Project documentation
-│   ├── API.md                           #   API endpoints reference
-│   ├── ARCHITECTURE.md                  #   System architecture
-│   └── DEPLOYMENT.md                   #   Deployment guide
-│
-├── 📂 .github/                          # GitHub configuration
-│   ├── ISSUE_TEMPLATE/                  #   Bug report & feature request
-│   ├── PULL_REQUEST_TEMPLATE.md         #   PR template
-│   └── workflows/                       #   CI/CD GitHub Actions
-│
-├── 📂 certs/                            # SSL certificates
-├── 📂 public/                           # Static assets (logo, favicon)
-│
-├── ⚙️ docker-compose.yml                # Container orchestration (5 services)
-├── ⚙️ nginx.conf                        # Nginx reverse proxy & SSL
-├── ⚙️ Dockerfile                        # Frontend Docker build
-├── ⚙️ package.json                      # Node.js dependencies
-├── ⚙️ tsconfig.json                     # TypeScript configuration
-├── ⚙️ tailwind.config.ts               # Tailwind CSS configuration
-├── ⚙️ eslint.config.mjs                # ESLint configuration
-├── ⚙️ next.config.ts                   # Next.js configuration
-├── ⚙️ postcss.config.mjs              # PostCSS configuration
-├── ⚙️ .env.example                     # Environment template
-├── ⚙️ .gitignore                       # Git ignore rules
-│
-├── 📄 README.md                         # Project overview (bạn đang xem)
-├── 📄 CHANGELOG.md                      # Release history
-├── 📄 CONTRIBUTING.md                   # Contribution guidelines
-├── 📄 SECURITY.md                       # Security policy
-├── 📄 CODE_OF_CONDUCT.md               # Community guidelines
-└── 📄 LICENSE                           # Apache License 2.0
+```powershell
+cd backend
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
+$env:ENVIRONMENT = "development"
+$env:SECRET_KEY = (python -c "import secrets; print(secrets.token_urlsafe(48))")
+$env:DATABASE_URL_SYNC = "sqlite:///./sql_app.db"
+python -m scripts.provision_schema
+alembic -c alembic.ini upgrade head
+uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
 ```
 
----
+Backend docs: `http://127.0.0.1:8001/docs` · liveness: `http://127.0.0.1:8001/health/live` · readiness: `http://127.0.0.1:8001/health/ready`.
 
-## 📖 Tài liệu
+### Frontend
 
-| Tài liệu | Mô tả |
-|-----------|-------|
-| [README.md](README.md) | Tổng quan dự án (bạn đang xem) |
-| [CHANGELOG.md](CHANGELOG.md) | Lịch sử thay đổi |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Hướng dẫn đóng góp |
-| [SECURITY.md](SECURITY.md) | Chính sách bảo mật |
-| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Quy tắc ứng xử |
-| [LICENSE](LICENSE) | Giấy phép Apache 2.0 |
-| [docs/API.md](docs/API.md) | Tài liệu API endpoints |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Kiến trúc hệ thống |
-| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Hướng dẫn triển khai |
-| Backend API Docs | `http://localhost:8001/docs` (Swagger UI) |
-
----
-
-## 🌟 Tình huống sử dụng
-
-### 👩‍🏫 Dành cho Giáo viên
-
-- Quản lý danh sách lớp, thời khóa biểu, hoạt động
-- Tạo bài kiểm tra tự động bằng AI hoặc nhập thủ công
-- Theo dõi tình trạng sức khỏe tinh thần của học sinh
-- Tạo báo cáo nhanh qua chatbot AI
-- Giao & chấm bài tập (hỗ trợ AI grading)
-- Xem analytics & cảnh báo sớm
-
-### 🎓 Dành cho Học sinh
-
-- Làm bài kiểm tra và xem kết quả chi tiết
-- Tham gia Quiz Battle thi đấu với bạn bè
-- Check-in hàng ngày, tích điểm, đổi thưởng
-- Chat với AI Tutor để nhận lộ trình học tập cá nhân
-- Ghi lại cảm xúc hàng ngày & gửi SOS khi cần
-- Chơi mini-games giải trí (Riddles, Word Chain)
-
-
-### 🏛️ Dành cho Quản trị viên
-
-- Quản lý tài khoản người dùng (CRUD)
-- Quản lý lớp học, phân công giáo viên
-- Import danh sách học sinh từ Excel
-- Xem thống kê toàn trường
-
----
-
-## 📈 Trạng thái dự án
-
-| Tính năng | Trạng thái |
-|-----------|-----------|
-| Authentication & RBAC | ✅ Hoàn thành |
-| Teacher Dashboard | ✅ Hoàn thành |
-| Student Dashboard | ✅ Hoàn thành |
-| AI Chatbot | ✅ Hoàn thành |
-| AI Tutor | ✅ Hoàn thành |
-| Quiz System (AI + Manual) | ✅ Hoàn thành |
-| Quiz Battle | ✅ Hoàn thành |
-| Smart Search (Ctrl+K) | ✅ Hoàn thành |
-| Gamification | ✅ Hoàn thành |
-| Wellness & Mood Tracking | ✅ Hoàn thành |
-| Analytics & Early Warning | ✅ Hoàn thành |
-
-| Docker Deployment | ✅ Hoàn thành |
-| SSL & Domain | ✅ Hoàn thành |
-| Mobile Responsive | 🔧 Đang cải thiện |
-| Email Notifications | 📋 Lên kế hoạch |
-| GraphQL API | 📋 Lên kế hoạch |
-
----
-
-## 🤝 Đóng góp
-
-Chúng tôi rất hoan nghênh mọi đóng góp! 🎉
-
-### 📖 Hướng dẫn đóng góp
-
-Đọc qua [CONTRIBUTING.md](CONTRIBUTING.md) để tìm hiểu quy trình gửi pull request, quy tắc viết code và nhiều hơn nữa.
-
-### 💁 Muốn giúp đỡ?
-
-- 🐛 **Sửa lỗi**: Tìm issues có nhãn [`bug`](https://github.com/HPhucTV/SchoolManager/labels/bug)
-- ✨ **Tính năng mới**: Xem issues có nhãn [`enhancement`](https://github.com/HPhucTV/SchoolManager/labels/enhancement)
-- 📚 **Tài liệu**: Cải thiện docs, README, comments
-- 🌐 **Quốc tế hóa**: Giúp dịch giao diện sang ngôn ngữ khác
-
----
-
-## 👥 Đội ngũ phát triển
-
-- **Only Team** — Thiết kế, phát triển và vận hành
-
----
-
-## 📄 Giấy phép
-
-Dự án này được phân phối dưới giấy phép **Apache License 2.0** — xem file [LICENSE](LICENSE) để biết chi tiết.
-
-```
-Copyright [TPTH] [Only Team]
-
-Licensed under the Apache License, Version 2.0
+```powershell
+cd ..
+"NEXT_PUBLIC_API_URL=http://127.0.0.1:8001" | Set-Content -Encoding utf8 .env.local
+npm ci
+npm run dev
 ```
 
----
+Frontend: `http://localhost:3000`.
 
-<p align="center">
-  <strong>⭐ Nếu dự án hữu ích, hãy cho chúng tôi một star trên GitHub! ⭐</strong>
-</p>
+### Dữ liệu demo (chỉ local)
 
-<p align="center">
-  Made with ❤️ by <strong>Only Team</strong>
-</p>
+Từ thư mục gốc, sau khi backend đã được cấu hình với SQLite:
+
+```powershell
+.\backend\.venv\Scripts\python.exe .\scripts\seed_db.py
+```
+
+Script tạo password ngẫu nhiên và chỉ in password một lần. Có thể đặt `SCHOOLMANAGER_SEED_PASSWORD` cho database local riêng. Script tự từ chối khi `ENVIRONMENT=production`; không dùng tài khoản demo trong trường thật.
+
+## Kiểm tra chất lượng
+
+```powershell
+npm run lint -- --max-warnings=0
+npx tsc --noEmit
+npm run build
+npm audit --audit-level=high
+cd backend
+python -m pytest -q
+python -m pip_audit -r requirements.txt
+```
+
+CI chạy các gate frontend và backend tương ứng tại `.github/workflows/quality.yml`.
+
+## Trạng thái release
+
+| Khu vực | Trạng thái | Evidence |
+|---|---|---|
+| Backend policy/workflow slice | Sẵn sàng review | Pytest và OpenAPI contract tests trong `backend/tests/` |
+| Frontend Campus Blue pilot | Sẵn sàng review | Lint, typecheck, production build và browser smoke đã chạy local |
+| Auth token storage | Cần hardening | Frontend hiện dùng `localStorage`; chưa phải cookie HttpOnly |
+| Database migration history | Baseline đang adoption | Alembic hiện chứa các migration quiz/audit; schema nền được bootstrap explicit |
+| Production operations | Cần kiểm chứng theo hạ tầng | Dùng health probes, request ID và checklist trong `docs/DEPLOYMENT.md` |
+
+## Cấu trúc
+
+```text
+backend/app/domain/          # Pure policies
+backend/app/application/     # Use cases và transaction boundary
+backend/app/routers/         # HTTP adapters
+backend/app/schemas/         # Request/response contracts
+backend/scripts/             # Schema/admin provisioning (không seed demo)
+scripts/seed_db.py           # Local demo seed only
+src/app/                     # Next.js routes
+src/components/              # UI primitives và shared shell
+src/lib/api/                 # Typed API client/contracts
+docs/                        # API, architecture, deployment, renovation blueprint
+```
+
+## Tài liệu
+
+- [API contract](docs/API.md) — endpoint nhóm chính; Swagger là nguồn chi tiết cuối cùng.
+- [Kiến trúc](docs/ARCHITECTURE.md) — vertical slices, privacy boundary và operational flow.
+- [Triển khai](docs/DEPLOYMENT.md) — Docker, provisioning, health checks và rollback.
+- [Đóng góp](CONTRIBUTING.md) — setup, quality gates và PR evidence.
+- [Security policy](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Changelog](CHANGELOG.md).
+- [Renovation blueprint](docs/RENOVATION_BLUEPRINT.md) — phases và các giới hạn đã biết.
+
+## Đóng góp
+
+Hãy mở issue trước với thay đổi lớn, không commit `.env`, token, certificate hay dữ liệu học sinh thật. Đọc [CONTRIBUTING.md](CONTRIBUTING.md), dùng PR template và đính kèm test evidence/migration note/screenshot khi phù hợp.
+
+## License
+
+Apache License 2.0 — xem [LICENSE](LICENSE).

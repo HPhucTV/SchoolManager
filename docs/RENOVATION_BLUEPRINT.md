@@ -345,9 +345,9 @@ Lát cắt đầu tiên đã hoàn thành và có evidence chạy local:
 | Hạng mục | Trạng thái | Evidence |
 |---|---|---|
 | Safety baseline | Hoàn thành | Shared authorization policy, secret fail-fast, scoped RBAC, upload validation |
-| Dependency hygiene | Hoàn thành frontend; backend audit cần CI | `npm audit --audit-level=high` báo 0 vulnerability; `pip-audit` chưa cài trong môi trường local |
-| Backend policy và workflow tests | Hoàn thành | 20 test pass cho role, class scope, domain policy, application/OpenAPI interface và CRUD Admin/coursework/quiz/schedule |
-| CI | Hoàn thành | Frontend audit/lint/build; backend audit/pytest |
+| Dependency hygiene | Hoàn thành baseline | `npm audit --audit-level=high` báo 0 vulnerability; `python -m pip_audit -r requirements.txt` báo không có vulnerability đã biết |
+| Backend policy và workflow tests | Hoàn thành | 30 test pass cho role, class scope, domain/application/OpenAPI workflow, wellbeing, operational readiness và first-admin provisioning |
+| CI | Hoàn thành | Frontend audit/lint/typecheck/build; backend audit/compileall/pytest |
 | Design foundation | Hoàn thành | Campus Blue tokens, Be Vietnam Pro, Button, Surface, states và `RoleShell` |
 | Pilot screens | Hoàn thành | Landing, login, Admin Overview responsive; public/auth hỗ trợ system dark mode |
 | Browser smoke | Hoàn thành | 7 ảnh baseline, không console error, không tràn ngang |
@@ -357,6 +357,7 @@ Lát cắt đầu tiên đã hoàn thành và có evidence chạy local:
 | Phase 2 browser smoke | Hoàn thành | 3 role trên production build, desktop/mobile, dialog/drawer, không console error hoặc tràn ngang |
 | Phase 3 backend deepening | Hoàn thành cho assessment/coursework | `Coursework` và `Assessment` application interface; router không query/commit; schema theo actor; transaction, error mapping và audit event dùng chung |
 | Phase 4 student wellbeing và engagement | Hoàn thành lát cắt chính | Wellbeing application/policy/schema + 14 workflow tests; Campus Blue cho mood, notifications, achievements, AI Tutor, Quiz Battle và mini-games; production build smoke desktop/mobile/dark/keyboard không console error hoặc tràn ngang |
+| Phase 5 open-source readiness và release | Hoàn thành baseline | README/API/ARCHITECTURE/CONTRIBUTING/DEPLOYMENT khớp code; issue/PR evidence templates; explicit schema/admin provisioning; request ID, structured error logs, liveness/readiness; audit và 30 test pass |
 
 Các giới hạn còn chủ động giữ lại:
 
@@ -366,4 +367,5 @@ Các giới hạn còn chủ động giữ lại:
 - Pytest còn một `StarletteDeprecationWarning` từ FastAPI TestClient về lớp tương thích `httpx`; mã ứng dụng không còn cảnh báo `class Config` của Pydantic v2.
 - Certificate đã bị xóa khỏi working tree nhưng vẫn tồn tại trong Git history cũ. Người vận hành phải thu hồi và cấp lại certificate bên ngoài repo.
 - Session frontend vẫn lưu token trong `localStorage`; migration sang cookie HttpOnly cần một thay đổi hợp đồng auth riêng.
-- `pip-audit` chưa được cài trong môi trường kiểm thử hiện tại; quality gate backend cần chạy lại trong CI có tool này.
+- Login/API chưa có rate limiting; đây là security hardening còn mở và cần thiết kế theo deployment topology trước khi bật.
+- Observability Phase 5 mới là baseline request ID/structured event/health probe; metrics, tracing, log aggregation và alert delivery thuộc hạ tầng triển khai và chưa được cấu hình trong repo.

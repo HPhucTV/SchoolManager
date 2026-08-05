@@ -1,31 +1,37 @@
 ---
 name: Bug report
-about: Create a report to help us improve Happy‑Schools
+about: Report a reproducible SchoolManager defect
 labels: bug
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+> Do not include passwords, tokens, certificates, real student data, mood notes or SOS content. Report vulnerabilities privately via SECURITY.md.
 
-**To Reproduce**
-Steps to reproduce the behavior:
+## Summary
 
-1. Go to '...'
-2. Click on '...'
-3. Scroll down to '...'
-4. See error
+What happened, and what did you expect?
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## Reproduction
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+1. Role and route:
+2. Preconditions (sanitized):
+3. Actions:
+4. Actual result:
 
-**Desktop (please complete the following information):**
+## Evidence
 
-- OS: [e.g. Windows 10]
-- Browser [e.g. Chrome, Safari]
-- Version [e.g. 22]
+- `X-Request-ID` (if an API request failed):
+- Time/timezone:
+- Sanitized log excerpt:
+- Screenshot (no real student data):
 
-**Additional context**
-Add any other context about the problem here.
+## Environment
+
+- Commit/tag:
+- OS:
+- Browser:
+- Node/Python version:
+- Local/Docker/other deployment:
+
+## Regression scope
+
+What related workflows still work?

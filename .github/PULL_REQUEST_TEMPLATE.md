@@ -1,28 +1,46 @@
-## Description
+## Problem and scope
 
-Please include a summary of the changes and the related issue. Reference any
-issues using `fixes #`.
+What problem does this PR solve? Link with `fixes #...` and list what is intentionally out of scope.
 
-## Type of Change
+## Change type
 
 - [ ] Bug fix
-- [ ] New feature
-- [ ] Documentation update
-- [ ] Other (please describe)
+- [ ] Feature or vertical-slice migration
+- [ ] Campus Blue/design-system change
+- [ ] Database migration
+- [ ] Security/operations hardening
+- [ ] Documentation only
 
-## How Has This Been Tested?
+## Test evidence
 
-Describe the tests that you ran to verify your changes. Provide instructions so
-we can reproduce. Include details of your testing environment, and the tests
-you ran.
+List exact commands, result counts and manual routes/roles/viewports. Do not write only “works locally”.
+
+```text
+# command -> result
+```
+
+## Visual evidence
+
+Required for UI changes: sanitized desktop + mobile screenshots and dark mode when affected. State `Not applicable` otherwise. Do not include real student data.
+
+## Migration and compatibility note
+
+State `None` or describe schema/config/API changes, upgrade order, backfill, rollback and data-loss risk.
+
+## Security, privacy and observability
+
+- Authorization/class ownership impact:
+- PII/wellbeing/SOS handling:
+- Logs, request ID, health/alerting impact:
+- Secret or operator action required:
 
 ## Checklist
 
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature
-      works
-- [ ] New and existing unit tests pass locally with my changes
+- [ ] I used the shared design/API/architecture seams instead of adding a duplicate abstraction.
+- [ ] Frontend lint, typecheck, build and audit pass when frontend/dependencies changed.
+- [ ] Backend compileall, pytest and pip-audit pass when backend/dependencies changed.
+- [ ] New/changed behavior has regression or policy tests.
+- [ ] Docs/OpenAPI/types/changelog are updated when their contract changed.
+- [ ] Migration and rollback evidence is included or explicitly not applicable.
+- [ ] Screenshots/logs/examples contain no credential, token, certificate or real student data.
+- [ ] Known limitations and unsupported claims remain explicit.
