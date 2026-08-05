@@ -10,12 +10,36 @@ export {
   aiGradingApi,
   aiTutorApi,
   analyticsApi,
+  gamesApi,
   gamificationApi,
+  notificationsApi,
   quizBattleApi,
   reportApi,
   searchApi,
   wellnessApi,
 } from "./extensions";
+export type {
+  ActiveBattle,
+  BadgeReward,
+  BattleLeaderboardEntry,
+  BattleQuestion,
+  BattleStatus,
+  CheckInResult,
+  ClassWellness,
+  CrosswordQuestion,
+  GamificationStats,
+  LeaderboardEntry,
+  MoodAnalytics,
+  MoodEntry,
+  NotificationItem,
+  Riddle,
+  ShopItem,
+  SOSAlert,
+  TutorAnalysis,
+  TutorLearningPath,
+  TutorRecommendations,
+} from "./extensions";
+export { AI_TUTOR_USAGE_NOTICE } from "./extensions";
 
 import { apiRequest } from "./client";
 

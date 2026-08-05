@@ -1,176 +1,25 @@
-/* eslint-disable */
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { Gamepad2, Brain, MessageCircle, Puzzle, ArrowLeft } from 'lucide-react';
+import Link from "next/link";
+import { ArrowRight, Brain, Gamepad2, MessageCircle, Puzzle, Sparkles } from "lucide-react";
+
+import { PageHeader, Surface } from "@/components/ui/primitives";
 
 const GAMES = [
-    {
-        id: 'memory',
-        title: 'Lật Hình Rèn Trí Nhớ',
-        description: 'Thử thách trí nhớ với 3 cấp độ: Dễ, Vừa và Khó.',
-        icon: Brain,
-        color: 'from-pink-500 to-rose-500',
-        image: '/images/games/memory-thumbnail.png',
-        href: '/student/entertain/memory',
-        status: 'available'
-    },
-    {
-        id: 'riddles',
-        title: 'Giải Đố Vui',
-        description: 'Những câu đố dân gian và trí tuệ hóc búa.',
-        icon: Puzzle,
-        color: 'from-violet-500 to-purple-500',
-        image: '/images/games/riddles-thumbnail.png',
-        href: '/student/entertain/riddles',
-        status: 'available'
-    },
-    {
-        id: 'word-chain',
-        title: 'Nối Từ Tiếng Việt',
-        description: 'Đấu trí nối từ với AI siêu thông minh.',
-        icon: MessageCircle,
-        color: 'from-amber-500 to-orange-500',
-        image: '/images/games/word-chain-thumbnail.png',
-        href: '/student/entertain/word-chain',
-        status: 'available'
-    }
+  { href: "/student/entertain/memory", title: "Lật hình rèn trí nhớ", description: "Ghép cặp biểu tượng và luyện khả năng tập trung.", icon: Brain, accent: "bg-pink-50 text-pink-700 dark:bg-pink-950/30 dark:text-pink-200" },
+  { href: "/student/entertain/riddles", title: "Giải đố vui", description: "Một câu đố ngắn, một gợi ý vừa đủ và thật nhiều tò mò.", icon: Puzzle, accent: "bg-violet-50 text-violet-700 dark:bg-violet-950/30 dark:text-violet-200" },
+  { href: "/student/entertain/word-chain", title: "Nối từ tiếng Việt", description: "Nối tiếp từ vựng cùng AI và giữ chuỗi suy nghĩ thật nhanh.", icon: MessageCircle, accent: "bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200" },
+  { href: "/student/games/crossword", title: "Ô chữ kiến thức", description: "Giải một ô chữ nhỏ để ôn lại vốn từ và kiến thức trên lớp.", icon: Gamepad2, accent: "bg-brand-soft text-brand-strong" },
 ];
 
 export default function GameCenterPage() {
-    return (
-        <div style={{
-            minHeight: '100vh',
-            background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)',
-            padding: '40px 24px',
-            animation: 'fadeIn 0.5s ease-out'
-        }}>
-            <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-                <div style={{ marginBottom: '40px' }}>
-                    <Link href="/student" style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '8px',
-                        color: 'white', textDecoration: 'none', fontWeight: 600,
-                        marginBottom: '24px', backgroundColor: 'rgba(255,255,255,0.1)',
-                        padding: '8px 16px', borderRadius: '12px',
-                        backdropFilter: 'blur(4px)',
-                        transition: 'all 0.2s ease'
-                    }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
-                    >
-                        <ArrowLeft size={20} />
-                        Quay lại
-                    </Link>
-
-                    <div style={{ textAlign: 'center' }}>
-                        <h1 style={{ fontSize: '32px', fontWeight: 800, color: 'white', marginBottom: '8px' }}>
-                            🎮 Góc Giải Trí
-                        </h1>
-                        <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '18px' }}>Thư giãn và rèn luyện trí tuệ sau giờ học</p>
-                    </div>
-                </div>
-
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: '24px'
-                }}>
-                    {GAMES.map((game) => (
-                        <Link
-                            key={game.id}
-                            href={game.href}
-                            style={{ textDecoration: 'none' }}
-                        >
-                            <div style={{
-                                backgroundColor: '#1e293b',
-                                borderRadius: '24px',
-                                overflow: 'hidden',
-                                boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                cursor: 'pointer',
-                                height: '100%',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                position: 'relative',
-                            }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-10px)';
-                                    e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
-                                }}
-                            >
-                                {/* Image Container */}
-                                <div style={{ position: 'relative', width: '100%', height: '220px' }}>
-                                    <Image
-                                        src={game.image}
-                                        alt={game.title}
-                                        fill
-                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                        style={{ objectFit: 'cover' }}
-                                    />
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: 0, left: 0, right: 0, bottom: 0,
-                                        background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 100%)'
-                                    }} />
-                                </div>
-
-                                <div style={{
-                                    padding: '24px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    textAlign: 'center',
-                                    flex: 1
-                                }}>
-                                    <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#e2e8f0', marginBottom: '8px' }}>
-                                        {game.title}
-                                    </h3>
-                                    <p style={{ fontSize: '15px', color: '#94a3b8', lineHeight: '1.6' }}>
-                                        {game.description}
-                                    </p>
-
-                                    {game.status === 'coming_soon' ? (
-                                        <span style={{
-                                            marginTop: '16px',
-                                            padding: '6px 16px',
-                                            backgroundColor: '#0f172a',
-                                            color: '#94a3b8',
-                                            borderRadius: '20px',
-                                            fontSize: '12px',
-                                            fontWeight: 600,
-                                        }}>
-                                            Sắp ra mắt
-                                        </span>
-                                    ) : (
-                                        <div style={{
-                                            marginTop: 'auto',
-                                            paddingTop: '20px',
-                                            color: game.id === 'memory' ? '#ec4899' : game.id === 'riddles' ? '#8b5cf6' : '#f59e0b',
-                                            fontWeight: 700,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px'
-                                        }}>
-                                            Chơi ngay &rarr;
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-            </div>
-            <style jsx>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
-        </div>
-    );
+  return (
+    <div>
+      <PageHeader title="Góc giải trí học tập" description="Nghỉ ngắn giữa các buổi học bằng những trò chơi nhẹ, có điểm dừng rõ ràng và không gây áp lực." />
+      <div className="mb-6 flex items-start gap-3 rounded-[12px] border border-brand/20 bg-brand-soft px-4 py-3 text-sm leading-6 text-brand-strong"><Sparkles className="mt-0.5 size-5 shrink-0" /><p>Mỗi trò chơi được thiết kế cho một phiên ngắn. Hãy chọn hoạt động phù hợp với năng lượng hiện tại của bạn.</p></div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {GAMES.map((game) => <Link key={game.href} href={game.href} className="group"><Surface className="h-full p-5 transition-[border-color,transform,box-shadow] group-hover:-translate-y-0.5 group-hover:border-brand/40 group-hover:shadow-[0_18px_42px_rgba(28,52,84,0.1)]"><div className={`grid size-12 place-items-center rounded-[14px] ${game.accent}`}><game.icon className="size-6" /></div><div className="mt-5 flex items-start justify-between gap-4"><div><h2 className="text-base font-extrabold text-ink">{game.title}</h2><p className="mt-1 text-sm leading-6 text-ink-soft">{game.description}</p></div><ArrowRight className="mt-1 size-5 shrink-0 text-ink-soft transition-transform group-hover:translate-x-1 group-hover:text-brand-strong" /></div><span className="mt-5 inline-flex text-xs font-extrabold text-brand-strong">Chơi ngay</span></Surface></Link>)}
+      </div>
+    </div>
+  );
 }

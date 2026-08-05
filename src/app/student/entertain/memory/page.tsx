@@ -1,283 +1,78 @@
-/* eslint-disable */
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import {
-    Heart, Sun, Smile, Star, Zap, Cloud, Moon, Music,
-    Coffee, Flower, Ghost, Crown, Anchor, Gift, Bell, Camera
-} from 'lucide-react';
-import { ArrowLeft, RefreshCw, Trophy } from 'lucide-react';
-import Link from 'next/link';
+import { useEffect, useRef, useState } from "react";
+import { Anchor, Bird, BookOpen, Camera, Coffee, Crown, Flower2, Gamepad2, Gift, Heart, Lightbulb, Moon, Music, RefreshCw, Smile, Star, Sun, Trophy, Zap, type LucideIcon } from "lucide-react";
 
-// Available icons for the game
-const ICONS = [
-    Heart, Sun, Smile, Star, Zap, Cloud, Moon, Music,
-    Coffee, Flower, Ghost, Crown, Anchor, Gift, Bell, Camera
-];
+import { Button, PageHeader, Surface } from "@/components/ui/primitives";
+import { cn } from "@/lib/utils";
 
-type Level = 'easy' | 'medium' | 'hard';
+const ICONS: LucideIcon[] = [Heart, Sun, Smile, Star, Zap, Moon, Music, Coffee, Flower2, Crown, Anchor, Camera, Gift, Bird, BookOpen, Lightbulb];
+const LEVELS = { easy: { pairs: 6, label: "Dễ", columns: "grid-cols-3 sm:grid-cols-4" }, medium: { pairs: 8, label: "Vừa", columns: "grid-cols-4" }, hard: { pairs: 12, label: "Khó", columns: "grid-cols-4 sm:grid-cols-6" } } as const;
+type Level = keyof typeof LEVELS;
+interface MemoryCard { id: number; iconIndex: number; isFlipped: boolean; isMatched: boolean; }
 
-const LEVELS = {
-    easy: { pairs: 6, cols: 3, label: 'Dễ' }, // 4x3 grid
-    medium: { pairs: 8, cols: 4, label: 'Vừa' }, // 4x4 grid
-    hard: { pairs: 12, cols: 4, label: 'Khó' }, // 6x4 grid
-};
-
-interface Card {
-    id: number;
-    iconIndex: number;
-    isFlipped: boolean;
-    isMatched: boolean;
+function shuffledCards(level: Level): MemoryCard[] {
+  const pairs = LEVELS[level].pairs;
+  const deck = Array.from({ length: pairs * 2 }, (_, index) => ({ id: index, iconIndex: index % pairs, isFlipped: false, isMatched: false }));
+  for (let index = deck.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [deck[index], deck[randomIndex]] = [deck[randomIndex], deck[index]];
+  }
+  return deck;
 }
 
 export default function MemoryGamePage() {
-    const [level, setLevel] = useState<Level>('easy');
-    const [cards, setCards] = useState<Card[]>([]);
-    const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
-    const [matchedCount, setMatchedCount] = useState(0);
-    const [moves, setMoves] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [gameWon, setGameWon] = useState(false);
+  const [level, setLevel] = useState<Level>("easy");
+  const [cards, setCards] = useState<MemoryCard[]>(() => shuffledCards("easy"));
+  const [flipped, setFlipped] = useState<number[]>([]);
+  const [moves, setMoves] = useState(0);
+  const [matched, setMatched] = useState(0);
+  const [won, setWon] = useState(false);
+  const flipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Initialize game
-    const initGame = (selectedLevel: Level) => {
-        const config = LEVELS[selectedLevel];
-        const selectedIcons = ICONS.slice(0, config.pairs);
+  useEffect(() => () => { if (flipTimerRef.current) clearTimeout(flipTimerRef.current); }, []);
 
-        // Double the icons to make pairs
-        const deck = [...selectedIcons, ...selectedIcons].map((_, index) => ({
-            id: index,
-            iconIndex: index % config.pairs,
-            isFlipped: false,
-            isMatched: false,
-        }));
+  function restart(nextLevel: Level = level) {
+    if (flipTimerRef.current) clearTimeout(flipTimerRef.current);
+    setLevel(nextLevel);
+    setCards(shuffledCards(nextLevel));
+    setFlipped([]);
+    setMoves(0);
+    setMatched(0);
+    setWon(false);
+  }
 
-        // Shuffle
-        for (let i = deck.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [deck[i], deck[j]] = [deck[j], deck[i]];
-        }
+  function chooseCard(index: number) {
+    if (won || flipped.length >= 2 || cards[index].isFlipped || cards[index].isMatched) return;
+    const nextCards = cards.map((card, cardIndex) => cardIndex === index ? { ...card, isFlipped: true } : card);
+    const nextFlipped = [...flipped, index];
+    setCards(nextCards);
+    setFlipped(nextFlipped);
+    if (nextFlipped.length !== 2) return;
+    setMoves((value) => value + 1);
+    const [first, second] = nextFlipped;
+    if (nextCards[first].iconIndex === nextCards[second].iconIndex) {
+      flipTimerRef.current = setTimeout(() => {
+        setCards((current) => current.map((card, cardIndex) => cardIndex === first || cardIndex === second ? { ...card, isMatched: true } : card));
+        setFlipped([]);
+        setMatched((value) => {
+          const nextValue = value + 1;
+          if (nextValue === LEVELS[level].pairs) setWon(true);
+          return nextValue;
+        });
+      }, 350);
+    } else {
+      flipTimerRef.current = setTimeout(() => {
+        setCards((current) => current.map((card, cardIndex) => cardIndex === first || cardIndex === second ? { ...card, isFlipped: false } : card));
+        setFlipped([]);
+      }, 800);
+    }
+  }
 
-        setCards(deck);
-        setFlippedIndices([]);
-        setMatchedCount(0);
-        setMoves(0);
-        setGameWon(false);
-        setIsPlaying(true);
-        setLevel(selectedLevel);
-    };
-
-    useEffect(() => {
-
-        initGame('easy');
-    }, []);
-
-    // Handle card click
-    const handleCardClick = (index: number) => {
-        if (!isPlaying || gameWon || cards[index].isMatched || cards[index].isFlipped || flippedIndices.length >= 2) {
-            return;
-        }
-
-        // Flip card
-        const newCards = [...cards];
-        newCards[index].isFlipped = true;
-        setCards(newCards);
-
-        const newFlipped = [...flippedIndices, index];
-        setFlippedIndices(newFlipped);
-
-        // Check match if 2 cards flipped
-        if (newFlipped.length === 2) {
-            setMoves(m => m + 1);
-            const [firstIndex, secondIndex] = newFlipped;
-
-            if (cards[firstIndex].iconIndex === cards[secondIndex].iconIndex) {
-                // Match
-                setTimeout(() => {
-                    setCards(prev => prev.map((c, i) =>
-                        i === firstIndex || i === secondIndex
-                            ? { ...c, isMatched: true, isFlipped: true }
-                            : c
-                    ));
-                    setFlippedIndices([]);
-                    setMatchedCount(prev => {
-                        const newCount = prev + 1;
-                        if (newCount === LEVELS[level].pairs) {
-                            setGameWon(true);
-                            setIsPlaying(false);
-                        }
-                        return newCount;
-                    });
-                }, 500);
-            } else {
-                // No match
-                setTimeout(() => {
-                    setCards(prev => prev.map((c, i) =>
-                        i === firstIndex || i === secondIndex
-                            ? { ...c, isFlipped: false }
-                            : c
-                    ));
-                    setFlippedIndices([]);
-                }, 1000);
-            }
-        }
-    };
-
-    return (
-        <div style={{
-            minHeight: '100vh',
-            background: 'linear-gradient(135deg, #0f766e 0%, #115e59 50%, #134e4a 100%)', // Dark teal theme
-            padding: '40px 24px',
-            animation: 'fadeIn 0.5s ease-out'
-        }}>
-            <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px', gap: '16px' }}>
-                    <Link href="/student/entertain" style={{
-                        padding: '10px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)', display: 'flex', backdropFilter: 'blur(4px)',
-                        transition: 'all 0.2s ease'
-                    }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
-                    >
-                        <ArrowLeft size={20} />
-                    </Link>
-                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'white', margin: 0 }}>🧠 Lật Hình Rèn Trí Nhớ</h1>
-                </div>
-
-                {/* Controls */}
-                <div style={{
-                    backgroundColor: '#1e293b', padding: '24px', borderRadius: '24px',
-                    marginBottom: '32px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px'
-                }}>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        {(Object.keys(LEVELS) as Level[]).map((l) => (
-                            <button
-                                key={l}
-                                onClick={() => initGame(l)}
-                                style={{
-                                    padding: '8px 16px', borderRadius: '12px', fontWeight: 600, border: 'none', cursor: 'pointer',
-                                    backgroundColor: level === l ? '#22c55e' : '#f3f4f6',
-                                    color: level === l ? 'white' : '#6b7280',
-                                    transition: 'all 0.2s',
-                                }}
-                            >
-                                {LEVELS[l].label}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '20px', fontWeight: 600, color: '#cbd5e1', alignItems: 'center' }}>
-                        <span>Số bước: {moves}</span>
-                        <button
-                            onClick={() => initGame(level)}
-                            style={{
-                                padding: '8px', borderRadius: '50%', backgroundColor: '#e5e7eb',
-                                border: 'none', cursor: 'pointer', display: 'flex'
-                            }}
-                        >
-                            <RefreshCw size={18} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Game Board */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${LEVELS[level].cols}, minmax(80px, 1fr))`,
-                    gap: '16px', maxWidth: '600px', margin: '0 auto',
-                    perspective: '1000px'
-                }}>
-                    {cards.map((card, index) => {
-                        const Icon = ICONS[card.iconIndex];
-                        return (
-                            <div
-                                key={card.id}
-                                onClick={() => handleCardClick(index)}
-                                style={{
-                                    aspectRatio: '1', cursor: 'pointer',
-                                    position: 'relative', transformStyle: 'preserve-3d',
-                                    transition: 'transform 0.6s',
-                                    transform: card.isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                                }}
-                            >
-                                {/* Front (Hidden) */}
-                                <div style={{
-                                    position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
-                                    backgroundColor: '#bfdbfe', borderRadius: '16px',
-                                    background: 'linear-gradient(135deg, #60a5fa, #3b82f6)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: '0 4px 10px rgba(59, 130, 246, 0.3)',
-                                    border: '2px solid white'
-                                }}>
-                                    <span style={{ fontSize: '32px', opacity: 0.5 }}>?</span>
-                                </div>
-
-                                {/* Back (Revealed) */}
-                                <div style={{
-                                    position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
-                                    backgroundColor: '#1e293b', borderRadius: '16px',
-                                    transform: 'rotateY(180deg)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                                    border: card.isMatched ? '4px solid #22c55e' : '1px solid #e5e7eb'
-                                }}>
-                                    <Icon size={40} color={card.isMatched ? '#22c55e' : '#f59e0b'} fill={card.isMatched ? '#dcfce7' : 'none'} />
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* Victory Overlay */}
-                {gameWon && (
-                    <div style={{
-                        position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 50,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}>
-                        <div style={{
-                            backgroundColor: '#1e293b', padding: '40px', borderRadius: '32px',
-                            textAlign: 'center', maxWidth: '90%', width: '400px',
-                            animation: 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                        }}>
-                            <div style={{
-                                width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'rgba(251, 191, 36, 0.15)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px',
-                                color: '#f59e0b'
-                            }}>
-                                <Trophy size={40} fill="#f59e0b" />
-                            </div>
-                            <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#e2e8f0', margin: '0 0 8px 0' }}>Xuất sắc!</h2>
-                            <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
-                                Bạn đã hoàn thành mức {LEVELS[level].label} trong {moves} bước.
-                            </p>
-                            <button
-                                onClick={() => initGame(level)}
-                                style={{
-                                    padding: '12px 32px', borderRadius: '16px', border: 'none', cursor: 'pointer',
-                                    background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
-                                    color: 'white', fontWeight: 700, fontSize: '16px',
-                                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.4)'
-                                }}
-                            >
-                                Chơi lại
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                <style jsx>{`
-                    @keyframes popIn {
-                        from { opacity: 0; transform: scale(0.8); }
-                        to { opacity: 1; transform: scale(1); }
-                    }
-                    @keyframes fadeIn {
-                        from { opacity: 0; transform: translateY(10px); }
-                        to { opacity: 1; transform: translateY(0); }
-                    }
-                `}</style>
-            </div>
-        </div>
-    );
+  return (
+    <div>
+      <PageHeader title="Lật hình rèn trí nhớ" description="Ghép đúng các cặp biểu tượng với ít lượt lật nhất có thể." actions={<Button variant="secondary" size="small" onClick={() => restart()}><RefreshCw className="size-4" />Chơi lại</Button>} />
+      <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]"><Surface className="p-5 sm:p-6"><div className="flex items-center gap-3"><div className="grid size-11 place-items-center rounded-[12px] bg-pink-50 text-pink-700 dark:bg-pink-950/30 dark:text-pink-200"><Gamepad2 className="size-5" /></div><div><h2 className="text-base font-extrabold text-ink">Chọn mức độ</h2><p className="text-sm text-ink-soft">Bàn lớn hơn sẽ cần nhiều lượt tập trung hơn.</p></div></div><div className="mt-5 grid gap-2">{(Object.keys(LEVELS) as Level[]).map((item) => <button key={item} type="button" onClick={() => restart(item)} className={cn("flex items-center justify-between rounded-[10px] border px-4 py-3 text-left", level === item ? "border-brand bg-brand-soft" : "border-line bg-surface hover:border-brand/40")}><span><span className="block text-sm font-extrabold text-ink">{LEVELS[item].label}</span><span className="text-xs text-ink-soft">{LEVELS[item].pairs} cặp</span></span>{level === item && <span className="text-xs font-extrabold text-brand-strong">Đang chọn</span>}</button>)}</div><div className="mt-6 grid grid-cols-2 gap-2"><div className="rounded-[10px] bg-surface-subtle p-3"><p className="text-xl font-extrabold text-ink">{moves}</p><p className="text-xs font-bold text-ink-soft">Lượt lật</p></div><div className="rounded-[10px] bg-surface-subtle p-3"><p className="text-xl font-extrabold text-ink">{matched}/{LEVELS[level].pairs}</p><p className="text-xs font-bold text-ink-soft">Cặp đã ghép</p></div></div>{won && <div className="mt-5 rounded-[12px] bg-emerald-50 p-4 text-center dark:bg-emerald-950/30"><Trophy className="mx-auto size-6 text-success" /><p className="mt-2 text-sm font-extrabold text-success">Hoàn thành! Bạn đã ghép đủ tất cả.</p><Button size="small" className="mt-3" onClick={() => restart()}>Chơi ván mới</Button></div>}</Surface><Surface className="p-5 sm:p-6"><div className={cn("mx-auto grid max-w-xl gap-2", LEVELS[level].columns)} aria-label="Bàn chơi lật hình">{cards.map((card, index) => { const Icon = ICONS[card.iconIndex]; const visible = card.isFlipped || card.isMatched; return <button key={card.id} type="button" aria-label={visible ? `Thẻ ${index + 1}` : `Lật thẻ ${index + 1}`} aria-pressed={visible} onClick={() => chooseCard(index)} className={cn("grid aspect-square place-items-center rounded-[12px] border text-brand-strong transition-[background-color,border-color,transform] active:translate-y-px", visible ? card.isMatched ? "border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30" : "border-brand/35 bg-brand-soft" : "border-line bg-surface-subtle hover:border-brand/40 hover:bg-surface")}><Icon className={cn("size-7 sm:size-9", visible ? "opacity-100" : "opacity-0")} aria-hidden="true" />{!visible && <span className="text-lg font-extrabold text-brand/55">?</span>}</button>; })}</div></Surface></div>
+    </div>
+  );
 }

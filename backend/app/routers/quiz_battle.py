@@ -25,7 +25,8 @@ class BattleJoin(BaseModel):
 
 class BattleAnswerSubmit(BaseModel):
     question_index: int = Field(ge=0)
-    answer: Literal["A", "B", "C", "D"]
+    # Empty answers are valid when the client timer expires.
+    answer: Literal["", "A", "B", "C", "D"]
     time_taken: float = Field(ge=0)
 
 # --- Endpoints ---
@@ -330,7 +331,7 @@ async def submit_battle_answer(
         raise HTTPException(status_code=400, detail="Câu hỏi không hợp lệ")
     
     q = questions[data.question_index]
-    is_correct = data.answer.upper() == q.correct_answer.upper()
+    is_correct = bool(data.answer) and data.answer.upper() == q.correct_answer.upper()
     
     # Client timing is informational only. It must never influence the score.
     # A server-timed question lifecycle can reintroduce a trusted speed bonus later.

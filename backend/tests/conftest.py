@@ -27,6 +27,7 @@ from app.routers import (  # noqa: E402
     schedule_api,
     search,
     students,
+    wellness,
 )
 
 
@@ -60,6 +61,7 @@ def client(db_session: Session) -> Iterator[TestClient]:
     app.include_router(schedule_api.router, prefix="/api/schedules")
     app.include_router(search.router, prefix="/api/search")
     app.include_router(students.router, prefix="/api/students")
+    app.include_router(wellness.router, prefix="/api/wellness")
 
     def override_get_db() -> Iterator[Session]:
         yield db_session

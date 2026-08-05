@@ -1,208 +1,79 @@
-/* eslint-disable */
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { ArrowLeft, HelpCircle, RefreshCw, Trophy, Lightbulb } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { API_URL } from '@/lib/api';
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, CheckCircle2, HelpCircle, Lightbulb, RefreshCw, Trophy, XCircle } from "lucide-react";
+import Link from "next/link";
 
-interface CrosswordData {
-    id: number;
-    topic: string;
-    question: string;
-    hint: string;
-    length: number;
-}
+import { ErrorState } from "@/components/ui/feedback";
+import { Button, PageHeader, Skeleton, Surface } from "@/components/ui/primitives";
+import { gamesApi, getErrorMessage, type CrosswordQuestion } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 export default function CrosswordGame() {
-    const router = useRouter();
-    const [data, setData] = useState<CrosswordData | null>(null);
-    const [userAnswer, setUserAnswer] = useState<string[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [message, setMessage] = useState('');
-    const [isCorrect, setIsCorrect] = useState(false);
-    const [showHint, setShowHint] = useState(false);
-    const [score, setScore] = useState(0); // Local session score
+  const [question, setQuestion] = useState<CrosswordQuestion | null>(null);
+  const [answer, setAnswer] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [checking, setChecking] = useState(false);
+  const [message, setMessage] = useState("");
+  const [correct, setCorrect] = useState(false);
+  const [hintVisible, setHintVisible] = useState(false);
+  const [score, setScore] = useState(0);
+  const [error, setError] = useState("");
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-    const [revealedIndices, setRevealedIndices] = useState<number[]>([]);
+  async function loadQuestion() {
+    setLoading(true);
+    setError("");
+    setMessage("");
+    setCorrect(false);
+    setHintVisible(false);
+    try {
+      const nextQuestion = await gamesApi.getCrossword();
+      setQuestion(nextQuestion);
+      setAnswer(Array.from({ length: nextQuestion.length }, () => ""));
+      inputRefs.current = [];
+    } catch (loadError) {
+      setError(getErrorMessage(loadError, "Không thể tải ô chữ."));
+    } finally {
+      setLoading(false);
+    }
+  }
 
+  useEffect(() => { void loadQuestion(); }, []);
 
-    const fetchCrossword = async () => {
-        setLoading(true);
-        setMessage('');
-        setIsCorrect(false);
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_URL}/api/games/crossword/random`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const newData = await res.json();
-                setData(newData);
-                setUserAnswer(new Array(newData.length).fill(''));
-                setRevealedIndices([]);
-                setShowHint(false);
-            }
-        } catch (error) {
-            console.error('Failed to fetch crossword', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+  function changeLetter(index: number, value: string) {
+    const letter = value.replace(/[^a-zA-ZÀ-ỹ]/g, "").slice(-1).toUpperCase();
+    setAnswer((current) => current.map((item, itemIndex) => itemIndex === index ? letter : item));
+    if (letter) inputRefs.current[index + 1]?.focus();
+  }
 
-    useEffect(() => {
-        fetchCrossword();
-    }, []);
+  function handleKeyDown(index: number, event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Backspace" && !answer[index]) inputRefs.current[index - 1]?.focus();
+    if (event.key === "ArrowLeft") inputRefs.current[index - 1]?.focus();
+    if (event.key === "ArrowRight") inputRefs.current[index + 1]?.focus();
+  }
 
-    const handleInputChange = (index: number, value: string) => {
-        if (value.length > 1) return;
+  async function checkAnswer() {
+    if (!question || answer.some((letter) => !letter)) { setMessage("Hãy điền đủ các ô trước khi kiểm tra."); return; }
+    setChecking(true);
+    setError("");
+    try {
+      const result = await gamesApi.checkCrossword(question.id, answer.join(""));
+      setCorrect(result.correct);
+      setMessage(result.message);
+      if (result.correct) setScore((current) => current + result.bonus_score);
+    } catch (checkError) {
+      setError(getErrorMessage(checkError, "Không thể kiểm tra đáp án."));
+    } finally {
+      setChecking(false);
+    }
+  }
 
-        const newAnswer = [...userAnswer];
-        newAnswer[index] = value.toUpperCase();
-        setUserAnswer(newAnswer);
-
-        // Auto move focus
-        if (value && index < userAnswer.length - 1) {
-            const nextInput = document.getElementById(`char-${index + 1}`);
-            nextInput?.focus();
-        }
-    };
-
-    const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-        if (e.key === 'Backspace' && !userAnswer[index] && index > 0) {
-            const prevInput = document.getElementById(`char-${index - 1}`);
-            prevInput?.focus();
-        }
-    };
-
-    const checkAnswer = async () => {
-        if (!data) return;
-
-        const fullAnswer = userAnswer.join('');
-
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_URL}/api/games/crossword/check`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ id: data.id, answer: fullAnswer })
-            });
-
-            const result = await res.json();
-
-            if (result.correct) {
-                setIsCorrect(true);
-                setScore(prev => prev + result.bonus_score);
-                setMessage(result.message);
-            } else {
-                setMessage(result.message);
-                // Shake effect or visual feedback could be added here
-            }
-        } catch (error) {
-            console.error('Error checking answer', error);
-        }
-    };
-
-    if (loading && !data) return <div className="p-8 text-center">Đang tải câu đố...</div>;
-
-    return (
-        <div className="min-h-screen bg-slate-50 p-6">
-            <div className="max-w-3xl mx-auto">
-                <div className="flex items-center justify-between mb-8">
-                    <Link href="/student" className="flex items-center text-slate-600 hover:text-slate-900">
-                        <ArrowLeft className="mr-2" size={20} />
-                        Quay lại Dashboard
-                    </Link>
-                    <div className="flex items-center gap-2 bg-yellow-100 px-4 py-2 rounded-full text-yellow-700 font-bold">
-                        <Trophy size={20} />
-                        <span>Điểm thưởng phiên: {score}</span>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-xl p-8 text-center relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-
-                    <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold mb-6">
-                        Chủ đề: {data?.topic}
-                    </div>
-
-                    <h1 className="text-2xl font-bold text-slate-800 mb-8 leading-relaxed">
-                        {data?.question}
-                    </h1>
-
-                    {/* Crossword Grid */}
-                    <div className="flex justify-center flex-wrap gap-2 mb-8">
-                        {userAnswer.map((char, index) => (
-                            <input
-                                key={index}
-                                id={`char-${index}`}
-                                type="text"
-                                maxLength={1}
-                                value={char}
-                                disabled={isCorrect}
-                                onChange={(e) => handleInputChange(index, e.target.value)}
-                                onKeyDown={(e) => handleKeyDown(index, e)}
-                                className={`w-12 h-14 md:w-14 md:h-16 border-2 rounded-lg text-center text-2xl font-bold uppercase transition-all
-                                    ${isCorrect
-                                        ? 'bg-green-100 border-green-500 text-green-700'
-                                        : 'bg-white border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100'
-                                    }
-                                    ${revealedIndices.includes(index) ? 'text-purple-600' : ''}
-                                `}
-                                autoComplete="off"
-                            />
-                        ))}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="flex gap-4">
-                            {!isCorrect ? (
-                                <>
-                                    <button
-                                        onClick={() => setShowHint(!showHint)}
-                                        className="flex items-center gap-2 px-6 py-3 bg-amber-100 text-amber-700 rounded-xl hover:bg-amber-200 transition-colors font-medium"
-                                    >
-                                        <Lightbulb size={20} />
-                                        Gợi ý
-                                    </button>
-                                    <button
-                                        onClick={checkAnswer}
-                                        className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all font-bold text-lg"
-                                    >
-                                        Kiểm tra
-                                    </button>
-                                </>
-                            ) : (
-                                <button
-                                    onClick={fetchCrossword}
-                                    className="flex items-center gap-2 px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-lg shadow-green-200 transition-all font-bold text-lg animate-bounce"
-                                >
-                                    <RefreshCw size={20} />
-                                    Câu tiếp theo
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Messages & Hints */}
-                        {showHint && (
-                            <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-slate-600 animate-fade-in-up">
-                                <span className="font-semibold text-amber-600">Gợi ý:</span> {data?.hint}
-                            </div>
-                        )}
-
-                        {message && (
-                            <div className={`mt-4 text-lg font-bold ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>
-                                {message}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+  return (
+    <div>
+      <PageHeader title="Ô chữ kiến thức" description="Một câu hỏi ngắn, một đáp án bí mật và một chút điểm thưởng cho phiên học hôm nay." actions={<Link href="/student/entertain" className="inline-flex min-h-9 items-center gap-2 rounded-[10px] border border-line bg-surface px-3 text-xs font-bold text-ink-soft hover:border-brand/40 hover:text-ink"><ArrowLeft className="size-4" />Góc giải trí</Link>} />
+      {error && <ErrorState className="mb-5" title="Không thể tải trò chơi" description={error} action={<Button variant="secondary" size="small" onClick={() => void loadQuestion()}><RefreshCw className="size-4" />Thử lại</Button>} />}
+      {loading && !question ? <Surface className="mx-auto max-w-3xl space-y-4 p-6"><Skeleton className="h-5 w-32" /><Skeleton className="h-16 w-full" /><Skeleton className="h-20 w-full" /></Surface> : question ? <Surface className="mx-auto max-w-3xl p-6 text-center sm:p-8"><div className="flex flex-wrap items-center justify-between gap-3"><span className="rounded-full bg-brand-soft px-3 py-1.5 text-xs font-extrabold text-brand-strong">{question.topic}</span><span className="inline-flex items-center gap-1.5 text-sm font-extrabold text-brand-strong"><Trophy className="size-4" />{score} điểm</span></div><div className="mx-auto mt-7 max-w-2xl"><HelpCircle className="mx-auto size-7 text-brand-strong" /><h2 className="mt-3 text-xl font-extrabold leading-8 text-ink">{question.question}</h2></div><div className="mt-7 flex flex-wrap justify-center gap-2" aria-label={`Đáp án gồm ${question.length} chữ cái`}>{answer.map((letter, index) => <input key={index} ref={(element) => { inputRefs.current[index] = element; }} id={`crossword-${index}`} aria-label={`Chữ cái thứ ${index + 1}`} value={letter} maxLength={1} disabled={correct || checking} onChange={(event) => changeLetter(index, event.target.value)} onKeyDown={(event) => handleKeyDown(index, event)} className={cn("size-12 rounded-[10px] border-2 bg-surface text-center text-xl font-extrabold uppercase text-ink outline-none transition-colors focus:border-brand focus:ring-4 focus:ring-brand/10 sm:size-14", correct ? "border-emerald-300 bg-emerald-50 text-success" : "border-line")} autoComplete="off" />)}</div><div className="mt-7 flex flex-wrap justify-center gap-2">{!correct ? <><Button variant="secondary" onClick={() => setHintVisible((value) => !value)}><Lightbulb className="size-4" />{hintVisible ? "Ẩn gợi ý" : "Xem gợi ý"}</Button><Button onClick={() => void checkAnswer()} disabled={checking}>{checking ? "Đang kiểm tra..." : "Kiểm tra đáp án"}</Button></> : <Button onClick={() => void loadQuestion()}><RefreshCw className="size-4" />Câu tiếp theo</Button>}</div>{hintVisible && <p className="mx-auto mt-5 max-w-xl rounded-[10px] border border-amber-200 bg-amber-50 px-4 py-3 text-left text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100"><Lightbulb className="mr-2 inline size-4" />{question.hint}</p>}{message && <p role="status" className={cn("mt-5 flex items-center justify-center gap-2 text-sm font-extrabold", correct ? "text-success" : "text-danger")}>{correct ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}{message}</p>}</Surface> : null}
+    </div>
+  );
 }

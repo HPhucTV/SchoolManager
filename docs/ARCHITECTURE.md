@@ -47,6 +47,28 @@ Quy tắc đóng góp:
 
 Lý do và trade-off được ghi tại [ADR-001](decisions/ADR-001-backend-vertical-slices.md).
 
+## Lát cắt Phase 4: wellbeing và engagement
+
+Wellbeing đã được đưa vào cùng mô hình vertical slice thay vì mở rộng router thành một service riêng:
+
+```text
+wellness router
+  -> wellbeing request/response schemas
+  -> WellbeingApplication (use cases + transaction + audit)
+  -> wellbeing domain policies (mood, SOS, class summary)
+  -> SQLAlchemy models
+```
+
+Các quyết định bảo vệ dữ liệu:
+
+- Mood emoji dùng allow-list và ghi chú bị giới hạn 500 ký tự.
+- SOS giới hạn message/reviewer note 1.000 ký tự; nội dung message không xuất hiện trong audit event.
+- SOS ẩn danh trả về `student_id: null` và không cho phép đoán danh tính từ response.
+- Teacher chỉ xem hoặc cập nhật SOS thuộc lớp của mình; SOS đã resolved không thể mở lại.
+- Class wellness summary không trả raw mood emoji hoặc điểm cá nhân nhạy cảm.
+
+Frontend engagement dùng `src/lib/api/extensions.ts` làm seam typed cho wellbeing, gamification, notifications, AI Tutor, Quiz Battle và games. Route page chỉ điều phối state và dùng UI primitives chung; polling Quiz Battle và timer game đều có cleanup khi unmount.
+
 ## Vai trò người dùng
 
 | Vai trò | Mô tả | Trang chính |

@@ -1,232 +1,233 @@
-/* eslint-disable */
-'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { wellnessApi } from '@/lib/api';
-import ProtectedRoute from '@/components/ProtectedRoute';
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { BarChart3, CalendarDays, HeartHandshake, LifeBuoy, ShieldCheck, TrendingDown, TrendingUp } from "lucide-react";
+
+import { Dialog, EmptyState, ErrorState } from "@/components/ui/feedback";
+import { Field, Textarea } from "@/components/ui/forms";
+import { Button, PageHeader, Skeleton, Surface } from "@/components/ui/primitives";
+import { Tabs } from "@/components/ui/Tabs";
+import { getErrorMessage, type MoodAnalytics, type MoodEntry, wellnessApi } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 const MOODS = [
-    { level: 1, emoji: '😢', label: 'Rất buồn', color: '#ef4444' },
-    { level: 2, emoji: '😟', label: 'Buồn', color: '#f97316' },
-    { level: 3, emoji: '😐', label: 'Bình thường', color: '#eab308' },
-    { level: 4, emoji: '🙂', label: 'Vui', color: '#22c55e' },
-    { level: 5, emoji: '😄', label: 'Rất vui', color: '#10b981' },
-];
+  { level: 1, emoji: "😢", label: "Rất buồn" },
+  { level: 2, emoji: "😟", label: "Buồn" },
+  { level: 3, emoji: "😐", label: "Bình thường" },
+  { level: 4, emoji: "🙂", label: "Vui" },
+  { level: 5, emoji: "😄", label: "Rất vui" },
+] as const;
 
-interface MoodEntry {
-    id: number;
-    mood_level: number;
-    mood_emoji: string;
-    note?: string;
-    created_at: string;
-}
-
-interface MoodAnalytics {
-    avg_week: number;
-    avg_month: number;
-    trend: string;
-    total_entries: number;
-    distribution: Record<number, number>;
-    recent_entries: Array<{ mood_level: number; mood_emoji: string; created_at: string }>;
-}
+type JournalTab = "log" | "history" | "analytics";
 
 export default function MoodJournalPage() {
-    const router = useRouter();
-    const [selectedMood, setSelectedMood] = useState<number | null>(null);
-    const [note, setNote] = useState('');
-    const [history, setHistory] = useState<MoodEntry[]>([]);
-    const [analytics, setAnalytics] = useState<MoodAnalytics | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [showSOS, setShowSOS] = useState(false);
-    const [sosMessage, setSOSMessage] = useState('');
-    const [sosAnon, setSOSAnon] = useState(true);
-    const [sosSent, setSOSSent] = useState(false);
-    const [tab, setTab] = useState<'log' | 'history' | 'analytics'>('log');
+  const [selectedMood, setSelectedMood] = useState<number | null>(null);
+  const [note, setNote] = useState("");
+  const [history, setHistory] = useState<MoodEntry[]>([]);
+  const [analytics, setAnalytics] = useState<MoodAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [tab, setTab] = useState<JournalTab>("log");
+  const [showSOS, setShowSOS] = useState(false);
+  const [sosMessage, setSOSMessage] = useState("");
+  const [sosAnonymous, setSOSAnonymous] = useState(true);
+  const [sosSending, setSOSSending] = useState(false);
+  const [sosSent, setSOSSent] = useState(false);
 
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [entries, summary] = await Promise.all([
+        wellnessApi.getMoodHistory(30),
+        wellnessApi.getMoodAnalytics(),
+      ]);
+      setHistory(entries);
+      setAnalytics(summary);
+    } catch (loadError) {
+      setError(getErrorMessage(loadError, "Không thể tải nhật ký cảm xúc."));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
-    const loadData = async () => {
-        try {
-            const [h, a] = await Promise.all([
-                wellnessApi.getMoodHistory(30),
-                wellnessApi.getMoodAnalytics()
-            ]);
-            setHistory(h);
-            setAnalytics(a);
-        } catch (e) { console.error(e); }
-        setLoading(false);
-    };
+  async function submitMood() {
+    const mood = MOODS.find((item) => item.level === selectedMood);
+    if (!mood) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      await wellnessApi.createMood({
+        mood_level: mood.level,
+        mood_emoji: mood.emoji,
+        note: note.trim() || undefined,
+      });
+      setSelectedMood(null);
+      setNote("");
+      setSuccess("Đã lưu cảm xúc hôm nay.");
+      await loadData();
+    } catch (submitError) {
+      setError(getErrorMessage(submitError, "Không thể lưu cảm xúc."));
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
-    useEffect(() => {
-        loadData();
-    }, []);
+  async function sendSOS() {
+    if (!sosMessage.trim()) return;
+    setSOSSending(true);
+    setError("");
+    try {
+      await wellnessApi.createSOS({ message: sosMessage.trim(), is_anonymous: sosAnonymous });
+      setSosStateAfterSuccess();
+    } catch (sendError) {
+      setError(getErrorMessage(sendError, "Không thể gửi tín hiệu hỗ trợ."));
+    } finally {
+      setSOSSending(false);
+    }
+  }
 
-    const submitMood = async () => {
-        if (!selectedMood) return;
-        setSubmitting(true);
-        try {
-            const mood = MOODS.find(m => m.level === selectedMood)!;
-            await wellnessApi.createMood({
-                mood_level: selectedMood,
-                mood_emoji: mood.emoji,
-                note: note || undefined
-            });
-            setSelectedMood(null);
-            setNote('');
-            loadData();
-        } catch (e) { console.error(e); }
-        setSubmitting(false);
-    };
+  function setSosStateAfterSuccess() {
+    setSOSSent(true);
+    setSOSMessage("");
+  }
 
-    const sendSOS = async () => {
-        if (!sosMessage.trim()) return;
-        try {
-            await wellnessApi.createSOS({ message: sosMessage, is_anonymous: sosAnon });
-            setSOSSent(true);
-            setSOSMessage('');
-        } catch (e) { console.error(e); }
-    };
+  function closeSOS() {
+    setShowSOS(false);
+    setSOSSent(false);
+    setSOSMessage("");
+  }
 
-    const trendIcon = analytics?.trend === 'improving' ? '📈' : analytics?.trend === 'declining' ? '📉' : '➡️';
-    const trendLabel = analytics?.trend === 'improving' ? 'Đang cải thiện' : analytics?.trend === 'declining' ? 'Cần chú ý' : 'Ổn định';
+  const trend = analytics?.trend ?? "stable";
+  const trendLabel = trend === "improving" ? "Đang cải thiện" : trend === "declining" ? "Cần quan tâm thêm" : "Ổn định";
+  const TrendIcon = trend === "improving" ? TrendingUp : trend === "declining" ? TrendingDown : BarChart3;
 
-    return (
-        <ProtectedRoute allowedRoles={['student']}>
-            <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
-                <button
-                    onClick={() => router.push('/student')}
-                    style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '14px', marginBottom: '16px', padding: 0 }}
-                >
-                    ← Quay lại trang chủ
-                </button>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                    <div>
-                        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>💚 Nhật ký cảm xúc</h1>
-                        <p style={{ color: '#94a3b8', margin: '4px 0 0' }}>Ghi lại cảm xúc mỗi ngày để hiểu bản thân hơn</p>
-                    </div>
-                    <button onClick={() => setShowSOS(true)} style={{ padding: '10px 20px', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(239,68,68,0.3)' }}>
-                        🆘 Cần giúp đỡ
-                    </button>
-                </div>
+  return (
+    <div>
+      <PageHeader
+        title="Nhật ký cảm xúc"
+        description="Ghi nhận riêng tư để hiểu mình hơn. Nội dung ghi chú chỉ xuất hiện trong lịch sử của bạn."
+        actions={
+          <Button variant="danger" onClick={() => setShowSOS(true)}>
+            <LifeBuoy className="size-4" aria-hidden="true" /> Cần hỗ trợ
+          </Button>
+        }
+      />
 
-                {/* Tabs */}
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-                    {[
-                        { key: 'log' as const, label: '✏️ Ghi nhận', },
-                        { key: 'history' as const, label: '📋 Lịch sử' },
-                        { key: 'analytics' as const, label: '📊 Phân tích' }
-                    ].map(t => (
-                        <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '10px 20px', borderRadius: '10px', border: tab === t.key ? 'none' : '1px solid #334155', cursor: 'pointer', fontWeight: 600, fontSize: '14px', background: tab === t.key ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : '#1e293b', color: tab === t.key ? 'white' : '#cbd5e1', transition: 'all 0.2s' }}>
-                            {t.label}
-                        </button>
-                    ))}
-                </div>
+      {error && <ErrorState className="mb-5" title="Có lỗi xảy ra" description={error} action={<Button variant="secondary" size="small" onClick={() => void loadData()}>Thử lại</Button>} />}
+      {success && <p role="status" className="mb-5 rounded-[12px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-success dark:border-emerald-900 dark:bg-emerald-950/30">{success}</p>}
 
-                {/* Tab: Log */}
-                {tab === 'log' && (
-                    <div style={{ background: '#1e293b', borderRadius: '16px', padding: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
-                        <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '24px', color: '#e2e8f0' }}>Hôm nay bạn cảm thấy thế nào?</h2>
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-                            {MOODS.map(mood => (
-                                <button key={mood.level} onClick={() => setSelectedMood(mood.level)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '16px 20px', borderRadius: '16px', border: selectedMood === mood.level ? `3px solid ${mood.color}` : '3px solid #334155', background: selectedMood === mood.level ? `${mood.color}15` : '#0f172a', cursor: 'pointer', transition: 'all 0.2s', transform: selectedMood === mood.level ? 'scale(1.1)' : 'scale(1)' }}>
-                                    <span style={{ fontSize: '40px' }}>{mood.emoji}</span>
-                                    <span style={{ fontSize: '12px', fontWeight: 600, color: mood.color }}>{mood.label}</span>
-                                </button>
-                            ))}
-                        </div>
-                        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Ghi chú thêm (tùy chọn)..." rows={3} style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '2px solid #334155', backgroundColor: '#0f172a', color: '#e2e8f0', fontSize: '14px', resize: 'none', marginBottom: '16px', boxSizing: 'border-box' }} />
-                        <button onClick={submitMood} disabled={!selectedMood || submitting} style={{ width: '100%', padding: '14px', background: selectedMood ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : '#334155', color: selectedMood ? 'white' : '#94a3b8', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 600, cursor: selectedMood ? 'pointer' : 'default' }}>
-                            {submitting ? 'Đang lưu...' : '💾 Lưu cảm xúc'}
-                        </button>
-                    </div>
+      <Tabs<JournalTab>
+        label="Nội dung nhật ký"
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: "log", label: "Ghi nhận hôm nay" },
+          { value: "history", label: "Lịch sử 30 ngày" },
+          { value: "analytics", label: "Tổng quan" },
+        ]}
+      />
+
+      {loading ? (
+        <Surface className="space-y-4 p-6"><Skeleton className="h-7 w-56" /><Skeleton className="h-28 w-full" /><Skeleton className="h-24 w-full" /></Surface>
+      ) : tab === "log" ? (
+        <Surface className="p-5 sm:p-7">
+          <div className="flex items-center gap-3">
+            <div className="grid size-11 place-items-center rounded-[12px] bg-brand-soft text-brand-strong"><HeartHandshake className="size-5" aria-hidden="true" /></div>
+            <div><h2 className="text-lg font-extrabold text-ink">Hôm nay bạn cảm thấy thế nào?</h2><p className="text-sm text-ink-soft">Chọn mức gần nhất với cảm xúc hiện tại.</p></div>
+          </div>
+          <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5" aria-label="Chọn mức cảm xúc">
+            {MOODS.map((mood) => (
+              <button
+                key={mood.level}
+                type="button"
+                aria-pressed={selectedMood === mood.level}
+                className={cn(
+                  "flex min-h-28 flex-col items-center justify-center gap-2 rounded-[12px] border px-3 py-4 text-center transition-[border-color,background-color,transform] active:translate-y-px",
+                  selectedMood === mood.level ? "border-brand bg-brand-soft text-brand-strong" : "border-line bg-surface text-ink-soft hover:border-brand/45 hover:bg-surface-subtle",
                 )}
-
-                {/* Tab: History */}
-                {tab === 'history' && (
-                    <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
-                        <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px', color: '#e2e8f0' }}>Lịch sử 30 ngày qua</h2>
-                        {history.length === 0 ? (
-                            <p style={{ textAlign: 'center', color: '#cbd5e1', padding: '32px' }}>Chưa có dữ liệu. Hãy bắt đầu ghi nhận cảm xúc! ✨</p>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                {history.map(entry => (
-                                    <div key={entry.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px 16px', background: '#0f172a', borderRadius: '12px' }}>
-                                        <span style={{ fontSize: '32px' }}>{entry.mood_emoji}</span>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: 600, fontSize: '14px', color: '#e2e8f0' }}>{MOODS.find(m => m.level === entry.mood_level)?.label}</div>
-                                            {entry.note && <p style={{ fontSize: '13px', color: '#94a3b8', margin: '2px 0 0' }}>{entry.note}</p>}
-                                        </div>
-                                        <span style={{ fontSize: '12px', color: '#cbd5e1' }}>{new Date(entry.created_at).toLocaleDateString('vi-VN')}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Tab: Analytics */}
-                {tab === 'analytics' && analytics && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                        <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
-                            <h3 style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>Trung bình tuần</h3>
-                            <div style={{ fontSize: '36px', fontWeight: 700, color: '#8b5cf6' }}>{analytics.avg_week}/5</div>
-                            <div style={{ fontSize: '14px', color: '#94a3b8', marginTop: '4px' }}>{trendIcon} {trendLabel}</div>
-                        </div>
-                        <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
-                            <h3 style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>Trung bình tháng</h3>
-                            <div style={{ fontSize: '36px', fontWeight: 700, color: '#6d28d9' }}>{analytics.avg_month}/5</div>
-                            <div style={{ fontSize: '14px', color: '#94a3b8', marginTop: '4px' }}>📝 {analytics.total_entries} ghi nhận</div>
-                        </div>
-                        <div style={{ gridColumn: 'span 2', background: '#1e293b', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
-                            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#e2e8f0' }}>Phân bổ cảm xúc</h3>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', height: '120px' }}>
-                                {MOODS.map(mood => {
-                                    const count = analytics.distribution[mood.level] || 0;
-                                    const maxCount = Math.max(...Object.values(analytics.distribution), 1);
-                                    const height = (count / maxCount) * 100;
-                                    return (
-                                        <div key={mood.level} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#cbd5e1' }}>{count}</span>
-                                            <div style={{ width: '100%', height: `${height}%`, minHeight: '4px', background: `linear-gradient(to top, ${mood.color}, ${mood.color}99)`, borderRadius: '8px 8px 0 0', transition: 'height 0.5s' }} />
-                                            <span style={{ fontSize: '20px' }}>{mood.emoji}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* SOS Modal */}
-                {showSOS && (
-                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                        <div style={{ background: '#1e293b', borderRadius: '20px', padding: '32px', maxWidth: '480px', width: '90%', border: '1px solid #334155' }}>
-                            {sosSent ? (
-                                <div style={{ textAlign: 'center' }}>
-                                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>💚</div>
-                                    <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px', color: '#e2e8f0' }}>Đã gửi tín hiệu</h2>
-                                    <p style={{ color: '#94a3b8', marginBottom: '24px' }}>Giáo viên sẽ liên hệ hỗ trợ bạn sớm nhất</p>
-                                    <button onClick={() => { setShowSOS(false); setSOSSent(false); }} style={{ padding: '12px 32px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600 }}>Đóng</button>
-                                </div>
-                            ) : (
-                                <>
-                                    <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0' }}>🆘 Gửi tín hiệu cần giúp đỡ</h2>
-                                    <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>Tin nhắn sẽ được gửi đến giáo viên chủ nhiệm. Bạn không đơn độc!</p>
-                                    <textarea value={sosMessage} onChange={e => setSOSMessage(e.target.value)} placeholder="Chia sẻ những gì bạn đang trải qua..." rows={4} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #334155', backgroundColor: '#0f172a', color: '#e2e8f0', fontSize: '14px', resize: 'none', marginBottom: '12px', boxSizing: 'border-box' }} />
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#94a3b8', marginBottom: '16px', cursor: 'pointer' }}>
-                                        <input type="checkbox" checked={sosAnon} onChange={e => setSOSAnon(e.target.checked)} /> Gửi ẩn danh
-                                    </label>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button onClick={() => setShowSOS(false)} style={{ flex: 1, padding: '12px', background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, color: '#cbd5e1' }}>Hủy</button>
-                                        <button onClick={sendSOS} disabled={!sosMessage.trim()} style={{ flex: 1, padding: '12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600 }}>Gửi SOS</button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                )}
+                onClick={() => setSelectedMood(mood.level)}
+              >
+                <span className="text-3xl" aria-hidden="true">{mood.emoji}</span>
+                <span className="text-xs font-extrabold">{mood.label}</span>
+              </button>
+            ))}
+          </div>
+          <Field name="mood-note" label="Ghi chú riêng" helper={`${note.length}/500 ký tự`} className="mt-6">
+            <Textarea value={note} maxLength={500} placeholder="Bạn có thể ghi lại điều khiến mình cảm thấy như vậy." onChange={(event) => setNote(event.target.value)} />
+          </Field>
+          <Button className="mt-5 w-full sm:w-auto" disabled={!selectedMood || submitting} onClick={() => void submitMood()}>
+            {submitting ? "Đang lưu..." : "Lưu cảm xúc"}
+          </Button>
+        </Surface>
+      ) : tab === "history" ? (
+        <Surface>
+          {history.length === 0 ? (
+            <EmptyState icon={CalendarDays} title="Chưa có ghi nhận" description="Ghi lại cảm xúc đầu tiên để bắt đầu lịch sử riêng của bạn." action={<Button onClick={() => setTab("log")}>Ghi nhận ngay</Button>} />
+          ) : (
+            <div className="divide-y divide-line">
+              {history.map((entry) => (
+                <article key={entry.id} className="flex items-start gap-4 px-5 py-4 sm:px-6">
+                  <span className="text-2xl" aria-hidden="true">{entry.mood_emoji}</span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-extrabold text-ink">{MOODS.find((mood) => mood.level === entry.mood_level)?.label || "Cảm xúc"}</h3>
+                    {entry.note && <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-ink-soft">{entry.note}</p>}
+                  </div>
+                  <time className="shrink-0 text-xs text-ink-soft" dateTime={entry.created_at}>{new Date(entry.created_at).toLocaleDateString("vi-VN")}</time>
+                </article>
+              ))}
             </div>
-        </ProtectedRoute>
-    );
+          )}
+        </Surface>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+          <Surface className="p-5 sm:p-6">
+            <p className="text-sm font-bold text-ink-soft">Trung bình 7 ngày</p>
+            <p className="mt-2 text-4xl font-extrabold tracking-tight text-ink">{analytics?.avg_week ?? 0}<span className="text-lg text-ink-soft">/5</span></p>
+            <div className="mt-4 flex items-center gap-2 text-sm font-bold text-brand-strong"><TrendIcon className="size-4" aria-hidden="true" />{trendLabel}</div>
+            <p className="mt-5 text-sm leading-6 text-ink-soft">Trung bình 30 ngày: <strong className="text-ink">{analytics?.avg_month ?? 0}/5</strong>. Tổng cộng {analytics?.total_entries ?? 0} ghi nhận.</p>
+          </Surface>
+          <Surface className="p-5 sm:p-6">
+            <h2 className="text-base font-extrabold text-ink">Phân bổ cảm xúc</h2>
+            <div className="mt-4 grid gap-2 sm:grid-cols-5">
+              {MOODS.map((mood) => (
+                <div key={mood.level} className="rounded-[12px] bg-surface-subtle p-3 text-center">
+                  <span className="text-2xl" aria-hidden="true">{mood.emoji}</span>
+                  <p className="mt-2 text-xl font-extrabold text-ink">{analytics?.distribution[mood.level] ?? 0}</p>
+                  <p className="text-xs font-bold text-ink-soft">{mood.label}</p>
+                </div>
+              ))}
+            </div>
+          </Surface>
+        </div>
+      )}
+
+      <Dialog
+        open={showSOS}
+        onClose={closeSOS}
+        title={sosSent ? "Đã gửi tín hiệu hỗ trợ" : "Gửi tín hiệu cần giúp đỡ"}
+        description={sosSent ? "Giáo viên chủ nhiệm đã nhận được thông báo." : "Tín hiệu được gửi đến giáo viên chủ nhiệm của lớp bạn."}
+        size="small"
+        footer={sosSent ? <Button onClick={closeSOS}>Đóng</Button> : <><Button variant="secondary" onClick={closeSOS}>Hủy</Button><Button variant="danger" disabled={!sosMessage.trim() || sosSending} onClick={() => void sendSOS()}>{sosSending ? "Đang gửi..." : "Gửi tín hiệu"}</Button></>}
+      >
+        {sosSent ? (
+          <div className="rounded-[12px] bg-brand-soft p-4 text-sm leading-6 text-brand-strong">Bạn không đơn độc. Nếu đang gặp nguy hiểm ngay lúc này, hãy liên hệ một người lớn tin cậy hoặc dịch vụ khẩn cấp tại nơi bạn sống.</div>
+        ) : (
+          <div className="grid gap-4">
+            <div className="flex gap-3 rounded-[12px] border border-line bg-surface-subtle p-4 text-sm leading-6 text-ink-soft"><ShieldCheck className="mt-0.5 size-5 shrink-0 text-brand-strong" aria-hidden="true" /><span>Khi chọn ẩn danh, tên và mã học sinh sẽ không xuất hiện trong danh sách SOS của giáo viên.</span></div>
+            <Field name="sos-message" label="Điều bạn muốn chia sẻ" required helper={`${sosMessage.length}/1000 ký tự`}>
+              <Textarea value={sosMessage} maxLength={1000} placeholder="Hãy mô tả ngắn gọn điều bạn đang cần hỗ trợ." onChange={(event) => setSOSMessage(event.target.value)} />
+            </Field>
+            <label className="flex min-h-11 items-center gap-3 rounded-[10px] border border-line px-3.5 text-sm font-bold text-ink"><input type="checkbox" checked={sosAnonymous} onChange={(event) => setSOSAnonymous(event.target.checked)} className="size-4 accent-[var(--brand)]" />Gửi ẩn danh</label>
+          </div>
+        )}
+      </Dialog>
+    </div>
+  );
 }

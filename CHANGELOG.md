@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Thêm `Coursework` và `Assessment` application interface, policy thuần và 6 interface/policy/OpenAPI test; tổng backend suite hiện có 20 test.
 - Thêm audit trail bền vững cho assignment/quiz bằng migration `20260805_0002`, ghi trong cùng transaction với thay đổi nghiệp vụ.
 - Thêm ADR-001 ghi lại quyết định modular-monolith vertical slice và lý do không tạo generic repository.
+- Thêm Wellbeing application/policy/schema, mood journal và SOS privacy-first với 14 workflow/authorization tests.
+- Thêm typed API seam cho wellbeing, notifications, gamification, AI Tutor, Quiz Battle và mini-games.
 
 ### Changed
 
@@ -37,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Teacher và Student dùng chung `RoleShell`; thời khóa biểu dùng một component responsive và accessible cho cả hai vai trò.
 - Làm mỏng router assignment/quiz thành HTTP adapter; tách request schema khỏi response schema theo vai trò và chuẩn hóa application error sang HTTP status.
 - Gộp create/update/submit/grade/delete của assessment/coursework thành một transaction cho mỗi use case thay vì commit nhiều lần trong router.
+- Migrate các màn student engagement và teacher/student Quiz Battle sang Campus Blue: achievements, AI Tutor, mini-games, mood, notifications và xử lý sức khỏe tinh thần.
+- Quiz Battle chấp nhận câu trả lời rỗng khi hết giờ để không gửi payload sai schema; điểm chỉ được tính khi đáp án không rỗng và đúng.
 
 ### Fixed
 

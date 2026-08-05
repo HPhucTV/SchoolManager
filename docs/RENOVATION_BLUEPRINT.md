@@ -345,7 +345,7 @@ Lát cắt đầu tiên đã hoàn thành và có evidence chạy local:
 | Hạng mục | Trạng thái | Evidence |
 |---|---|---|
 | Safety baseline | Hoàn thành | Shared authorization policy, secret fail-fast, scoped RBAC, upload validation |
-| Dependency hygiene | Hoàn thành | `pip-audit` và `npm audit` đều báo 0 vulnerability đã biết |
+| Dependency hygiene | Hoàn thành frontend; backend audit cần CI | `npm audit --audit-level=high` báo 0 vulnerability; `pip-audit` chưa cài trong môi trường local |
 | Backend policy và workflow tests | Hoàn thành | 20 test pass cho role, class scope, domain policy, application/OpenAPI interface và CRUD Admin/coursework/quiz/schedule |
 | CI | Hoàn thành | Frontend audit/lint/build; backend audit/pytest |
 | Design foundation | Hoàn thành | Campus Blue tokens, Be Vietnam Pro, Button, Surface, states và `RoleShell` |
@@ -356,12 +356,14 @@ Lát cắt đầu tiên đã hoàn thành và có evidence chạy local:
 | Workflow primitives | Hoàn thành | DataTable, FilterToolbar, Pagination, Field, Dialog và ConfirmDialog có keyboard/focus behavior chung |
 | Phase 2 browser smoke | Hoàn thành | 3 role trên production build, desktop/mobile, dialog/drawer, không console error hoặc tràn ngang |
 | Phase 3 backend deepening | Hoàn thành cho assessment/coursework | `Coursework` và `Assessment` application interface; router không query/commit; schema theo actor; transaction, error mapping và audit event dùng chung |
+| Phase 4 student wellbeing và engagement | Hoàn thành lát cắt chính | Wellbeing application/policy/schema + 14 workflow tests; Campus Blue cho mood, notifications, achievements, AI Tutor, Quiz Battle và mini-games; production build smoke desktop/mobile/dark/keyboard không console error hoặc tràn ngang |
 
 Các giới hạn còn chủ động giữ lại:
 
-- `RoleShell` hiện được dùng cho cả Admin, Teacher và Student. Các feature wellbeing, gamification và mini-game chuyên biệt vẫn được giữ cho giai đoạn 4.
+- `RoleShell` hiện được dùng cho cả Admin, Teacher và Student. Các feature wellbeing, gamification và mini-game đã đi qua lát cắt Phase 4; các route legacy ngoài danh sách này vẫn cần migrate dần.
 - Alembic hiện là adoption baseline cho các cột quiz cũ, chưa phải lịch sử khởi tạo toàn bộ schema.
 - Các router ngoài assessment/coursework vẫn là legacy slice và chỉ được migrate khi domain tương ứng được triển khai; ADR-001 cấm thêm generic repository dùng trước nhu cầu.
 - Pytest còn một `StarletteDeprecationWarning` từ FastAPI TestClient về lớp tương thích `httpx`; mã ứng dụng không còn cảnh báo `class Config` của Pydantic v2.
 - Certificate đã bị xóa khỏi working tree nhưng vẫn tồn tại trong Git history cũ. Người vận hành phải thu hồi và cấp lại certificate bên ngoài repo.
 - Session frontend vẫn lưu token trong `localStorage`; migration sang cookie HttpOnly cần một thay đổi hợp đồng auth riêng.
+- `pip-audit` chưa được cài trong môi trường kiểm thử hiện tại; quality gate backend cần chạy lại trong CI có tool này.

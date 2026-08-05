@@ -1,211 +1,178 @@
-/* eslint-disable */
-'use client';
-import { useState, useEffect } from 'react';
-import { gamificationApi } from '@/lib/api';
-import ProtectedRoute from '@/components/ProtectedRoute';
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import {
+  Award,
+  Check,
+  Coins,
+  Crown,
+  Flame,
+  Medal,
+  Package,
+  RefreshCw,
+  ShoppingBag,
+  Sparkles,
+  Trophy,
+} from "lucide-react";
+
+import { EmptyState, ErrorState } from "@/components/ui/feedback";
+import { Button, PageHeader, Skeleton, StatusBadge, Surface } from "@/components/ui/primitives";
+import { Tabs } from "@/components/ui/Tabs";
+import { getErrorMessage, gamificationApi, type BadgeReward, type GamificationStats, type LeaderboardEntry, type ShopItem } from "@/lib/api";
+import { cn } from "@/lib/utils";
+
+type AchievementTab = "badges" | "leaderboard" | "shop";
+type LeaderboardScope = "class" | "school";
+
+function rewardIcon(value: string, fallback: "badge" | "shop" = "badge") {
+  const source = value.toLowerCase();
+  if (source.includes("streak") || source.includes("fire")) return Flame;
+  if (source.includes("coin") || source.includes("money")) return Coins;
+  if (source.includes("title") || source.includes("crown")) return Crown;
+  if (source.includes("trophy") || source.includes("rank")) return Trophy;
+  return fallback === "shop" ? Package : Award;
+}
 
 export default function AchievementsPage() {
-    const [stats, setStats] = useState<any>(null);
-    const [badges, setBadges] = useState<any[]>([]);
-    const [leaderboard, setLeaderboard] = useState<any>(null);
-    const [shop, setShop] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [tab, setTab] = useState<'badges' | 'leaderboard' | 'shop'>('badges');
-    const [checkInResult, setCheckInResult] = useState<any>(null);
-    const [lbScope, setLBScope] = useState('class');
+  const [stats, setStats] = useState<GamificationStats | null>(null);
+  const [badges, setBadges] = useState<BadgeReward[]>([]);
+  const [leaderboard, setLeaderboard] = useState<{ leaderboard: LeaderboardEntry[]; my_rank: number; scope: string } | null>(null);
+  const [shop, setShop] = useState<{ coins: number; items: ShopItem[] } | null>(null);
+  const [tab, setTab] = useState<AchievementTab>("badges");
+  const [scope, setScope] = useState<LeaderboardScope>("class");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState<"check-in" | number | null>(null);
+  const [notice, setNotice] = useState("");
 
+  const load = useCallback(async (nextScope: LeaderboardScope = scope) => {
+    setLoading(true);
+    setError("");
+    try {
+      const [nextStats, nextBadges, nextLeaderboard, nextShop] = await Promise.all([
+        gamificationApi.getMyStats(),
+        gamificationApi.getBadges(),
+        gamificationApi.getLeaderboard(nextScope),
+        gamificationApi.getShop(),
+      ]);
+      setStats(nextStats);
+      setBadges(nextBadges);
+      setLeaderboard(nextLeaderboard);
+      setShop(nextShop);
+    } catch (loadError) {
+      setError(getErrorMessage(loadError, "Không thể tải dữ liệu thành tích."));
+    } finally {
+      setLoading(false);
+    }
+  }, [scope]);
 
-    const loadAll = async () => {
-        try {
-            const [s, b, lb, sh] = await Promise.all([
-                gamificationApi.getMyStats(),
-                gamificationApi.getBadges(),
-                gamificationApi.getLeaderboard('class'),
-                gamificationApi.getShop()
-            ]);
-            setStats(s);
-            setBadges(b);
-            setLeaderboard(lb);
-            setShop(sh);
-        } catch (e) { console.error(e); }
-        setLoading(false);
-    };
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-    useEffect(() => { loadAll(); }, []);
+  async function handleCheckIn() {
+    setBusy("check-in");
+    setError("");
+    try {
+      const result = await gamificationApi.checkIn();
+      setNotice(result.already_checked ? "Bạn đã điểm danh hôm nay." : `${result.message} +${result.xp_earned ?? 0} XP`);
+      await load();
+    } catch (checkInError) {
+      setError(getErrorMessage(checkInError, "Không thể điểm danh lúc này."));
+    } finally {
+      setBusy(null);
+    }
+  }
 
-    const handleCheckIn = async () => {
-        try {
-            const result = await gamificationApi.checkIn();
-            setCheckInResult(result);
-            loadAll();
-            setTimeout(() => setCheckInResult(null), 4000);
-        } catch (e) { console.error(e); }
-    };
+  async function handleBuy(item: ShopItem) {
+    if (item.owned || busy !== null) return;
+    setBusy(item.id);
+    setError("");
+    try {
+      const result = await gamificationApi.buyItem(item.id);
+      setNotice(`${result.message} Còn ${result.coins_remaining} xu.`);
+      await load();
+    } catch (buyError) {
+      setError(getErrorMessage(buyError, "Không thể đổi phần thưởng."));
+    } finally {
+      setBusy(null);
+    }
+  }
 
-    const handleBuy = async (itemId: number) => {
-        try {
-            await gamificationApi.buyItem(itemId);
-            loadAll();
-        } catch (e) { console.error(e); }
-    };
+  async function changeScope(nextScope: LeaderboardScope) {
+    setScope(nextScope);
+    setError("");
+    try {
+      setLeaderboard(await gamificationApi.getLeaderboard(nextScope));
+    } catch (scopeError) {
+      setError(getErrorMessage(scopeError, "Không thể tải bảng xếp hạng."));
+    }
+  }
 
-    const loadLeaderboard = async (scope: string) => {
-        setLBScope(scope);
-        try {
-            const lb = await gamificationApi.getLeaderboard(scope);
-            setLeaderboard(lb);
-        } catch (e) { console.error(e); }
-    };
+  return (
+    <div>
+      <PageHeader
+        title="Thành tích & phần thưởng"
+        description="Theo dõi tiến bộ, ghi nhận nỗ lực và đổi xu lấy những phần thưởng trong lớp học."
+        actions={
+          <Button onClick={() => void handleCheckIn()} disabled={busy === "check-in"}>
+            <Flame className="size-4" aria-hidden="true" />
+            {busy === "check-in" ? "Đang điểm danh..." : "Điểm danh hôm nay"}
+          </Button>
+        }
+      />
 
-    if (loading) return (
-        <ProtectedRoute allowedRoles={['student']}>
-            <div style={{ padding: '24px', textAlign: 'center', paddingTop: '100px' }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎮</div>
-                <p style={{ color: '#94a3b8' }}>Đang tải...</p>
-            </div>
-        </ProtectedRoute>
-    );
+      {error && <ErrorState className="mb-5" title="Không thể tải dữ liệu" description={error} action={<Button variant="secondary" size="small" onClick={() => void load()}><RefreshCw className="size-4" />Thử lại</Button>} />}
+      {notice && <p role="status" className="mb-5 rounded-[12px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-success dark:border-emerald-900 dark:bg-emerald-950/30">{notice}</p>}
 
-    return (
-        <ProtectedRoute allowedRoles={['student']}>
-            <div style={{ padding: '24px', maxWidth: '1000px', margin: '0 auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                    <div>
-                        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>🎮 Thành tích & Phần thưởng</h1>
-                        <p style={{ color: '#94a3b8', margin: '4px 0 0' }}>Chinh phục thử thách, nhận huy hiệu, đổi phần thưởng</p>
-                    </div>
-                    <button onClick={handleCheckIn} style={{ padding: '12px 24px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '15px', boxShadow: '0 4px 12px rgba(245,158,11,0.3)' }}>
-                        🔥 Điểm danh
-                    </button>
-                </div>
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /></div>
+      ) : (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {[
+              { label: "Cấp độ", value: stats?.level ?? 1, icon: Crown },
+              { label: "Kinh nghiệm", value: stats?.xp ?? 0, icon: Sparkles },
+              { label: "Xu", value: stats?.coins ?? 0, icon: Coins },
+              { label: "Chuỗi ngày", value: `${stats?.streak ?? 0} ngày`, icon: Flame },
+              { label: "Huy hiệu", value: `${stats?.badges_earned ?? 0}/${stats?.total_badges ?? 0}`, icon: Medal },
+            ].map((item) => (
+              <Surface key={item.label} className="p-4">
+                <item.icon className="size-5 text-brand-strong" aria-hidden="true" />
+                <p className="mt-3 text-xl font-extrabold text-ink">{item.value}</p>
+                <p className="text-xs font-bold text-ink-soft">{item.label}</p>
+              </Surface>
+            ))}
+          </div>
 
-                {/* Check-in toast */}
-                {checkInResult && (
-                    <div style={{ position: 'fixed', top: '20px', right: '20px', background: checkInResult.already_checked ? '#f59e0b' : 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', padding: '16px 24px', borderRadius: '14px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 1000, animation: 'slideIn 0.3s ease' }}>
-                        <div style={{ fontWeight: 700, fontSize: '15px' }}>{checkInResult.message}</div>
-                        {!checkInResult.already_checked && (
-                            <div style={{ fontSize: '13px', marginTop: '4px' }}>+{checkInResult.xp_earned} XP | +{checkInResult.coins_earned} xu {checkInResult.leveled_up ? '| 🎉 LEVEL UP!' : ''}</div>
-                        )}
-                    </div>
-                )}
+          <Surface className="mt-4 p-5 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-bold text-ink-soft"><span>Cấp {stats?.level ?? 1}</span><span>{stats?.xp_progress ?? 0}% đến cấp tiếp theo</span></div>
+            <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-brand-soft" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats?.xp_progress ?? 0} aria-label="Tiến độ cấp độ"><div className="h-full rounded-full bg-brand transition-[width] duration-500" style={{ width: `${Math.min(100, Math.max(0, stats?.xp_progress ?? 0))}%` }} /></div>
+            <p className="mt-2 text-xs text-ink-soft">Còn {stats?.xp_to_next_level ?? 0} XP để mở khóa cấp tiếp theo.</p>
+          </Surface>
 
-                {/* Stats Bar */}
-                {stats && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '24px' }}>
-                        {[
-                            { label: 'Level', value: stats.level, icon: '⭐', color: '#f59e0b' },
-                            { label: 'XP', value: stats.xp, icon: '✨', color: '#8b5cf6' },
-                            { label: 'Xu', value: stats.coins, icon: '🪙', color: '#f97316' },
-                            { label: 'Streak', value: `${stats.streak} ngày`, icon: '🔥', color: '#ef4444' },
-                            { label: 'Huy hiệu', value: `${stats.badges_earned}/${stats.total_badges}`, icon: '🏆', color: '#10b981' },
-                        ].map((s, i) => (
-                            <div key={i} style={{ background: '#1e293b', borderRadius: '14px', padding: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', border: '1px solid #334155', textAlign: 'center' }}>
-                                <div style={{ fontSize: '24px' }}>{s.icon}</div>
-                                <div style={{ fontSize: '20px', fontWeight: 700, color: s.color }}>{s.value}</div>
-                                <div style={{ fontSize: '11px', color: '#cbd5e1', fontWeight: 500 }}>{s.label}</div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+          <Tabs<AchievementTab> label="Nội dung thành tích" value={tab} onChange={setTab} options={[{ value: "badges", label: "Huy hiệu" }, { value: "leaderboard", label: "Bảng xếp hạng" }, { value: "shop", label: "Cửa hàng" }]} className="mt-6" />
 
-                {/* XP Progress */}
-                {stats && (
-                    <div style={{ background: '#1e293b', borderRadius: '14px', padding: '16px 20px', marginBottom: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#94a3b8', marginBottom: '6px' }}>
-                            <span>Level {stats.level}</span>
-                            <span>{stats.xp_progress}/100 XP</span>
-                            <span>Level {stats.level + 1}</span>
-                        </div>
-                        <div style={{ width: '100%', height: '10px', background: '#334155', borderRadius: '5px' }}>
-                            <div style={{ width: `${stats.xp_progress}%`, height: '100%', background: 'linear-gradient(90deg, #8b5cf6, #6d28d9)', borderRadius: '5px', transition: 'width 0.5s' }} />
-                        </div>
-                    </div>
-                )}
+          {tab === "badges" && (
+            badges.length === 0 ? <Surface><EmptyState icon={Award} title="Chưa có huy hiệu" description="Hoàn thành bài học và thử thách để mở khóa huy hiệu đầu tiên." /></Surface> :
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {badges.map((badge) => { const Icon = rewardIcon(badge.category); return <Surface key={badge.id} className={cn("p-5", !badge.earned && "opacity-65")}><div className="flex items-start justify-between gap-4"><div className={cn("grid size-11 place-items-center rounded-[12px]", badge.earned ? "bg-brand-soft text-brand-strong" : "bg-surface-subtle text-ink-soft")}><Icon className="size-5" aria-hidden="true" /></div>{badge.earned && <StatusBadge><Check className="size-3" />Đã nhận</StatusBadge>}</div><h2 className="mt-4 text-base font-extrabold text-ink">{badge.name}</h2><p className="mt-1 text-sm leading-6 text-ink-soft">{badge.description}</p><p className="mt-4 text-xs font-bold text-brand-strong">+{badge.xp_reward} XP · +{badge.coin_reward} xu</p></Surface>; })}
+              </div>
+          )}
 
-                {/* Tabs */}
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                    {[
-                        { key: 'badges' as const, label: '🏆 Huy hiệu' },
-                        { key: 'leaderboard' as const, label: '🏅 Bảng xếp hạng' },
-                        { key: 'shop' as const, label: '🛒 Cửa hàng' }
-                    ].map(t => (
-                        <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '10px 20px', borderRadius: '10px', border: tab === t.key ? 'none' : '1px solid #334155', cursor: 'pointer', fontWeight: 600, fontSize: '14px', background: tab === t.key ? 'linear-gradient(135deg, #f59e0b, #d97706)' : '#1e293b', color: tab === t.key ? 'white' : '#cbd5e1' }}>
-                            {t.label}
-                        </button>
-                    ))}
-                </div>
+          {tab === "leaderboard" && (
+            <Surface className="p-5 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-base font-extrabold text-ink">Thi đua tích cực</h2><p className="mt-1 text-sm text-ink-soft">Chỉ hiển thị tên và điểm để giữ bảng xếp hạng thân thiện.</p></div><div className="flex gap-1 rounded-[10px] bg-surface-subtle p-1">{(["class", "school"] as const).map((item) => <button key={item} type="button" onClick={() => void changeScope(item)} className={cn("rounded-[8px] px-3 py-2 text-xs font-bold", scope === item ? "bg-surface text-brand-strong shadow-sm" : "text-ink-soft")} aria-pressed={scope === item}>{item === "class" ? "Trong lớp" : "Toàn trường"}</button>)}</div></div>
+              {!leaderboard?.leaderboard?.length ? <EmptyState icon={Trophy} title="Chưa có dữ liệu xếp hạng" description="Khi có hoạt động học tập, bảng xếp hạng sẽ xuất hiện ở đây." /> : <div className="mt-5 divide-y divide-line">{leaderboard.leaderboard.map((entry) => <div key={entry.id} className={cn("flex items-center gap-3 py-3", entry.is_me && "rounded-[10px] bg-brand-soft px-3")}><span className="w-8 text-center text-sm font-extrabold text-ink-soft">#{entry.rank}</span><div className="grid size-9 place-items-center rounded-full bg-surface-subtle text-xs font-extrabold text-brand-strong">{entry.name.slice(0, 2).toUpperCase()}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-extrabold text-ink">{entry.name}{entry.is_me ? " (Bạn)" : ""}</p><p className="text-xs text-ink-soft">Cấp {entry.level} · chuỗi {entry.streak} ngày</p></div><span className="text-sm font-extrabold text-brand-strong">{entry.xp} XP</span></div>)}</div>}
+              {leaderboard && <p className="mt-4 text-center text-xs font-bold text-ink-soft">Thứ hạng của bạn: #{leaderboard.my_rank}</p>}
+            </Surface>
+          )}
 
-                {/* Badges */}
-                {tab === 'badges' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
-                        {badges.map((b: any) => (
-                            <div key={b.id} style={{ background: '#1e293b', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', border: b.earned ? '2px solid #f59e0b' : '1px solid #334155', textAlign: 'center', opacity: b.earned ? 1 : 0.55 }}>
-                                <div style={{ fontSize: '40px', marginBottom: '8px' }}>{b.icon}</div>
-                                <div style={{ fontWeight: 700, fontSize: '14px', color: '#e2e8f0', marginBottom: '4px' }}>{b.name}</div>
-                                <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 8px' }}>{b.description}</p>
-                                <div style={{ fontSize: '11px', color: '#8b5cf6' }}>+{b.xp_reward} XP | +{b.coin_reward} xu</div>
-                                {b.earned && <div style={{ marginTop: '8px', fontSize: '11px', color: '#22c55e', fontWeight: 600 }}>✅ Đã nhận</div>}
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* Leaderboard */}
-                {tab === 'leaderboard' && leaderboard && (
-                    <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', border: '1px solid #334155' }}>
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                            <button onClick={() => loadLeaderboard('class')} style={{ padding: '8px 16px', borderRadius: '8px', border: lbScope === 'class' ? 'none' : '1px solid #334155', cursor: 'pointer', fontWeight: 600, fontSize: '13px', background: lbScope === 'class' ? '#f59e0b' : '#0f172a', color: lbScope === 'class' ? 'white' : '#cbd5e1' }}>Lớp</button>
-                            <button onClick={() => loadLeaderboard('school')} style={{ padding: '8px 16px', borderRadius: '8px', border: lbScope === 'school' ? 'none' : '1px solid #334155', cursor: 'pointer', fontWeight: 600, fontSize: '13px', background: lbScope === 'school' ? '#f59e0b' : '#0f172a', color: lbScope === 'school' ? 'white' : '#cbd5e1' }}>Trường</button>
-                        </div>
-                        {leaderboard.leaderboard?.map((item: any) => (
-                            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: item.is_me ? 'rgba(245,158,11,0.1)' : '#0f172a', borderRadius: '10px', marginBottom: '6px', border: item.is_me ? '2px solid #f59e0b' : '1px solid #334155' }}>
-                                <span style={{ fontWeight: 700, fontSize: '18px', color: item.rank <= 3 ? '#f59e0b' : '#94a3b8', minWidth: '30px' }}>
-                                    {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : `#${item.rank}`}
-                                </span>
-                                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
-                                    {item.avatar_url ? <img src={item.avatar_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : '👤'}
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <span style={{ fontWeight: 600, fontSize: '14px', color: '#e2e8f0' }}>{item.name} {item.is_me ? '(Bạn)' : ''}</span>
-                                    {item.equipped_title && <span style={{ fontSize: '11px', color: '#8b5cf6', marginLeft: '6px' }}>• {item.equipped_title}</span>}
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontWeight: 700, fontSize: '14px', color: '#f59e0b' }}>{item.xp} XP</div>
-                                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>Lv.{item.level} | 🔥{item.streak}</div>
-                                </div>
-                            </div>
-                        ))}
-                        <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px', color: '#94a3b8' }}>
-                            Hạng của bạn: #{leaderboard.my_rank}
-                        </div>
-                    </div>
-                )}
-
-                {/* Shop */}
-                {tab === 'shop' && shop && (
-                    <div>
-                        <div style={{ background: 'rgba(245,158,11,0.1)', borderRadius: '12px', padding: '16px', marginBottom: '16px', textAlign: 'center', border: '1px solid rgba(245,158,11,0.2)' }}>
-                            <span style={{ fontSize: '20px' }}>🪙</span> Số xu hiện tại: <strong style={{ color: '#f59e0b' }}>{shop.coins}</strong>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
-                            {shop.items?.map((item: any) => (
-                                <div key={item.id} style={{ background: '#1e293b', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', border: '1px solid #334155', textAlign: 'center' }}>
-                                    <div style={{ fontSize: '36px', marginBottom: '8px' }}>{item.icon}</div>
-                                    <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px', color: '#e2e8f0' }}>{item.name}</div>
-                                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 12px' }}>{item.description}</p>
-                                    {item.owned ? (
-                                        <div style={{ padding: '8px', background: 'rgba(34,197,94,0.1)', borderRadius: '8px', color: '#4ade80', fontWeight: 600, fontSize: '13px' }}>✅ Đã sở hữu</div>
-                                    ) : (
-                                        <button onClick={() => handleBuy(item.id)} disabled={shop.coins < item.price} style={{ width: '100%', padding: '10px', border: 'none', borderRadius: '10px', cursor: shop.coins >= item.price ? 'pointer' : 'default', fontWeight: 600, fontSize: '13px', background: shop.coins >= item.price ? 'linear-gradient(135deg, #f59e0b, #d97706)' : '#334155', color: shop.coins >= item.price ? 'white' : '#64748b' }}>
-                                            🪙 {item.price} xu
-                                        </button>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
-        </ProtectedRoute>
-    );
+          {tab === "shop" && (
+            <Surface className="p-5 sm:p-6"><div className="flex items-center gap-3 rounded-[12px] bg-brand-soft px-4 py-3 text-sm font-bold text-brand-strong"><Coins className="size-5" />Bạn đang có {shop?.coins ?? 0} xu</div>{!shop?.items?.length ? <EmptyState icon={ShoppingBag} title="Cửa hàng đang trống" description="Hãy quay lại sau khi có phần thưởng mới." /> : <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{shop.items.map((item) => { const Icon = rewardIcon(item.item_type, "shop"); const canBuy = !item.owned && (shop.coins >= item.price); return <div key={item.id} className="rounded-[12px] border border-line bg-surface-subtle p-4"><div className="grid size-10 place-items-center rounded-[10px] bg-surface text-brand-strong"><Icon className="size-5" /></div><h2 className="mt-3 text-sm font-extrabold text-ink">{item.name}</h2><p className="mt-1 min-h-12 text-sm leading-6 text-ink-soft">{item.description}</p>{item.owned ? <StatusBadge>Đã sở hữu</StatusBadge> : <Button size="small" className="mt-4 w-full" disabled={!canBuy || busy === item.id} onClick={() => void handleBuy(item)}>{busy === item.id ? "Đang đổi..." : <><Coins className="size-3.5" />{item.price} xu</>}</Button>}</div>; })}</div>}</Surface>
+          )}
+        </>
+      )}
+    </div>
+  );
 }
