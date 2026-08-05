@@ -86,6 +86,19 @@ class GradeRequest(BaseModel):
     grades: List[GradeItem]
 
 
+def _submission_response(submission: models.Submission, *, student_name: str) -> SubmissionResponse:
+    return SubmissionResponse(
+        id=submission.id,
+        student_id=submission.student_id,
+        student_name=student_name,
+        status=submission.status,
+        total_score=submission.total_score,
+        submitted_at=submission.submitted_at,
+        graded_at=submission.graded_at,
+        answers=[AnswerResponse.model_validate(answer) for answer in submission.answers],
+    )
+
+
 def _assignment_response(
     assignment: models.Assignment,
     *,
@@ -284,9 +297,7 @@ async def get_submissions(assignment_id: int, db: Session = Depends(get_db), cur
     result = []
     for s in submissions:
         student = db.query(models.User).filter(models.User.id == s.student_id).first()
-        s_resp = SubmissionResponse.from_orm(s)
-        s_resp.student_name = student.name if student else "Unknown"
-        result.append(s_resp)
+        result.append(_submission_response(s, student_name=student.name if student else "Unknown"))
     return result
 
 @router.put("/submissions/{submission_id}/grade")
@@ -383,9 +394,7 @@ async def get_my_submission(assignment_id: int, db: Session = Depends(get_db), c
     if not submission:
         return None
         
-    s_resp = SubmissionResponse.from_orm(submission)
-    s_resp.student_name = current_user.name
-    return s_resp
+    return _submission_response(submission, student_name=current_user.name)
 
 @router.post("/{assignment_id}/submit", response_model=SubmissionResponse)
 async def submit_assignment(assignment_id: int, submission_data: SubmissionCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
@@ -448,9 +457,7 @@ async def submit_assignment(assignment_id: int, submission_data: SubmissionCreat
     db.commit()
     db.refresh(new_submission)
     
-    s_resp = SubmissionResponse.from_orm(new_submission)
-    s_resp.student_name = current_user.name
-    return s_resp
+    return _submission_response(new_submission, student_name=current_user.name)
 
 @router.delete("/{assignment_id}")
 async def delete_assignment(assignment_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):

@@ -1,560 +1,338 @@
-/* eslint-disable */
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { adminApi } from '@/lib/api';
-import {
-    Plus, Search, Edit2, Trash2, X, Filter,
-    Mail, GraduationCap, Upload, FileSpreadsheet, Download, KeyRound
-} from 'lucide-react';
-import styles from '../admin.module.css';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { CheckCircle2, Download, Edit2, KeyRound, Mail, Plus, Trash2, Upload } from "lucide-react";
+import toast from "react-hot-toast";
 
-interface User {
-    id: number;
-    email: string;
-    name: string;
-    role: string;
-    class_id?: number;
-    class_name?: string;
+import { adminApi, getErrorMessage } from "@/lib/api";
+import { DataTable, type DataColumn } from "@/components/ui/DataTable";
+import { ConfirmDialog, Dialog, ErrorState } from "@/components/ui/feedback";
+import { Field, Input, Select } from "@/components/ui/forms";
+import { Button, PageHeader, Surface } from "@/components/ui/primitives";
+import { FilterToolbar, Pagination } from "@/components/ui/workflow";
+
+interface StudentAccount {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+  class_id?: number;
+  class_name?: string;
 }
 
-interface ClassData {
-    id: number;
-    name: string;
+interface SchoolClass {
+  id: number;
+  name: string;
 }
+
+interface ImportResult {
+  success: number;
+  errors: string[];
+}
+
+const PAGE_SIZE = 10;
 
 export default function StudentsManagement() {
-    const [students, setStudents] = useState<User[]>([]);
-    const [classes, setClasses] = useState<ClassData[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterClass, setFilterClass] = useState<string>('all');
-    const [showModal, setShowModal] = useState(false);
-    const [showImportModal, setShowImportModal] = useState(false);
-    const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [students, setStudents] = useState<StudentAccount[]>([]);
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [classFilter, setClassFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<StudentAccount | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<StudentAccount | null>(null);
+  const [resetTarget, setResetTarget] = useState<StudentAccount | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", password: "", class_id: "" });
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importClassId, setImportClassId] = useState("");
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
-    // Form data
-    const [formData, setFormData] = useState({ name: '', email: '', password: '', class_id: '' });
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [studentData, classData] = await Promise.all([adminApi.getUsers("student"), adminApi.getClasses()]);
+      setStudents(studentData);
+      setClasses(classData);
+    } catch (loadError) {
+      setError(getErrorMessage(loadError, "Không thể tải dữ liệu học sinh."));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    // Import data
-    const [importFile, setImportFile] = useState<File | null>(null);
-    const [importClassId, setImportClassId] = useState<string>('');
-    const [importing, setImporting] = useState(false);
-    const [importResult, setImportResult] = useState<{ success: number; errors: string[] } | null>(null);
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
-    // Toast & Confirm
-    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-    const [showConfirm, setShowConfirm] = useState<{ id: number; name: string } | null>(null);
-    const [showResetConfirm, setShowResetConfirm] = useState<{ id: number; name: string } | null>(null);
-
-    const fetchData = async () => {
-        try {
-            const [studentsData, classesData] = await Promise.all([
-                adminApi.getUsers('student'),
-                adminApi.getClasses()
-            ]);
-            setStudents(studentsData);
-            setClasses(classesData);
-        } catch (err) {
-            console.error(err);
-            showToast('Lỗi tải dữ liệu', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchData();
-
-    }, []);
-
-    const showToast = (message: string, type: 'success' | 'error') => {
-        setToast({ message, type });
-        setTimeout(() => setToast(null), 3000);
-    };
-
-    const handleCreateOrUpdate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            const payload = {
-                ...formData,
-                role: 'student',
-                class_id: formData.class_id ? parseInt(formData.class_id) : null,
-            };
-
-            if (editingUser) {
-                // Update
-                await adminApi.updateUser(editingUser.id, {
-                    name: formData.name,
-                    email: formData.email,
-                    class_id: payload.class_id,
-                });
-                showToast('Cập nhật thành công!', 'success');
-            } else {
-                // Create
-                await adminApi.createUser(payload);
-                showToast('Thêm học sinh thành công!', 'success');
-            }
-            setShowModal(false);
-            setEditingUser(null);
-            setFormData({ name: '', email: '', password: '', class_id: '' });
-            fetchData();
-        } catch (err) {
-            showToast(err instanceof Error ? err.message : 'Có lỗi xảy ra', 'error');
-        }
-    };
-
-    const handleDelete = async () => {
-        if (!showConfirm) return;
-        try {
-            await adminApi.deleteUser(showConfirm.id);
-            showToast('Đã xoá học sinh', 'success');
-            fetchData();
-        } catch (err) {
-            showToast('Lỗi khi xoá học sinh', 'error');
-        } finally {
-            setShowConfirm(null);
-        }
-    };
-
-    const handleResetPassword = async () => {
-        if (!showResetConfirm) return;
-        try {
-            const result = await adminApi.resetPassword(showResetConfirm.id);
-            showToast(result.message, 'success');
-        } catch (err) {
-            showToast(err instanceof Error ? err.message : 'Lỗi khi đặt lại mật khẩu', 'error');
-        } finally {
-            setShowResetConfirm(null);
-        }
-    };
-
-    const handleDownloadTemplate = async () => {
-        try {
-            await adminApi.downloadStudentTemplate();
-        } catch (err) {
-            showToast('Lỗi tải mẫu file', 'error');
-        }
-    };
-
-    const handleImport = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!importFile || !importClassId) {
-            showToast('Vui lòng chọn file và lớp học', 'error');
-            return;
-        }
-
-        setImporting(true);
-        try {
-            const result = await adminApi.importStudents(parseInt(importClassId), importFile);
-            setImportResult({
-                success: result.success_count,
-                errors: result.errors
-            });
-            if (result.success_count > 0) {
-                showToast(`Đã import ${result.success_count} học sinh`, 'success');
-                fetchData();
-            }
-        } catch (err) {
-            showToast(err instanceof Error ? err.message : 'Lỗi import', 'error');
-        } finally {
-            setImporting(false);
-        }
-    };
-
-    const openCreateModal = () => {
-        setEditingUser(null);
-        setFormData({ name: '', email: '', password: '', class_id: '' });
-        setShowModal(true);
-    };
-
-    const openEditModal = (user: User) => {
-        setEditingUser(user);
-        setFormData({
-            name: user.name,
-            email: user.email,
-            password: '',
-            class_id: user.class_id ? user.class_id.toString() : ''
-        });
-        setShowModal(true);
-    };
-
-    // Filter
-    const filteredStudents = students.filter(s => {
-        const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            s.email.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesClass = filterClass === 'all' || (s.class_id && s.class_id.toString() === filterClass);
-        return matchesSearch && matchesClass;
+  const filteredStudents = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase("vi");
+    return students.filter((student) => {
+      const matchesSearch = !query || `${student.name} ${student.email}`.toLocaleLowerCase("vi").includes(query);
+      const matchesClass = classFilter === "all" || String(student.class_id || "") === classFilter;
+      return matchesSearch && matchesClass;
     });
+  }, [classFilter, search, students]);
 
-    return (
-        <div>
-            {/* Toast */}
-            {toast && (
-                <div className={styles.toastContainer}>
-                    <div className={toast.type === 'success' ? styles.toastSuccess : styles.toastError}>
-                        {toast.message}
-                    </div>
-                </div>
-            )}
+  useEffect(() => {
+    setPage(1);
+  }, [classFilter, search]);
 
-            {/* Header */}
-            <div className={styles.pageHeader}>
-                <div>
-                    <h1 className={styles.pageTitle}>Quản lý Học sinh</h1>
-                    <p className={styles.pageSubtitle}>{students.length} học sinh trong hệ thống</p>
-                </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    <button className={styles.btnSecondary} onClick={() => setShowImportModal(true)}>
-                        <Upload size={18} /> Import Excel
-                    </button>
-                    <button className={styles.btnPrimary} onClick={openCreateModal}>
-                        <Plus size={18} /> Thêm Học sinh
-                    </button>
-                </div>
-            </div>
+  const totalPages = Math.max(1, Math.ceil(filteredStudents.length / PAGE_SIZE));
+  const paginatedStudents = filteredStudents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-            {/* Toolbar */}
-            <div className={styles.toolbar}>
-                <div className={styles.searchWrapper}>
-                    <Search className={styles.searchIcon} size={18} />
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm học sinh..."
-                        className={styles.searchInput}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <div className={styles.searchWrapper} style={{ maxWidth: '200px' }}>
-                    <Filter className={styles.searchIcon} size={18} />
-                    <select
-                        className={styles.filterSelect}
-                        value={filterClass}
-                        onChange={(e) => setFilterClass(e.target.value)}
-                    >
-                        <option value="all">Tất cả các lớp</option>
-                        {classes.map(c => (
-                            <option key={c.id} value={c.id.toString()}>{c.name}</option>
-                        ))}
-                    </select>
-                </div>
-            </div>
+  const openCreate = () => {
+    setEditingStudent(null);
+    setForm({ name: "", email: "", password: "", class_id: "" });
+    setDialogOpen(true);
+  };
 
-            {/* Table */}
-            <div className={styles.tableWrapper}>
-                <table className={styles.table}>
-                    <thead>
-                        <tr>
-                            <th>Học sinh</th>
-                            <th>Lớp học</th>
-                            <th>Email</th>
-                            <th style={{ textAlign: 'center' }}>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
-                            <tr><td colSpan={4} className={styles.emptyState}>Đang tải...</td></tr>
-                        ) : filteredStudents.length === 0 ? (
-                            <tr>
-                                <td colSpan={4} className={styles.emptyState}>
-                                    <div className={styles.emptyIcon}><GraduationCap /></div>
-                                    <p className={styles.emptyTitle}>Không tìm thấy học sinh nào</p>
-                                    <p className={styles.emptyMessage}>Hãy thử tìm kiếm từ khóa khác hoặc thêm mới</p>
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredStudents.map((student) => {
-                                const initials = student.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-                                return (
-                                    <tr key={student.id}>
-                                        <td>
-                                            <div className={styles.userRow}>
-                                                <div className={styles.avatarGreen}>{initials}</div>
-                                                <div>
-                                                    <div className={styles.userRowName}>{student.name}</div>
-                                                    <div className={styles.badgeGreen} style={{ marginTop: '4px', fontSize: '10px' }}>Student</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {student.class_name ? (
-                                                <span className={styles.badgePurple}>{student.class_name}</span>
-                                            ) : (
-                                                <span className={styles.badgeMuted}>Chưa xếp lớp</span>
-                                            )}
-                                        </td>
-                                        <td style={{ color: '#94a3b8' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <Mail size={14} /> {student.email}
-                                            </div>
-                                        </td>
-                                        <td style={{ textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                                <button
-                                                    className={styles.btnIcon}
-                                                    onClick={() => openEditModal(student)}
-                                                    title="Sửa"
-                                                >
-                                                    <Edit2 size={16} />
-                                                </button>
-                                                <button
-                                                    className={`${styles.btnIcon} ${styles.btnIconWarning}`}
-                                                    onClick={() => setShowResetConfirm({ id: student.id, name: student.name })}
-                                                    title="Đặt lại mật khẩu"
-                                                >
-                                                    <KeyRound size={16} />
-                                                </button>
-                                                <button
-                                                    className={`${styles.btnIcon} ${styles.btnIconDanger}`}
-                                                    onClick={() => setShowConfirm({ id: student.id, name: student.name })}
-                                                    title="Xoá"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        )}
-                    </tbody>
-                </table>
-            </div>
+  const openEdit = (student: StudentAccount) => {
+    setEditingStudent(student);
+    setForm({ name: student.name, email: student.email, password: "", class_id: student.class_id ? String(student.class_id) : "" });
+    setDialogOpen(true);
+  };
 
-            {/* Modal Create/Edit */}
-            {showModal && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-                        <div className={styles.modalHeader}>
-                            <h2 className={styles.modalTitle}>
-                                {editingUser ? 'Cập nhật Học sinh' : 'Thêm Học sinh mới'}
-                            </h2>
-                            <button className={styles.btnIcon} onClick={() => setShowModal(false)}>
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <form onSubmit={handleCreateOrUpdate}>
-                            <div className={styles.formGroup}>
-                                <label className={styles.formLabel}>Họ và tên</label>
-                                <input
-                                    type="text"
-                                    required
-                                    className={styles.formInput}
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    placeholder="Họ tên học sinh"
-                                />
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label className={styles.formLabel}>Email</label>
-                                <input
-                                    type="email"
-                                    required
-                                    className={styles.formInput}
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    placeholder="email@example.com"
-                                />
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label className={styles.formLabel}>Lớp học</label>
-                                <select
-                                    className={styles.formSelect}
-                                    value={formData.class_id}
-                                    onChange={(e) => setFormData({ ...formData, class_id: e.target.value })}
-                                >
-                                    <option value="">-- Chọn lớp học --</option>
-                                    {classes.map(c => (
-                                        <option key={c.id} value={c.id}>{c.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            {!editingUser && (
-                                <div className={styles.formGroup}>
-                                    <label className={styles.formLabel}>Mật khẩu</label>
-                                    <input
-                                        type="password"
-                                        required
-                                        className={styles.formInput}
-                                        value={formData.password}
-                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                            )}
+  const saveStudent = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setBusy(true);
+    const classId = form.class_id ? Number(form.class_id) : null;
+    try {
+      if (editingStudent) {
+        await adminApi.updateUser(editingStudent.id, { name: form.name.trim(), email: form.email.trim(), class_id: classId });
+        toast.success("Đã cập nhật học sinh.");
+      } else {
+        await adminApi.createUser({ ...form, name: form.name.trim(), email: form.email.trim(), class_id: classId, role: "student" });
+        toast.success("Đã thêm học sinh.");
+      }
+      setDialogOpen(false);
+      await loadData();
+    } catch (saveError) {
+      toast.error(getErrorMessage(saveError));
+    } finally {
+      setBusy(false);
+    }
+  };
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
-                                <button type="button" className={styles.btnSecondary} onClick={() => setShowModal(false)}>
-                                    Hủy
-                                </button>
-                                <button type="submit" className={styles.btnPrimary}>
-                                    {editingUser ? 'Lưu thay đổi' : 'Tạo học sinh'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+  const deleteStudent = async () => {
+    if (!deleteTarget) return;
+    setBusy(true);
+    try {
+      await adminApi.deleteUser(deleteTarget.id);
+      toast.success("Đã xóa học sinh.");
+      setDeleteTarget(null);
+      await loadData();
+    } catch (deleteError) {
+      toast.error(getErrorMessage(deleteError, "Không thể xóa học sinh."));
+    } finally {
+      setBusy(false);
+    }
+  };
 
-            {/* Modal Import Excel */}
-            {showImportModal && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modal} onClick={(e) => e.stopPropagation()} style={{ width: '500px' }}>
-                        <div className={styles.modalHeader}>
-                            <h2 className={styles.modalTitle}>Import Học sinh từ Excel</h2>
-                            <button className={styles.btnIcon} onClick={() => { setShowImportModal(false); setImportResult(null); }}>
-                                <X size={20} />
-                            </button>
-                        </div>
+  const resetPassword = async () => {
+    if (!resetTarget) return;
+    setBusy(true);
+    try {
+      const result = await adminApi.resetPassword(resetTarget.id);
+      toast.success(result.message || "Đã tạo mật khẩu tạm thời.");
+      setResetTarget(null);
+    } catch (resetError) {
+      toast.error(getErrorMessage(resetError, "Không thể đặt lại mật khẩu."));
+    } finally {
+      setBusy(false);
+    }
+  };
 
-                        {!importResult ? (
-                            <form onSubmit={handleImport}>
-                                <div className={styles.formGroup}>
-                                    <label className={styles.formLabel}>1. Tải mẫu file import</label>
-                                    <button type="button" className={styles.btnSecondary} onClick={handleDownloadTemplate} style={{ width: '100%', justifyContent: 'center' }}>
-                                        <Download size={18} /> Tải file mẫu .xlsx
-                                    </button>
-                                </div>
+  const importStudents = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!importFile || !importClassId) {
+      toast.error("Chọn lớp học và file Excel trước khi import.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await adminApi.importStudents(Number(importClassId), importFile);
+      setImportResult({ success: result.success_count || 0, errors: result.errors || [] });
+      if (result.success_count) {
+        toast.success(`Đã import ${result.success_count} học sinh.`);
+        await loadData();
+      }
+    } catch (importError) {
+      toast.error(getErrorMessage(importError, "Không thể import danh sách."));
+    } finally {
+      setBusy(false);
+    }
+  };
 
-                                <div className={styles.formGroup}>
-                                    <label className={styles.formLabel}>2. Chọn lớp học cần import</label>
-                                    <select
-                                        className={styles.formSelect}
-                                        required
-                                        value={importClassId}
-                                        onChange={(e) => setImportClassId(e.target.value)}
-                                    >
-                                        <option value="">-- Chọn lớp học --</option>
-                                        {classes.map(c => (
-                                            <option key={c.id} value={c.id}>{c.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
+  const closeImport = () => {
+    if (busy) return;
+    setImportOpen(false);
+    setImportResult(null);
+    setImportFile(null);
+    setImportClassId("");
+  };
 
-                                <div className={styles.formGroup}>
-                                    <label className={styles.formLabel}>3. Upload file danh sách</label>
-                                    <div className={styles.uploadArea} onClick={() => document.getElementById('fileInput')?.click()}>
-                                        <input
-                                            id="fileInput"
-                                            type="file"
-                                            accept=".xlsx, .xls"
-                                            style={{ display: 'none' }}
-                                            onChange={(e) => setImportFile(e.target.files ? e.target.files[0] : null)}
-                                        />
-                                        <FileSpreadsheet className={styles.uploadIcon} />
-                                        {importFile ? (
-                                            <div className={styles.uploadFileSelected}>
-                                                <span style={{ fontWeight: 500 }}>{importFile.name}</span>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <p className={styles.uploadText}>Click để chọn file Excel</p>
-                                                <p className={styles.uploadSubtext}>Chỉ chấp nhận file .xlsx</p>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-                                    <button type="button" className={styles.btnSecondary} onClick={() => setShowImportModal(false)}>
-                                        Hủy
-                                    </button>
-                                    <button type="submit" className={styles.btnPrimary} disabled={importing}>
-                                        {importing ? 'Đang xử lý...' : 'Tiến hành Import'}
-                                    </button>
-                                </div>
-                            </form>
-                        ) : (
-                            <div>
-                                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>
-                                        {importResult.success > 0 ? '🎉' : '⚠️'}
-                                    </div>
-                                    <h3 className={styles.modalTitle}>Kết quả Import</h3>
-                                    <p style={{ color: '#94a3b8' }}>
-                                        Đã thêm thành công <strong style={{ color: '#10b981' }}>{importResult.success}</strong> học sinh.
-                                    </p>
-                                </div>
-
-                                {importResult.errors.length > 0 && (
-                                    <div className={styles.importResults}>
-                                        <h4 style={{ fontSize: '14px', margin: '0 0 8px', color: '#ef4444' }}>Lỗi chi tiết:</h4>
-                                        <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
-                                            {importResult.errors.map((err, idx) => (
-                                                <div key={idx} className={styles.importError}>• {err}</div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
-                                    <button className={styles.btnPrimary} onClick={() => { setShowImportModal(false); setImportResult(null); }}>
-                                        Hoàn tất
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {/* Confirm Delete */}
-            {showConfirm && (
-                <div className={styles.confirmOverlay}>
-                    <div className={styles.confirmDialog} onClick={(e) => e.stopPropagation()}>
-                        <div style={{
-                            width: '48px', height: '48px', borderRadius: '50%',
-                            background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            margin: '0 auto 16px'
-                        }}>
-                            <Trash2 size={24} />
-                        </div>
-                        <h3 className={styles.confirmTitle}>Xác nhận xoá?</h3>
-                        <p className={styles.confirmMessage}>
-                            Bạn có chắc chắn muốn xoá học sinh <strong>{showConfirm.name}</strong>?<br />
-                            Hành động này không thể hoàn tác.
-                        </p>
-                        <div className={styles.confirmActions}>
-                            <button className={styles.btnSecondary} onClick={() => setShowConfirm(null)}>
-                                Hủy
-                            </button>
-                            <button className={styles.btnDanger} onClick={handleDelete}>
-                                Xoá vĩnh viễn
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Confirm Reset Password */}
-            {showResetConfirm && (
-                <div className={styles.confirmOverlay}>
-                    <div className={styles.confirmDialog} onClick={(e) => e.stopPropagation()}>
-                        <div style={{
-                            width: '48px', height: '48px', borderRadius: '50%',
-                            background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            margin: '0 auto 16px'
-                        }}>
-                            <KeyRound size={24} />
-                        </div>
-                        <h3 className={styles.confirmTitle}>Đặt lại mật khẩu?</h3>
-                        <p className={styles.confirmMessage}>
-                            Hệ thống sẽ tạo mật khẩu tạm thời cho <strong>{showResetConfirm.name}</strong> và chỉ trả về một lần.
-                        </p>
-                        <div className={styles.confirmActions}>
-                            <button className={styles.btnSecondary} onClick={() => setShowResetConfirm(null)}>
-                                Hủy
-                            </button>
-                            <button className={styles.btnPrimary} onClick={handleResetPassword}>
-                                Xác nhận
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+  const columns: DataColumn<StudentAccount>[] = [
+    {
+      key: "student",
+      header: "Học sinh",
+      cell: (student) => {
+        const initials = student.name.split(" ").filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+        return (
+          <div className="flex items-center gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-[11px] bg-emerald-50 text-xs font-extrabold text-success dark:bg-emerald-950/40">{initials}</div>
+            <div><p className="font-bold text-ink">{student.name}</p><p className="text-xs text-ink-soft">Học sinh</p></div>
+          </div>
+        );
+      },
+    },
+    {
+      key: "class",
+      header: "Lớp học",
+      cell: (student) => student.class_name
+        ? <span className="rounded-full bg-brand-soft px-2.5 py-1 text-xs font-bold text-brand-strong">{student.class_name}</span>
+        : <span className="text-sm text-ink-soft">Chưa xếp lớp</span>,
+    },
+    {
+      key: "email",
+      header: "Email",
+      cell: (student) => <span className="inline-flex items-center gap-2 text-ink-soft"><Mail className="size-4" aria-hidden="true" />{student.email}</span>,
+    },
+    {
+      key: "actions",
+      header: "Thao tác",
+      align: "right",
+      cell: (student) => (
+        <div className="flex justify-end gap-1">
+          <Button variant="ghost" size="icon" aria-label={`Sửa ${student.name}`} onClick={() => openEdit(student)}><Edit2 className="size-4" /></Button>
+          <Button variant="ghost" size="icon" aria-label={`Đặt lại mật khẩu cho ${student.name}`} onClick={() => setResetTarget(student)}><KeyRound className="size-4" /></Button>
+          <Button variant="danger" size="icon" aria-label={`Xóa ${student.name}`} onClick={() => setDeleteTarget(student)}><Trash2 className="size-4" /></Button>
         </div>
-    );
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <PageHeader
+        title="Quản lý học sinh"
+        description={`${students.length} học sinh đang có tài khoản trên hệ thống.`}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setImportOpen(true)}><Upload className="size-4" />Import Excel</Button>
+            <Button onClick={openCreate}><Plus className="size-4" />Thêm học sinh</Button>
+          </>
+        }
+      />
+
+      {error ? (
+        <ErrorState title="Không tải được học sinh" description={error} action={<Button variant="secondary" onClick={() => void loadData()}>Thử lại</Button>} />
+      ) : (
+        <Surface className="overflow-hidden">
+          <FilterToolbar searchValue={search} onSearchChange={setSearch} searchLabel="Tìm theo tên hoặc email">
+            <Select value={classFilter} onChange={(event) => setClassFilter(event.target.value)} aria-label="Lọc theo lớp" className="w-full sm:w-48">
+              <option value="all">Tất cả lớp học</option>
+              {classes.map((schoolClass) => <option key={schoolClass.id} value={schoolClass.id}>{schoolClass.name}</option>)}
+            </Select>
+          </FilterToolbar>
+          <DataTable
+            ariaLabel="Danh sách học sinh"
+            columns={columns}
+            rows={paginatedStudents}
+            rowKey={(student) => student.id}
+            loading={loading}
+            emptyTitle="Không tìm thấy học sinh"
+            emptyDescription="Thử bộ lọc khác hoặc thêm học sinh mới."
+          />
+          {!loading && filteredStudents.length > 0 && (
+            <Pagination page={page} totalPages={totalPages} totalItems={filteredStudents.length} itemLabel="học sinh" onPageChange={setPage} />
+          )}
+        </Surface>
+      )}
+
+      <Dialog
+        open={dialogOpen}
+        onClose={() => !busy && setDialogOpen(false)}
+        title={editingStudent ? "Cập nhật học sinh" : "Thêm học sinh"}
+        description="Gán lớp ngay hoặc để trống và cập nhật sau."
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setDialogOpen(false)} disabled={busy}>Hủy</Button>
+            <Button type="submit" form="student-form" disabled={busy}>{busy ? "Đang lưu..." : editingStudent ? "Lưu thay đổi" : "Tạo học sinh"}</Button>
+          </>
+        }
+      >
+        <form id="student-form" className="grid gap-5" onSubmit={saveStudent}>
+          <Field label="Họ và tên" name="student-name" required>
+            <Input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required autoComplete="name" />
+          </Field>
+          <Field label="Email" name="student-email" required>
+            <Input type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required autoComplete="email" />
+          </Field>
+          <Field label="Lớp học" name="student-class" helper="Có thể thay đổi lớp sau khi tạo tài khoản.">
+            <Select value={form.class_id} onChange={(event) => setForm((current) => ({ ...current, class_id: event.target.value }))}>
+              <option value="">Chưa xếp lớp</option>
+              {classes.map((schoolClass) => <option key={schoolClass.id} value={schoolClass.id}>{schoolClass.name}</option>)}
+            </Select>
+          </Field>
+          {!editingStudent && (
+            <Field label="Mật khẩu ban đầu" name="student-password" required helper="Ít nhất 8 ký tự. Học sinh nên đổi sau lần đăng nhập đầu tiên.">
+              <Input type="password" minLength={8} value={form.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} required autoComplete="new-password" />
+            </Field>
+          )}
+        </form>
+      </Dialog>
+
+      <Dialog
+        open={importOpen}
+        onClose={closeImport}
+        title="Import học sinh từ Excel"
+        description="Dùng file mẫu để giữ đúng cấu trúc dữ liệu và thông báo lỗi theo từng dòng."
+        footer={importResult ? (
+          <Button onClick={closeImport}>Hoàn tất</Button>
+        ) : (
+          <>
+            <Button variant="secondary" onClick={closeImport} disabled={busy}>Hủy</Button>
+            <Button type="submit" form="student-import-form" disabled={busy || !importFile || !importClassId}>{busy ? "Đang import..." : "Import học sinh"}</Button>
+          </>
+        )}
+      >
+        {importResult ? (
+          <div className="grid gap-5">
+            <div className="flex items-start gap-3 rounded-[12px] bg-emerald-50 p-4 dark:bg-emerald-950/30">
+              <CheckCircle2 className="mt-0.5 size-5 text-success" aria-hidden="true" />
+              <div><p className="font-extrabold text-ink">Đã thêm {importResult.success} học sinh</p><p className="mt-1 text-sm text-ink-soft">Kiểm tra các dòng lỗi bên dưới nếu kết quả chưa đầy đủ.</p></div>
+            </div>
+            {importResult.errors.length > 0 && (
+              <div className="max-h-52 overflow-y-auto rounded-[12px] border border-red-200 bg-red-50 p-4 text-sm text-danger dark:border-red-900 dark:bg-red-950/30">
+                <ul className="grid gap-2">{importResult.errors.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul>
+              </div>
+            )}
+          </div>
+        ) : (
+          <form id="student-import-form" className="grid gap-5" onSubmit={importStudents}>
+            <Button type="button" variant="secondary" className="w-full" onClick={() => void adminApi.downloadStudentTemplate().catch((downloadError) => toast.error(getErrorMessage(downloadError, "Không thể tải file mẫu.")))}>
+              <Download className="size-4" />Tải file mẫu .xlsx
+            </Button>
+            <Field label="Lớp nhận học sinh" name="import-class" required>
+              <Select value={importClassId} onChange={(event) => setImportClassId(event.target.value)} required>
+                <option value="">Chọn lớp học</option>
+                {classes.map((schoolClass) => <option key={schoolClass.id} value={schoolClass.id}>{schoolClass.name}</option>)}
+              </Select>
+            </Field>
+            <Field label="File danh sách" name="import-file" required helper={importFile ? `Đã chọn: ${importFile.name}` : "Định dạng .xlsx hoặc .xls."}>
+              <Input type="file" accept=".xlsx,.xls" onChange={(event) => setImportFile(event.target.files?.[0] || null)} required />
+            </Field>
+          </form>
+        )}
+      </Dialog>
+
+      <ConfirmDialog open={Boolean(deleteTarget)} title="Xóa học sinh?" description={`Tài khoản ${deleteTarget?.name || "này"} sẽ bị xóa vĩnh viễn.`} confirmLabel="Xóa học sinh" busy={busy} onClose={() => setDeleteTarget(null)} onConfirm={() => void deleteStudent()} />
+      <ConfirmDialog open={Boolean(resetTarget)} title="Đặt lại mật khẩu?" description={`Hệ thống sẽ tạo mật khẩu tạm thời một lần cho ${resetTarget?.name || "học sinh này"}.`} confirmLabel="Tạo mật khẩu tạm" tone="primary" busy={busy} onClose={() => setResetTarget(null)} onConfirm={() => void resetPassword()} />
+    </>
+  );
 }

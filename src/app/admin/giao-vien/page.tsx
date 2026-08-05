@@ -1,375 +1,245 @@
-/* eslint-disable */
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { adminApi, classesApi } from '@/lib/api';
-import {
-    Plus, Search, Edit2, Trash2, X, Filter,
-    Mail, User, BookOpen, Users, KeyRound
-} from 'lucide-react';
-import styles from '../admin.module.css';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Edit2, KeyRound, Mail, Plus, Trash2 } from "lucide-react";
+import toast from "react-hot-toast";
 
-interface User {
-    id: number;
-    email: string;
-    name: string;
-    role: string;
-    class_id?: number;
-    class_name?: string;
+import { adminApi, getErrorMessage } from "@/lib/api";
+import { DataTable, type DataColumn } from "@/components/ui/DataTable";
+import { ConfirmDialog, Dialog, ErrorState } from "@/components/ui/feedback";
+import { Field, Input } from "@/components/ui/forms";
+import { Button, PageHeader, Surface } from "@/components/ui/primitives";
+import { FilterToolbar, Pagination } from "@/components/ui/workflow";
+
+interface Teacher {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+  class_name?: string;
 }
 
-interface ClassData {
-    id: number;
-    name: string;
-}
+const PAGE_SIZE = 10;
 
 export default function TeachersManagement() {
-    const [teachers, setTeachers] = useState<User[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [showModal, setShowModal] = useState(false);
-    const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Teacher | null>(null);
+  const [resetTarget, setResetTarget] = useState<Teacher | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
 
-    // Form data
-    const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const loadTeachers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setTeachers(await adminApi.getUsers("teacher"));
+    } catch (loadError) {
+      setError(getErrorMessage(loadError, "Không thể tải danh sách giáo viên."));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    // Toast & Confirm
-    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-    const [showConfirm, setShowConfirm] = useState<{ id: number; name: string } | null>(null);
-    const [showResetConfirm, setShowResetConfirm] = useState<{ id: number; name: string } | null>(null);
+  useEffect(() => {
+    void loadTeachers();
+  }, [loadTeachers]);
 
-    const fetchData = async () => {
-        try {
-            const data = await adminApi.getUsers('teacher');
-            setTeachers(data);
-        } catch (err) {
-            console.error(err);
-            showToast('Lỗi tải danh sách giáo viên', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchData();
-
-    }, []);
-
-    const showToast = (message: string, type: 'success' | 'error') => {
-        setToast({ message, type });
-        setTimeout(() => setToast(null), 3000);
-    };
-
-    const handleCreateOrUpdate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            if (editingUser) {
-                // Update
-                await adminApi.updateUser(editingUser.id, {
-                    name: formData.name,
-                    email: formData.email,
-                });
-                showToast('Cập nhật thành công!', 'success');
-            } else {
-                // Create
-                await adminApi.createUser({ ...formData, role: 'teacher' });
-                showToast('Thêm giáo viên thành công!', 'success');
-            }
-            setShowModal(false);
-            setEditingUser(null);
-            setFormData({ name: '', email: '', password: '' });
-            fetchData();
-        } catch (err) {
-            showToast(err instanceof Error ? err.message : 'Có lỗi xảy ra', 'error');
-        }
-    };
-
-    const handleDelete = async () => {
-        if (!showConfirm) return;
-        try {
-            await adminApi.deleteUser(showConfirm.id);
-            showToast('Đã xoá giáo viên', 'success');
-            fetchData();
-        } catch (err) {
-            showToast('Lỗi khi xoá giáo viên', 'error');
-        } finally {
-            setShowConfirm(null);
-        }
-    };
-
-    const handleResetPassword = async () => {
-        if (!showResetConfirm) return;
-        try {
-            const result = await adminApi.resetPassword(showResetConfirm.id);
-            showToast(result.message, 'success');
-        } catch (err) {
-            showToast(err instanceof Error ? err.message : 'Lỗi khi đặt lại mật khẩu', 'error');
-        } finally {
-            setShowResetConfirm(null);
-        }
-    };
-
-    const openCreateModal = () => {
-        setEditingUser(null);
-        setFormData({ name: '', email: '', password: '' });
-        setShowModal(true);
-    };
-
-    const openEditModal = (user: User) => {
-        setEditingUser(user);
-        setFormData({ name: user.name, email: user.email, password: '' }); // Don't fill password
-        setShowModal(true);
-    };
-
-    // Filter
-    const filteredTeachers = teachers.filter(t =>
-        t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTeachers = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase("vi");
+    if (!query) return teachers;
+    return teachers.filter((teacher) =>
+      `${teacher.name} ${teacher.email} ${teacher.class_name || ""}`.toLocaleLowerCase("vi").includes(query),
     );
+  }, [search, teachers]);
 
-    return (
-        <div>
-            {/* Toast */}
-            {toast && (
-                <div className={styles.toastContainer}>
-                    <div className={toast.type === 'success' ? styles.toastSuccess : styles.toastError}>
-                        {toast.message}
-                    </div>
-                </div>
-            )}
+  const totalPages = Math.max(1, Math.ceil(filteredTeachers.length / PAGE_SIZE));
+  const paginatedTeachers = filteredTeachers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-            {/* Header */}
-            <div className={styles.pageHeader}>
-                <div>
-                    <h1 className={styles.pageTitle}>Quản lý Giáo viên</h1>
-                    <p className={styles.pageSubtitle}>{teachers.length} giáo viên trong hệ thống</p>
-                </div>
-                <button className={styles.btnPrimary} onClick={openCreateModal}>
-                    <Plus size={18} /> Thêm Giáo viên
-                </button>
-            </div>
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
-            {/* Toolbar */}
-            <div className={styles.toolbar}>
-                <div className={styles.searchWrapper}>
-                    <Search className={styles.searchIcon} size={18} />
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm theo tên hoặc email..."
-                        className={styles.searchInput}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-            </div>
+  const openCreate = () => {
+    setEditingTeacher(null);
+    setForm({ name: "", email: "", password: "" });
+    setDialogOpen(true);
+  };
 
-            {/* Table */}
-            <div className={styles.tableWrapper}>
-                <table className={styles.table}>
-                    <thead>
-                        <tr>
-                            <th>Giáo viên</th>
-                            <th>Liên hệ</th>
-                            <th>Lớp phụ trách</th>
-                            <th style={{ textAlign: 'center' }}>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
-                            <tr><td colSpan={4} className={styles.emptyState}>Đang tải...</td></tr>
-                        ) : filteredTeachers.length === 0 ? (
-                            <tr>
-                                <td colSpan={4} className={styles.emptyState}>
-                                    <div className={styles.emptyIcon}><Users /></div>
-                                    <p className={styles.emptyTitle}>Không tìm thấy giáo viên nào</p>
-                                    <p className={styles.emptyMessage}>Hãy thử tìm kiếm từ khóa khác hoặc thêm mới</p>
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredTeachers.map((teacher) => {
-                                const initials = teacher.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-                                return (
-                                    <tr key={teacher.id}>
-                                        <td>
-                                            <div className={styles.userRow}>
-                                                <div className={styles.avatarBlue}>{initials}</div>
-                                                <div>
-                                                    <div className={styles.userRowName}>{teacher.name}</div>
-                                                    <div className={styles.badgeBlue} style={{ marginTop: '4px', fontSize: '10px' }}>Teacher</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td style={{ color: '#94a3b8' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <Mail size={14} /> {teacher.email}
-                                            </div>
-                                        </td>
-                                        <td style={{ color: '#e2e8f0', fontWeight: 500 }}>
-                                            {teacher.class_name ? (
-                                                <span className={styles.badgePurple}>{teacher.class_name}</span>
-                                            ) : (
-                                                <span className={styles.badgeMuted}>Chưa phân công</span>
-                                            )}
-                                        </td>
-                                        <td style={{ textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                                <button
-                                                    className={styles.btnIcon}
-                                                    onClick={() => openEditModal(teacher)}
-                                                    title="Sửa"
-                                                >
-                                                    <Edit2 size={16} />
-                                                </button>
-                                                <button
-                                                    className={`${styles.btnIcon} ${styles.btnIconWarning}`}
-                                                    onClick={() => setShowResetConfirm({ id: teacher.id, name: teacher.name })}
-                                                    title="Đặt lại mật khẩu"
-                                                >
-                                                    <KeyRound size={16} />
-                                                </button>
-                                                <button
-                                                    className={`${styles.btnIcon} ${styles.btnIconDanger}`}
-                                                    onClick={() => setShowConfirm({ id: teacher.id, name: teacher.name })}
-                                                    title="Xoá"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        )}
-                    </tbody>
-                </table>
-            </div>
+  const openEdit = (teacher: Teacher) => {
+    setEditingTeacher(teacher);
+    setForm({ name: teacher.name, email: teacher.email, password: "" });
+    setDialogOpen(true);
+  };
 
-            {/* Modal Create/Edit */}
-            {showModal && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-                        <div className={styles.modalHeader}>
-                            <h2 className={styles.modalTitle}>
-                                {editingUser ? 'Cập nhật Giáo viên' : 'Thêm Giáo viên mới'}
-                            </h2>
-                            <button className={styles.btnIcon} onClick={() => setShowModal(false)}>
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <form onSubmit={handleCreateOrUpdate}>
-                            <div className={styles.formGroup}>
-                                <label className={styles.formLabel}>Họ và tên</label>
-                                <div className={styles.searchWrapper} style={{ maxWidth: '100%' }}>
-                                    <User className={styles.searchIcon} size={18} />
-                                    <input
-                                        type="text"
-                                        required
-                                        className={styles.formInput}
-                                        style={{ paddingLeft: '40px' }}
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        placeholder="Ví dụ: Nguyễn Văn A"
-                                    />
-                                </div>
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label className={styles.formLabel}>Email</label>
-                                <div className={styles.searchWrapper} style={{ maxWidth: '100%' }}>
-                                    <Mail className={styles.searchIcon} size={18} />
-                                    <input
-                                        type="email"
-                                        required
-                                        className={styles.formInput}
-                                        style={{ paddingLeft: '40px' }}
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        placeholder="email@example.com"
-                                    />
-                                </div>
-                            </div>
-                            {!editingUser && (
-                                <div className={styles.formGroup}>
-                                    <label className={styles.formLabel}>Mật khẩu</label>
-                                    <input
-                                        type="password"
-                                        required
-                                        className={styles.formInput}
-                                        value={formData.password}
-                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                            )}
+  const saveTeacher = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setBusy(true);
+    try {
+      if (editingTeacher) {
+        await adminApi.updateUser(editingTeacher.id, { name: form.name.trim(), email: form.email.trim() });
+        toast.success("Đã cập nhật giáo viên.");
+      } else {
+        await adminApi.createUser({ ...form, name: form.name.trim(), email: form.email.trim(), role: "teacher" });
+        toast.success("Đã thêm giáo viên.");
+      }
+      setDialogOpen(false);
+      await loadTeachers();
+    } catch (saveError) {
+      toast.error(getErrorMessage(saveError));
+    } finally {
+      setBusy(false);
+    }
+  };
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
-                                <button type="button" className={styles.btnSecondary} onClick={() => setShowModal(false)}>
-                                    Hủy
-                                </button>
-                                <button type="submit" className={styles.btnPrimary}>
-                                    {editingUser ? 'Lưu thay đổi' : 'Tạo giáo viên'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+  const deleteTeacher = async () => {
+    if (!deleteTarget) return;
+    setBusy(true);
+    try {
+      await adminApi.deleteUser(deleteTarget.id);
+      toast.success("Đã xóa giáo viên.");
+      setDeleteTarget(null);
+      await loadTeachers();
+    } catch (deleteError) {
+      toast.error(getErrorMessage(deleteError, "Không thể xóa giáo viên."));
+    } finally {
+      setBusy(false);
+    }
+  };
 
-            {/* Confirm Delete */}
-            {showConfirm && (
-                <div className={styles.confirmOverlay}>
-                    <div className={styles.confirmDialog} onClick={(e) => e.stopPropagation()}>
-                        <div style={{
-                            width: '48px', height: '48px', borderRadius: '50%',
-                            background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            margin: '0 auto 16px'
-                        }}>
-                            <Trash2 size={24} />
-                        </div>
-                        <h3 className={styles.confirmTitle}>Xác nhận xoá?</h3>
-                        <p className={styles.confirmMessage}>
-                            Bạn có chắc chắn muốn xoá giáo viên <strong>{showConfirm.name}</strong>?<br />
-                            Hành động này không thể hoàn tác.
-                        </p>
-                        <div className={styles.confirmActions}>
-                            <button className={styles.btnSecondary} onClick={() => setShowConfirm(null)}>
-                                Hủy
-                            </button>
-                            <button className={styles.btnDanger} onClick={handleDelete}>
-                                Xoá vĩnh viễn
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+  const resetPassword = async () => {
+    if (!resetTarget) return;
+    setBusy(true);
+    try {
+      const result = await adminApi.resetPassword(resetTarget.id);
+      toast.success(result.message || "Đã tạo mật khẩu tạm thời.");
+      setResetTarget(null);
+    } catch (resetError) {
+      toast.error(getErrorMessage(resetError, "Không thể đặt lại mật khẩu."));
+    } finally {
+      setBusy(false);
+    }
+  };
 
-            {/* Confirm Reset Password */}
-            {showResetConfirm && (
-                <div className={styles.confirmOverlay}>
-                    <div className={styles.confirmDialog} onClick={(e) => e.stopPropagation()}>
-                        <div style={{
-                            width: '48px', height: '48px', borderRadius: '50%',
-                            background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            margin: '0 auto 16px'
-                        }}>
-                            <KeyRound size={24} />
-                        </div>
-                        <h3 className={styles.confirmTitle}>Đặt lại mật khẩu?</h3>
-                        <p className={styles.confirmMessage}>
-                            Hệ thống sẽ tạo mật khẩu tạm thời cho <strong>{showResetConfirm.name}</strong> và chỉ trả về một lần.
-                        </p>
-                        <div className={styles.confirmActions}>
-                            <button className={styles.btnSecondary} onClick={() => setShowResetConfirm(null)}>
-                                Hủy
-                            </button>
-                            <button className={styles.btnPrimary} onClick={handleResetPassword}>
-                                Xác nhận
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+  const columns: DataColumn<Teacher>[] = [
+    {
+      key: "teacher",
+      header: "Giáo viên",
+      cell: (teacher) => {
+        const initials = teacher.name.split(" ").filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+        return (
+          <div className="flex items-center gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-[11px] bg-brand-soft text-xs font-extrabold text-brand-strong">{initials}</div>
+            <div><p className="font-bold text-ink">{teacher.name}</p><p className="text-xs text-ink-soft">Giáo viên</p></div>
+          </div>
+        );
+      },
+    },
+    {
+      key: "email",
+      header: "Liên hệ",
+      cell: (teacher) => <span className="inline-flex items-center gap-2 text-ink-soft"><Mail className="size-4" aria-hidden="true" />{teacher.email}</span>,
+    },
+    {
+      key: "class",
+      header: "Lớp phụ trách",
+      cell: (teacher) => teacher.class_name
+        ? <span className="rounded-full bg-brand-soft px-2.5 py-1 text-xs font-bold text-brand-strong">{teacher.class_name}</span>
+        : <span className="text-sm text-ink-soft">Chưa phân công</span>,
+    },
+    {
+      key: "actions",
+      header: "Thao tác",
+      align: "right",
+      cell: (teacher) => (
+        <div className="flex justify-end gap-1">
+          <Button variant="ghost" size="icon" aria-label={`Sửa ${teacher.name}`} onClick={() => openEdit(teacher)}><Edit2 className="size-4" /></Button>
+          <Button variant="ghost" size="icon" aria-label={`Đặt lại mật khẩu cho ${teacher.name}`} onClick={() => setResetTarget(teacher)}><KeyRound className="size-4" /></Button>
+          <Button variant="danger" size="icon" aria-label={`Xóa ${teacher.name}`} onClick={() => setDeleteTarget(teacher)}><Trash2 className="size-4" /></Button>
         </div>
-    );
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <PageHeader
+        title="Quản lý giáo viên"
+        description={`${teachers.length} giáo viên đang có tài khoản trên hệ thống.`}
+        actions={<Button onClick={openCreate}><Plus className="size-4" />Thêm giáo viên</Button>}
+      />
+
+      {error ? (
+        <ErrorState title="Không tải được giáo viên" description={error} action={<Button variant="secondary" onClick={() => void loadTeachers()}>Thử lại</Button>} />
+      ) : (
+        <Surface className="overflow-hidden">
+          <FilterToolbar searchValue={search} onSearchChange={setSearch} searchLabel="Tìm theo tên, email hoặc lớp" />
+          <DataTable
+            ariaLabel="Danh sách giáo viên"
+            columns={columns}
+            rows={paginatedTeachers}
+            rowKey={(teacher) => teacher.id}
+            loading={loading}
+            emptyTitle="Không tìm thấy giáo viên"
+            emptyDescription="Thử từ khóa khác hoặc thêm giáo viên mới."
+          />
+          {!loading && filteredTeachers.length > 0 && (
+            <Pagination page={page} totalPages={totalPages} totalItems={filteredTeachers.length} itemLabel="giáo viên" onPageChange={setPage} />
+          )}
+        </Surface>
+      )}
+
+      <Dialog
+        open={dialogOpen}
+        onClose={() => !busy && setDialogOpen(false)}
+        title={editingTeacher ? "Cập nhật giáo viên" : "Thêm giáo viên"}
+        description="Thông tin này được dùng để đăng nhập và phân công lớp học."
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setDialogOpen(false)} disabled={busy}>Hủy</Button>
+            <Button type="submit" form="teacher-form" disabled={busy}>{busy ? "Đang lưu..." : editingTeacher ? "Lưu thay đổi" : "Tạo giáo viên"}</Button>
+          </>
+        }
+      >
+        <form id="teacher-form" className="grid gap-5" onSubmit={saveTeacher}>
+          <Field label="Họ và tên" name="teacher-name" required>
+            <Input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required autoComplete="name" placeholder="Nguyễn Văn A" />
+          </Field>
+          <Field label="Email" name="teacher-email" required>
+            <Input type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required autoComplete="email" placeholder="giaovien@truong.edu.vn" />
+          </Field>
+          {!editingTeacher && (
+            <Field label="Mật khẩu ban đầu" name="teacher-password" required helper="Ít nhất 8 ký tự. Giáo viên nên đổi mật khẩu sau lần đăng nhập đầu tiên.">
+              <Input type="password" minLength={8} value={form.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} required autoComplete="new-password" />
+            </Field>
+          )}
+        </form>
+      </Dialog>
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Xóa giáo viên?"
+        description={`Tài khoản ${deleteTarget?.name || "này"} sẽ bị xóa vĩnh viễn.`}
+        confirmLabel="Xóa giáo viên"
+        busy={busy}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => void deleteTeacher()}
+      />
+      <ConfirmDialog
+        open={Boolean(resetTarget)}
+        title="Đặt lại mật khẩu?"
+        description={`Hệ thống sẽ tạo mật khẩu tạm thời một lần cho ${resetTarget?.name || "giáo viên này"}.`}
+        confirmLabel="Tạo mật khẩu tạm"
+        tone="primary"
+        busy={busy}
+        onClose={() => setResetTarget(null)}
+        onConfirm={() => void resetPassword()}
+      />
+    </>
+  );
 }

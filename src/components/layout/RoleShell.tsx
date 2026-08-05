@@ -18,12 +18,13 @@ export interface RoleNavItem {
 
 interface RoleShellProps {
   children: React.ReactNode;
+  headerActions?: React.ReactNode;
   homeHref: string;
   navItems: RoleNavItem[];
   roleLabel: string;
 }
 
-export function RoleShell({ children, homeHref, navItems, roleLabel }: RoleShellProps) {
+export function RoleShell({ children, headerActions, homeHref, navItems, roleLabel }: RoleShellProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -70,7 +71,7 @@ export function RoleShell({ children, homeHref, navItems, roleLabel }: RoleShell
           </Button>
         </div>
 
-        <nav aria-label={`Điều hướng ${roleLabel}`} className="mt-8 flex flex-1 flex-col gap-1">
+        <nav aria-label={`Điều hướng ${roleLabel}`} className="mt-8 flex flex-1 flex-col gap-1 overflow-y-auto py-1 pr-1">
           {navItems.map((item) => {
             const active = pathname === item.href || (item.href !== homeHref && pathname.startsWith(`${item.href}/`));
             return (
@@ -119,6 +120,7 @@ export function RoleShell({ children, homeHref, navItems, roleLabel }: RoleShell
             </div>
 
             <div className="flex min-w-0 items-center gap-3">
+              {headerActions}
               <div className="hidden min-w-0 text-right sm:block">
                 <p className="max-w-48 truncate text-sm font-bold text-ink">{user?.name || "Người dùng"}</p>
                 <p className="text-xs text-ink-soft">{roleLabel}</p>

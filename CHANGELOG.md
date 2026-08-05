@@ -21,11 +21,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Thêm Alembic adoption baseline, 10 test authorization, CI quality gates và browser smoke test.
 - Thêm Campus Blue semantic tokens, UI primitives và shared `RoleShell`.
 - Thêm ảnh trường học gốc cho landing và login.
+- Thêm DataTable, filter, pagination, form field, accessible dialog và confirmation flow dùng chung cho workflow nghiệp vụ.
+- Thêm 4 API integration test cho provisioning Admin, assignment submission, quiz lifecycle và schedule CRUD; tổng backend suite hiện có 14 test.
+- Thêm browser smoke Phase 2 cho cả Admin, Teacher và Student trên desktop/mobile.
 
 ### Changed
 
 - Thiết kế lại landing, login và Admin Overview cho bối cảnh trường học, responsive và system dark mode.
 - Seed development dùng mật khẩu ngẫu nhiên hoặc `SCHOOLMANAGER_SEED_PASSWORD`, không dùng credential chung trong repo.
+- Migrate các workflow Phase 2 sang Campus Blue: Admin giáo viên/học sinh/lớp; Teacher dashboard/lớp/bài tập/kiểm tra/thời khóa biểu; Student dashboard/lớp/môn/bài tập/quiz/thời khóa biểu.
+- Tách module API hơn 600 dòng thành client/error model và các feature `admin`, `academic`, `coursework`, `school`, `extensions`, đồng thời giữ compatibility facade cho route cũ.
+- Teacher và Student dùng chung `RoleShell`; thời khóa biểu dùng một component responsive và accessible cho cả hai vai trò.
+
+### Fixed
+
+- Sửa response mapping của bài nộp trên Pydantic v2 để luồng nộp bài, xem bài nộp và chấm điểm không lỗi thiếu `student_name`.
+- Trang lớp của học sinh không còn gọi endpoint danh sách học sinh dành riêng cho Admin/Teacher, tránh lỗi 403 và không phơi dữ liệu wellbeing của bạn cùng lớp.
 
 ---
 

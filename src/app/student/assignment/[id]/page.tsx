@@ -1,406 +1,75 @@
-/* eslint-disable */
-'use client';
+"use client";
 
-import { useState, useEffect, use, useCallback } from 'react';
-import { useAuth } from '@/lib/auth';
-import { ArrowLeft, Clock, CheckCircle, Send, FileText } from 'lucide-react';
-import Link from 'next/link';
-import { API_URL } from '@/lib/api';
+import Link from "next/link";
+import { use, useCallback, useEffect, useState } from "react";
+import { CheckCircle2, Clock3, Send } from "lucide-react";
+import toast from "react-hot-toast";
 
-interface Question {
-    id: number;
-    question_type: 'multiple_choice' | 'essay';
-    question_text: string;
-    points: number;
-    option_a?: string;
-    option_b?: string;
-    option_c?: string;
-    option_d?: string;
-    order_num: number;
-}
+import { ConfirmDialog, ErrorState } from "@/components/ui/feedback";
+import { Textarea } from "@/components/ui/forms";
+import { Button, PageHeader, Skeleton, Surface } from "@/components/ui/primitives";
+import { getErrorMessage, studentCourseworkApi, type Assignment, type AssignmentSubmission } from "@/lib/api";
 
-interface Assignment {
-    id: number;
-    title: string;
-    description: string;
-    subject: string;
-    deadline: string;
-    status: string;
-    total_points: number;
-    questions: Question[];
-}
+export default function StudentAssignmentPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const assignmentId = Number(id);
+  const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [submission, setSubmission] = useState<AssignmentSubmission | null>(null);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-interface Submission {
-    id: number;
-    status: string;
-    total_score: number;
-    submitted_at: string;
-    graded_at: string;
-    answers: {
-        id: number;
-        question_id: number;
-        answer_text: string;
-        is_correct: boolean | null;
-        score: number;
-        feedback: string;
-    }[];
-}
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [assignmentData, submissionData] = await Promise.all([studentCourseworkApi.getAssignment(assignmentId), studentCourseworkApi.getSubmission(assignmentId)]);
+      setAssignment(assignmentData);
+      setSubmission(submissionData);
+    } catch (loadError) { setError(getErrorMessage(loadError, "Không thể tải bài tập.")); }
+    finally { setLoading(false); }
+  }, [assignmentId]);
 
-export default function AssignmentPage({ params }: { params: Promise<{ id: string }> }) {
-    const resolvedParams = use(params);
-    const { token } = useAuth();
-    const [assignment, setAssignment] = useState<Assignment | null>(null);
-    const [submission, setSubmission] = useState<Submission | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [answers, setAnswers] = useState<{ [key: number]: string }>({});
+  useEffect(() => { void loadData(); }, [loadData]);
 
-    const fetchAssignment = useCallback(async () => {
-        try {
-            const response = await fetch(`${API_URL}/api/assignments/${resolvedParams.id}`, {
-                headers: { 'Authorization': `Bearer ${token}` },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setAssignment(data);
-            }
-        } catch (err) {
-            console.error('Failed to fetch assignment:', err);
-        } finally {
-            setLoading(false);
-        }
-    }, [token, resolvedParams.id]);
+  const submit = async () => {
+    if (!assignment) return;
+    setSubmitting(true);
+    try {
+      const result = await studentCourseworkApi.submitAssignment(assignment.id, assignment.questions.map((question) => ({ question_id: question.id as number, answer_text: answers[question.id as number] })));
+      setSubmission(result);
+      setConfirmOpen(false);
+      toast.success("Đã nộp bài tập");
+    } catch (submitError) { toast.error(getErrorMessage(submitError, "Không thể nộp bài.")); }
+    finally { setSubmitting(false); }
+  };
 
-    const fetchMySubmission = useCallback(async () => {
-        try {
-            const response = await fetch(`${API_URL}/api/assignments/${resolvedParams.id}/my-submission`, {
-                headers: { 'Authorization': `Bearer ${token}` },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setSubmission(data);
-            }
-        } catch (err) {
-            console.error('Failed to fetch submission:', err);
-        }
-    }, [token, resolvedParams.id]);
+  if (loading) return <><PageHeader title="Bài tập" description="Đang tải nội dung bài tập..." /><Skeleton className="h-80" /></>;
+  if (error || !assignment) return <ErrorState title="Không tải được bài tập" description={error || "Không tìm thấy bài tập."} action={<Button variant="secondary" onClick={() => void loadData()}>Thử lại</Button>} />;
 
-    useEffect(() => {
-        if (token) {
-            fetchAssignment();
-            fetchMySubmission();
-        }
-    }, [token, fetchAssignment, fetchMySubmission]);
+  const deadlinePassed = Boolean(assignment.deadline && new Date(assignment.deadline) < new Date());
+  const unanswered = assignment.questions.filter((question) => !answers[question.id as number]?.trim()).length;
 
-    const handleSubmit = async () => {
-        if (!assignment) return;
+  return (
+    <>
+      <PageHeader title={assignment.title} description={assignment.description || `${assignment.subject || "Bài tập"} · ${assignment.questions.length} câu · ${assignment.total_points} điểm`} actions={<Link href="/student" className="inline-flex min-h-11 items-center rounded-[10px] border border-line bg-surface px-4 text-sm font-bold text-ink hover:bg-surface-subtle">Về tổng quan</Link>} />
+      <Surface className="mb-5 flex flex-wrap items-center justify-between gap-3 p-4"><div className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold text-ink-soft"><span>{assignment.subject || "Bài tập chung"}</span><span>{assignment.total_points} điểm</span>{assignment.deadline && <span className={`inline-flex items-center gap-2 ${deadlinePassed ? "text-danger" : ""}`}><Clock3 className="size-4" />Hạn {new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" }).format(new Date(assignment.deadline))}</span>}</div>{submission && <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-bold text-success"><CheckCircle2 className="size-4" />{submission.status === "graded" ? `Đã chấm: ${submission.total_score}/${assignment.total_points}` : "Đã nộp"}</span>}</Surface>
 
-        // Check all questions answered
-        const unanswered = assignment.questions.filter(q => !answers[q.id]);
-        if (unanswered.length > 0) {
-            alert(`Vui lòng trả lời ${unanswered.length} câu còn lại`);
-            return;
-        }
+      <div className="grid gap-4">{[...assignment.questions].map((question, index) => {
+        const questionId = question.id as number;
+        const submittedAnswer = submission?.answers.find((answer) => answer.question_id === questionId);
+        const options = [["A", question.option_a], ["B", question.option_b], ["C", question.option_c], ["D", question.option_d]].filter((entry) => entry[1]);
+        return <Surface key={questionId} className="p-5"><div className="flex items-start justify-between gap-4"><div><span className="text-xs font-extrabold uppercase tracking-[0.06em] text-brand-strong">Câu {index + 1}</span><h2 className="mt-2 text-base font-extrabold leading-7 text-ink">{question.question_text}</h2></div><span className="shrink-0 rounded-full bg-surface-subtle px-2.5 py-1 text-xs font-bold text-ink-soft">{question.points} điểm</span></div>
+          {question.question_type === "essay" ? <Textarea className="mt-4" aria-label={`Câu trả lời câu ${index + 1}`} value={submission ? submittedAnswer?.answer_text || "" : answers[questionId] || ""} onChange={(event) => setAnswers({ ...answers, [questionId]: event.target.value })} disabled={Boolean(submission)} placeholder="Nhập câu trả lời của em" /> : <fieldset className="mt-4 grid gap-2"><legend className="sr-only">Chọn đáp án câu {index + 1}</legend>{options.map(([option, text]) => { const selected = (submission ? submittedAnswer?.answer_text : answers[questionId]) === option; return <label key={option} className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-[10px] border px-4 py-3 text-sm font-semibold transition-colors ${selected ? "border-brand bg-brand-soft text-brand-strong" : "border-line bg-surface text-ink hover:border-brand/35"}`}><input type="radio" name={`question-${questionId}`} value={option} checked={selected} onChange={() => setAnswers({ ...answers, [questionId]: option as string })} disabled={Boolean(submission)} /><span className="font-extrabold">{option}</span><span>{text}</span></label>; })}</fieldset>}
+          {submittedAnswer && <div className="mt-4 rounded-[10px] bg-surface-subtle px-4 py-3 text-sm text-ink"><p className="font-bold">Điểm: {submittedAnswer.score}/{question.points}</p>{submittedAnswer.feedback && <p className="mt-1 text-ink-soft">Nhận xét: {submittedAnswer.feedback}</p>}</div>}
+        </Surface>;
+      })}</div>
 
-        if (!confirm('Bạn có chắc muốn nộp bài? Không thể sửa sau khi nộp.')) return;
+      {!submission && <div className="sticky bottom-4 mt-6 flex flex-col items-center justify-between gap-3 rounded-[14px] border border-line bg-surface/95 p-4 shadow-[0_16px_50px_rgba(28,52,84,0.16)] backdrop-blur sm:flex-row"><p className="text-sm font-bold text-ink-soft">{unanswered ? `Còn ${unanswered} câu chưa trả lời` : "Em đã trả lời tất cả câu hỏi"}</p><Button onClick={() => setConfirmOpen(true)} disabled={Boolean(unanswered) || deadlinePassed || assignment.status !== "active"}><Send className="size-4" />{deadlinePassed ? "Đã hết hạn" : assignment.status !== "active" ? "Bài đã đóng" : "Nộp bài"}</Button></div>}
 
-        setSubmitting(true);
-        try {
-            const response = await fetch(`${API_URL}/api/assignments/${resolvedParams.id}/submit`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    answers: Object.entries(answers).map(([qId, text]) => ({
-                        question_id: parseInt(qId),
-                        answer_text: text,
-                    })),
-                }),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setSubmission(data);
-                alert('✅ Nộp bài thành công!');
-            } else {
-                const error = await response.json();
-                alert(`❌ Lỗi: ${error.detail}`);
-            }
-        } catch (err) {
-            alert('❌ Lỗi kết nối');
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const isDeadlinePassed = assignment?.deadline && new Date(assignment.deadline) < new Date();
-
-    if (loading) {
-        return (
-            <div style={{
-                minHeight: '100vh',
-                background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
-                display: 'flex', justifyContent: 'center', alignItems: 'center',
-            }}>
-                <div style={{ textAlign: 'center', color: 'white' }}>
-                    <div style={{
-                        width: '48px', height: '48px',
-                        border: '4px solid rgba(255,255,255,0.3)',
-                        borderTop: '4px solid white',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite',
-                        margin: '0 auto 16px',
-                    }}></div>
-                    Đang tải...
-                </div>
-            </div>
-        );
-    }
-
-    if (!assignment) {
-        return (
-            <div style={{
-                minHeight: '100vh',
-                background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
-                display: 'flex', justifyContent: 'center', alignItems: 'center',
-            }}>
-                <div style={{ textAlign: 'center', color: 'white' }}>
-                    <h2>Không tìm thấy bài tập</h2>
-                    <Link href="/student" style={{ color: 'white' }}>← Quay lại</Link>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div style={{
-            minHeight: '100vh',
-            background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
-            padding: '24px',
-        }}>
-            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-                {/* Header */}
-                <div style={{ marginBottom: '24px' }}>
-                    <Link href="/student" style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '8px',
-                        color: 'white', textDecoration: 'none', marginBottom: '16px',
-                    }}>
-                        <ArrowLeft size={20} />
-                        Quay lại
-                    </Link>
-                    <div style={{
-                        backgroundColor: '#1e293b', borderRadius: '16px', padding: '20px',
-                        boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                                <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>
-                                    {assignment.title}
-                                </h1>
-                                {assignment.description && (
-                                    <p style={{ color: '#94a3b8', marginTop: '8px' }}>{assignment.description}</p>
-                                )}
-                                <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
-                                    <span style={{ fontSize: '14px', color: '#94a3b8' }}>
-                                        {assignment.questions.length} câu • {assignment.total_points} điểm
-                                    </span>
-                                    {assignment.deadline && (
-                                        <span style={{
-                                            fontSize: '14px',
-                                            color: isDeadlinePassed ? '#dc2626' : '#6b7280',
-                                            display: 'flex', alignItems: 'center', gap: '4px',
-                                        }}>
-                                            <Clock size={14} />
-                                            Hạn: {new Date(assignment.deadline).toLocaleString('vi-VN')}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                            {submission && (
-                                <div style={{
-                                    padding: '12px 16px', borderRadius: '12px',
-                                    backgroundColor: submission.status === 'graded' ? '#d1fae5' : '#dbeafe',
-                                    textAlign: 'center',
-                                }}>
-                                    <p style={{
-                                        fontSize: '12px', fontWeight: 600, margin: 0,
-                                        color: submission.status === 'graded' ? '#059669' : '#2563eb',
-                                    }}>
-                                        {submission.status === 'graded' ? 'Đã chấm' : 'Đã nộp'}
-                                    </p>
-                                    <p style={{ fontSize: '24px', fontWeight: 700, margin: '4px 0 0', color: '#e2e8f0' }}>
-                                        {submission.total_score}/{assignment.total_points}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Questions */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {assignment.questions
-                        .sort((a, b) => a.order_num - b.order_num)
-                        .map((q, index) => {
-                            const submittedAnswer = submission?.answers.find(a => a.question_id === q.id);
-                            const isEssay = q.question_type === 'essay';
-
-                            return (
-                                <div key={q.id} style={{
-                                    backgroundColor: '#1e293b', borderRadius: '16px', padding: '20px',
-                                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                                }}>
-                                    <div style={{
-                                        display: 'flex', justifyContent: 'space-between',
-                                        alignItems: 'center', marginBottom: '12px',
-                                    }}>
-                                        <span style={{
-                                            padding: '4px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                                            backgroundColor: isEssay ? '#fef3c7' : '#dbeafe',
-                                            color: isEssay ? '#d97706' : '#2563eb',
-                                        }}>
-                                            Câu {index + 1} ({q.points} điểm)
-                                        </span>
-                                        {submittedAnswer && (
-                                            <span style={{
-                                                padding: '4px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-                                                backgroundColor: submittedAnswer.is_correct === true ? '#d1fae5' :
-                                                    submittedAnswer.is_correct === false ? '#fee2e2' : '#f3f4f6',
-                                                color: submittedAnswer.is_correct === true ? '#059669' :
-                                                    submittedAnswer.is_correct === false ? '#dc2626' : '#6b7280',
-                                            }}>
-                                                {submittedAnswer.is_correct === true ? '✓ Đúng' :
-                                                    submittedAnswer.is_correct === false ? '✗ Sai' :
-                                                        `${submittedAnswer.score}/${q.points}`}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <p style={{ fontSize: '16px', fontWeight: 500, color: '#e2e8f0', marginBottom: '16px' }}>
-                                        {q.question_text}
-                                    </p>
-
-                                    {submission ? (
-                                        // Show submitted answer
-                                        <div>
-                                            <div style={{
-                                                padding: '12px', borderRadius: '8px',
-                                                backgroundColor: '#0f172a', border: '1px solid #334155',
-                                            }}>
-                                                <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Câu trả lời của bạn:</p>
-                                                <p style={{ color: '#e2e8f0', whiteSpace: 'pre-wrap' }}>
-                                                    {submittedAnswer?.answer_text || '(Chưa trả lời)'}
-                                                </p>
-                                            </div>
-                                            {submittedAnswer?.feedback && (
-                                                <div style={{
-                                                    marginTop: '12px', padding: '12px', borderRadius: '8px',
-                                                    backgroundColor: 'rgba(96, 165, 250, 0.15)', border: '1px solid #93c5fd',
-                                                }}>
-                                                    <p style={{ fontSize: '13px', color: '#1d4ed8', fontWeight: 600, marginBottom: '4px' }}>
-                                                        Nhận xét của giáo viên:
-                                                    </p>
-                                                    <p style={{ color: '#1e40af' }}>{submittedAnswer.feedback}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        // Input form
-                                        isEssay ? (
-                                            <textarea
-                                                value={answers[q.id] || ''}
-                                                onChange={e => setAnswers({ ...answers, [q.id]: e.target.value })}
-                                                placeholder="Nhập câu trả lời của bạn..."
-                                                rows={4}
-                                                style={{
-                                                    width: '100%', padding: '12px 14px', borderRadius: '10px',
-                                                    border: '2px solid #e5e7eb', fontSize: '14px', resize: 'vertical',
-                                                }}
-                                            />
-                                        ) : (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                {['A', 'B', 'C', 'D'].map(opt => {
-
-                                                    const optionText = (q as any)[`option_${opt.toLowerCase()}`];
-                                                    if (!optionText) return null;
-                                                    return (
-                                                        <label
-                                                            key={opt}
-                                                            style={{
-                                                                display: 'flex', alignItems: 'center', gap: '12px',
-                                                                padding: '12px 14px', borderRadius: '10px',
-                                                                border: `2px solid ${answers[q.id] === opt ? '#8b5cf6' : '#e5e7eb'}`,
-                                                                backgroundColor: answers[q.id] === opt ? '#f5f3ff' : 'white',
-                                                                cursor: 'pointer', transition: 'all 0.2s',
-                                                            }}
-                                                        >
-                                                            <input
-                                                                type="radio"
-                                                                name={`q_${q.id}`}
-                                                                checked={answers[q.id] === opt}
-                                                                onChange={() => setAnswers({ ...answers, [q.id]: opt })}
-                                                                style={{ display: 'none' }}
-                                                            />
-                                                            <span style={{
-                                                                width: '28px', height: '28px', borderRadius: '50%',
-                                                                backgroundColor: answers[q.id] === opt ? '#8b5cf6' : '#f3f4f6',
-                                                                color: answers[q.id] === opt ? 'white' : '#6b7280',
-                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                fontWeight: 600, fontSize: '14px',
-                                                            }}>
-                                                                {opt}
-                                                            </span>
-                                                            <span style={{ color: '#334155', fontWeight: 500 }}>{optionText}</span>
-                                                        </label>
-                                                    );
-                                                })}
-                                            </div>
-                                        )
-                                    )}
-                                </div>
-                            );
-                        })}
-                </div>
-
-                {/* Submit Button */}
-                {!submission && !isDeadlinePassed && (
-                    <div style={{ marginTop: '24px', textAlign: 'center' }}>
-                        <button
-                            onClick={handleSubmit}
-                            disabled={submitting}
-                            style={{
-                                display: 'inline-flex', alignItems: 'center', gap: '8px',
-                                padding: '16px 32px', borderRadius: '14px',
-                                background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
-                                color: 'white', fontWeight: 700, fontSize: '16px', border: 'none', cursor: 'pointer',
-                                boxShadow: '0 4px 14px rgba(34, 197, 94, 0.4)',
-                                opacity: submitting ? 0.7 : 1,
-                            }}
-                        >
-                            <Send size={20} />
-                            {submitting ? 'Đang nộp...' : 'Nộp bài'}
-                        </button>
-                    </div>
-                )}
-
-                {isDeadlinePassed && !submission && (
-                    <div style={{
-                        marginTop: '24px', textAlign: 'center',
-                        padding: '16px', backgroundColor: 'rgba(248, 113, 113, 0.15)', borderRadius: '12px',
-                        color: '#f87171', fontWeight: 600,
-                    }}>
-                        ⏰ Đã hết hạn nộp bài
-                    </div>
-                )}
-            </div>
-
-            <style jsx global>{`
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-            `}</style>
-        </div>
-    );
+      <ConfirmDialog open={confirmOpen} title="Nộp bài tập?" description="Sau khi nộp, em không thể thay đổi câu trả lời." confirmLabel="Nộp bài" tone="primary" busy={submitting} onClose={() => setConfirmOpen(false)} onConfirm={() => void submit()} />
+    </>
+  );
 }

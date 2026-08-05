@@ -1,331 +1,92 @@
-/* eslint-disable */
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, use } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth';
-import { Brain, Clock, CheckCircle, AlertCircle, ArrowRight, Save, Lock } from 'lucide-react';
-import { API_URL } from '@/lib/api';
+import Link from "next/link";
+import { use, useCallback, useEffect, useState } from "react";
+import { CheckCircle2, Clock3, Send } from "lucide-react";
+import toast from "react-hot-toast";
 
-interface Question {
-    id: number;
-    question_text: string;
-    difficulty: string;
-    option_a: string;
-    option_b: string;
-    option_c: string;
-    option_d: string;
-    order_num: number;
+import { ConfirmDialog, ErrorState } from "@/components/ui/feedback";
+import { Button, PageHeader, Skeleton, Surface } from "@/components/ui/primitives";
+import { getErrorMessage, studentCourseworkApi, type QuizResult, type StudentQuiz } from "@/lib/api";
+
+function formatTime(seconds: number) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+  return [hours, minutes, remainingSeconds].map((value) => String(value).padStart(2, "0")).join(":");
 }
 
-interface Quiz {
-    id: number;
-    title: string;
-    subject: string;
-    topic: string;
-    total_questions: number;
-    deadline: string | null;
-    status: string;
-    questions: Question[];
-}
+export default function StudentQuizPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const quizId = Number(id);
+  const [quiz, setQuiz] = useState<StudentQuiz | null>(null);
+  const [result, setResult] = useState<QuizResult | null>(null);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-export default function QuizTakingPage({ params }: { params: Promise<{ id: string }> }) {
-    const resolvedParams = use(params);
-    const { token } = useAuth();
-    const router = useRouter();
-    const [quiz, setQuiz] = useState<Quiz | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [answers, setAnswers] = useState<Record<string, string>>({});
-    const [submitting, setSubmitting] = useState(false);
-    const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const loadQuiz = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const previousResult = await studentCourseworkApi.getQuizResult(quizId);
+      if (previousResult.attempted) {
+        setResult(previousResult);
+      } else {
+        const quizData = await studentCourseworkApi.getQuiz(quizId);
+        setQuiz(quizData);
+        if (quizData.deadline) setTimeLeft(Math.max(0, Math.floor((new Date(quizData.deadline).getTime() - Date.now()) / 1000)));
+      }
+    } catch (loadError) { setError(getErrorMessage(loadError, "Không thể tải bài kiểm tra.")); }
+    finally { setLoading(false); }
+  }, [quizId]);
 
-    const [result, setResult] = useState<any>(null);
+  useEffect(() => { void loadQuiz(); }, [loadQuiz]);
 
-    const fetchQuiz = useCallback(async () => {
-        try {
-            const response = await fetch(`${API_URL}/api/quizzes/${resolvedParams.id}`, {
-                headers: { 'Authorization': `Bearer ${token}` },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setQuiz(data);
+  const submitQuiz = useCallback(async () => {
+    if (submitting || result) return;
+    setSubmitting(true);
+    try {
+      const quizResult = await studentCourseworkApi.submitQuiz(quizId, answers);
+      setResult(quizResult);
+      setConfirmOpen(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      toast.success("Đã nộp bài kiểm tra");
+    } catch (submitError) { toast.error(getErrorMessage(submitError, "Không thể nộp bài kiểm tra.")); }
+    finally { setSubmitting(false); }
+  }, [answers, quizId, result, submitting]);
 
-                // Calculate time left if deadline exists
-                if (data.deadline) {
-                    const deadline = new Date(data.deadline).getTime();
-                    const now = new Date().getTime();
-                    const diff = Math.floor((deadline - now) / 1000);
-                    if (diff > 0) {
-                        setTimeLeft(diff);
-                    } else {
-                        alert('Đã hết thời gian làm bài!');
-                        router.push('/student');
-                    }
-                }
-            } else {
-                const error = await response.json();
-                alert(error.detail || 'Không thể tải bài kiểm tra');
-                router.push('/student');
-            }
-        } catch (err) {
-            console.error('Failed to fetch quiz:', err);
-        } finally {
-            setLoading(false);
-        }
-    }, [token, resolvedParams.id, router]);
+  useEffect(() => {
+    if (timeLeft === null || timeLeft <= 0 || result) return;
+    const timer = window.setInterval(() => setTimeLeft((current) => current === null ? null : Math.max(0, current - 1)), 1000);
+    return () => window.clearInterval(timer);
+  }, [result, timeLeft]);
 
-    const handleSubmit = useCallback(async () => {
-        if (submitting || result) return;
+  useEffect(() => {
+    if (timeLeft === 0 && quiz && !result && !submitting) void submitQuiz();
+  }, [quiz, result, submitQuiz, submitting, timeLeft]);
 
-        if (!confirm('Bạn có chắc muốn nộp bài? Hành động này không thể hoàn tác.')) return;
+  if (loading) return <><PageHeader title="Bài kiểm tra" description="Đang tải đề kiểm tra..." /><Skeleton className="h-80" /></>;
+  if (error) return <ErrorState title="Không tải được bài kiểm tra" description={error} action={<Button variant="secondary" onClick={() => void loadQuiz()}>Thử lại</Button>} />;
 
-        setSubmitting(true);
-        try {
-            const response = await fetch(`${API_URL}/api/quizzes/${resolvedParams.id}/submit`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({ answers }),
-            });
+  if (result) return <Surface className="mx-auto max-w-xl p-7 text-center"><div className="mx-auto grid size-14 place-items-center rounded-full bg-emerald-50 text-success"><CheckCircle2 className="size-7" /></div><h1 className="mt-5 text-2xl font-extrabold text-ink">Đã hoàn thành bài kiểm tra</h1><p className="mt-2 text-sm text-ink-soft">Kết quả của em đã được ghi nhận.</p><div className="mt-6 grid grid-cols-2 gap-3"><div className="rounded-[12px] bg-surface-subtle p-5"><p className="text-xs font-bold text-ink-soft">Số câu đúng</p><p className="mt-2 text-3xl font-extrabold text-ink">{result.score}/{result.total_questions}</p></div><div className="rounded-[12px] bg-surface-subtle p-5"><p className="text-xs font-bold text-ink-soft">Tỷ lệ đúng</p><p className="mt-2 text-3xl font-extrabold text-brand-strong">{result.percentage}%</p></div></div><Link href="/student" className="mt-6 inline-flex min-h-11 items-center rounded-[10px] bg-brand px-5 text-sm font-bold text-white">Về trang tổng quan</Link></Surface>;
+  if (!quiz) return <ErrorState title="Không tìm thấy bài kiểm tra" description="Bài kiểm tra không tồn tại hoặc chưa được mở." />;
 
-            if (response.ok) {
-                const data = await response.json();
-                setResult(data);
-                // Scroll to top
-                window.scrollTo(0, 0);
-            } else {
-                const error = await response.json();
-                alert(`Lỗi: ${error.detail}`);
-            }
-        } catch (err) {
-            console.error('Submit error:', err);
-            alert('Lỗi kết nối khi nộp bài');
-        } finally {
-            setSubmitting(false);
-        }
-    }, [token, resolvedParams.id, answers, submitting, result]);
+  const answered = Object.keys(answers).length;
+  const unanswered = quiz.questions.length - answered;
 
-    // Fetch Quiz
-    useEffect(() => {
-        if (token && resolvedParams.id) {
-            // First check if already attempted
-            fetch(`${API_URL}/api/quizzes/${resolvedParams.id}/my-result`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.attempted) {
-                        setResult(data);
-                        setLoading(false);
-                    } else {
-                        // Fetch quiz details
-                        fetchQuiz();
-                    }
-                })
-                .catch(err => {
-                    console.error('Failed to check result:', err);
-                    setLoading(false);
-                });
-        }
-    }, [token, resolvedParams.id, fetchQuiz]);
+  return (
+    <>
+      <PageHeader title={quiz.title} description={`${quiz.subject || "Bài kiểm tra"} · ${quiz.topic || "Chủ đề tổng hợp"} · ${quiz.total_questions} câu`} actions={timeLeft !== null ? <span className={`inline-flex min-h-11 items-center gap-2 rounded-[10px] px-4 text-sm font-extrabold ${timeLeft < 300 ? "bg-red-50 text-danger" : "bg-brand-soft text-brand-strong"}`}><Clock3 className="size-4" />{formatTime(timeLeft)}</span> : undefined} />
+      <Surface className="mb-5 p-4"><div className="flex items-center justify-between text-sm font-bold"><span className="text-ink-soft">Tiến độ làm bài</span><span className="text-ink">{answered}/{quiz.questions.length} câu</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-subtle"><div className="h-full rounded-full bg-brand transition-[width]" style={{ width: `${quiz.questions.length ? (answered / quiz.questions.length) * 100 : 0}%` }} /></div></Surface>
 
+      <div className="grid gap-4">{quiz.questions.map((question, index) => <Surface key={question.id} className="p-5"><div className="flex items-start justify-between gap-4"><div><span className="text-xs font-extrabold uppercase tracking-[0.06em] text-brand-strong">Câu {index + 1}</span><h2 className="mt-2 text-base font-extrabold leading-7 text-ink">{question.question_text}</h2></div><span className="shrink-0 rounded-full bg-surface-subtle px-2.5 py-1 text-xs font-bold text-ink-soft">{question.difficulty === "easy" ? "Dễ" : question.difficulty === "hard" ? "Khó" : "Trung bình"}</span></div><fieldset className="mt-4 grid gap-2"><legend className="sr-only">Chọn đáp án câu {index + 1}</legend>{(["A", "B", "C", "D"] as const).map((option) => { const text = question[`option_${option.toLowerCase()}` as "option_a" | "option_b" | "option_c" | "option_d"]; const selected = answers[question.id] === option; return <label key={option} className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-[10px] border px-4 py-3 text-sm font-semibold transition-colors ${selected ? "border-brand bg-brand-soft text-brand-strong" : "border-line text-ink hover:border-brand/35"}`}><input type="radio" name={`quiz-question-${question.id}`} value={option} checked={selected} onChange={() => setAnswers({ ...answers, [question.id]: option })} /><span className="font-extrabold">{option}</span><span>{text}</span></label>; })}</fieldset></Surface>)}</div>
 
-    // Timer Logic
-    useEffect(() => {
-        if (timeLeft === null || result) return;
-
-        const timer = setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev === null || prev <= 0) {
-                    clearInterval(timer);
-                    handleSubmit(); // Auto submit
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-    }, [timeLeft, result, handleSubmit]);
-
-    const formatTime = (seconds: number) => {
-        const m = Math.floor(seconds / 60);
-        const s = seconds % 60;
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
-    };
-
-    const handleAnswer = (questionId: number, option: string) => {
-        setAnswers(prev => ({
-            ...prev,
-            [questionId]: option
-        }));
-    };
-
-    if (loading) {
-        return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#0f172a' }}>
-                <div style={{ textAlign: 'center' }}>
-                    <div className="spinner" style={{
-                        width: '48px', height: '48px',
-                        border: '4px solid #e5e7eb', borderTop: '4px solid #8b5cf6',
-                        borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px'
-                    }}></div>
-                    <p style={{ color: '#94a3b8' }}>Đang tải đề...</p>
-                </div>
-                <style jsx global>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-            </div>
-        );
-    }
-
-    if (result) {
-        return (
-            <div style={{ minHeight: '100vh', background: '#0f172a', padding: '40px 20px' }}>
-                <div style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: '#1e293b', borderRadius: '24px', padding: '40px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', textAlign: 'center' }}>
-
-                    <div style={{
-                        width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'rgba(52, 211, 153, 0.15)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px'
-                    }}>
-                        <CheckCircle size={40} color="#16a34a" />
-                    </div>
-
-                    <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#e2e8f0', marginBottom: '8px' }}>
-                        Hoàn thành bài kiểm tra!
-                    </h1>
-                    <p style={{ color: '#94a3b8', marginBottom: '32px' }}>
-                        Dưới đây là kết quả của bạn
-                    </p>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-                        <div style={{ padding: '20px', borderRadius: '16px', backgroundColor: '#0f172a', border: '1px solid #334155' }}>
-                            <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '4px' }}>Điểm số</p>
-                            <p style={{ fontSize: '32px', fontWeight: 800, color: '#e2e8f0' }}>
-                                {result.score} <span style={{ fontSize: '16px', color: '#64748b', fontWeight: 500 }}>/ {result.total_questions}</span>
-                            </p>
-                        </div>
-                        <div style={{ padding: '20px', borderRadius: '16px', backgroundColor: '#0f172a', border: '1px solid #334155' }}>
-                            <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '4px' }}>Tỷ lệ đúng</p>
-                            <p style={{ fontSize: '32px', fontWeight: 800, color: result.percentage >= 50 ? '#16a34a' : '#ef4444' }}>
-                                {result.percentage}%
-                            </p>
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={() => router.push('/student')}
-                        style={{
-                            width: '100%', padding: '16px', borderRadius: '14px',
-                            backgroundColor: '#111827', color: 'white', fontWeight: 600, fontSize: '16px',
-                            border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-                        }}
-                    >
-                        Quay lại trang chủ
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    if (!quiz) return null;
-
-    return (
-        <div style={{ minHeight: '100vh', background: '#0f172a' }}>
-            {/* Header / Sticky Timer */}
-            <div style={{
-                position: 'sticky', top: 0, zIndex: 50, backgroundColor: '#1e293b', borderBottom: '1px solid #334155',
-                padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-            }}>
-                <div>
-                    <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>{quiz.title}</h2>
-                    <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>{quiz.subject} - {quiz.total_questions} câu hỏi</p>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                    {timeLeft !== null && (
-                        <div style={{
-                            display: 'flex', alignItems: 'center', gap: '8px',
-                            padding: '8px 16px', borderRadius: '20px',
-                            backgroundColor: timeLeft < 300 ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)',
-                            color: timeLeft < 300 ? '#f87171' : '#60a5fa', fontWeight: 700
-                        }}>
-                            <Clock size={18} />
-                            {formatTime(timeLeft)}
-                        </div>
-                    )}
-
-                    <button
-                        onClick={handleSubmit}
-                        disabled={submitting}
-                        style={{
-                            padding: '10px 24px', borderRadius: '10px',
-                            background: 'linear-gradient(135deg, #111827 0%, #374151 100%)',
-                            color: 'white', fontWeight: 600, fontSize: '14px', border: 'none', cursor: 'pointer',
-                            opacity: submitting ? 0.7 : 1
-                        }}
-                    >
-                        {submitting ? 'Đang nộp...' : 'Nộp bài'}
-                    </button>
-                </div>
-            </div>
-
-            {/* Questions List */}
-            <div style={{ maxWidth: '800px', margin: '32px auto', padding: '0 20px', paddingBottom: '80px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    {quiz.questions.map((q, index) => (
-                        <div key={q.id} style={{
-                            backgroundColor: '#1e293b', borderRadius: '16px', padding: '24px',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
-                        }}>
-                            <div style={{ display: 'flex', gap: '16px' }}>
-                                <div style={{
-                                    minWidth: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#0f172a',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '14px', fontWeight: 700, color: '#94a3b8'
-                                }}>
-                                    {index + 1}
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <p style={{ fontSize: '16px', fontWeight: 500, color: '#e2e8f0', margin: '0 0 16px 0', lineHeight: '1.5' }}>
-                                        {q.question_text}
-                                    </p>
-
-                                    <div style={{ display: 'grid', gap: '12px' }}>
-                                        {['A', 'B', 'C', 'D'].map((opt) => {
-                                            const optionText = q[`option_${opt.toLowerCase()}` as keyof Question] as string;
-                                            const isSelected = answers[q.id] === opt;
-
-                                            return (
-                                                <div
-                                                    key={opt}
-                                                    onClick={() => handleAnswer(q.id, opt)}
-                                                    style={{
-                                                        padding: '12px 16px', borderRadius: '12px', border: '1px solid',
-                                                        borderColor: isSelected ? '#8b5cf6' : '#334155',
-                                                        backgroundColor: isSelected ? 'rgba(139,92,246,0.1)' : '#0f172a',
-                                                        cursor: 'pointer', transition: 'all 0.2s',
-                                                        display: 'flex', alignItems: 'center', gap: '12px'
-                                                    }}
-                                                >
-                                                    <div style={{
-                                                        width: '24px', height: '24px', borderRadius: '50%', border: '2px solid',
-                                                        borderColor: isSelected ? '#8b5cf6' : '#475569',
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        color: isSelected ? '#a78bfa' : '#94a3b8', fontWeight: 600, fontSize: '12px'
-                                                    }}>
-                                                        {opt}
-                                                    </div>
-                                                    <span style={{ fontSize: '14px', color: isSelected ? '#e2e8f0' : '#cbd5e1' }}>{optionText}</span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
+      <div className="sticky bottom-4 mt-6 flex flex-col items-center justify-between gap-3 rounded-[14px] border border-line bg-surface/95 p-4 shadow-[0_16px_50px_rgba(28,52,84,0.16)] backdrop-blur sm:flex-row"><p className="text-sm font-bold text-ink-soft">{unanswered ? `Còn ${unanswered} câu chưa trả lời` : "Em đã trả lời tất cả câu hỏi"}</p><Button onClick={() => setConfirmOpen(true)} disabled={submitting || timeLeft === 0}><Send className="size-4" />Nộp bài</Button></div>
+      <ConfirmDialog open={confirmOpen} title="Nộp bài kiểm tra?" description={unanswered ? `Em còn ${unanswered} câu chưa trả lời. Em vẫn muốn nộp bài?` : "Câu trả lời sẽ được chấm ngay sau khi nộp."} confirmLabel="Nộp bài" tone="primary" busy={submitting} onClose={() => setConfirmOpen(false)} onConfirm={() => void submitQuiz()} />
+    </>
+  );
 }

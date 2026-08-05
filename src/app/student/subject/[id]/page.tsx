@@ -1,379 +1,64 @@
-/* eslint-disable */
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useAuth } from '@/lib/auth';
-import {
-    ArrowLeft, Video, BookOpen, FileText, Brain,
-    Clock, CheckCircle, AlertCircle, Calendar,
-    MessageSquare, ClipboardList, User
-} from 'lucide-react';
-import { API_URL } from '@/lib/api';
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { ArrowRight, BookOpenCheck, Brain, CheckCircle2, Clock3, Mail, Phone, UserRound, Video } from "lucide-react";
 
-interface SubjectDetails {
-    subject: string;
-    class_info: {
-        meeting_link: string | null;
-        online_enabled: boolean;
-        teacher_name: string;
-        teacher_email?: string;
-        teacher_phone?: string;
-        teacher_avatar?: string;
-    } | null;
-    assignments: Array<{
-        id: number;
-        title: string;
-        deadline: string | null;
-        status: string;
-        score: number | null;
-    }>;
-    quizzes: Array<{
-        id: number;
-        title: string;
-        total_questions: number;
-        has_attempted: boolean;
-        score: number | null;
-    }>;
-    notifications: Array<unknown>;
-    surveys: Array<unknown>;
-    // ...
+import { EmptyState, ErrorState } from "@/components/ui/feedback";
+import { Button, PageHeader, Skeleton, Surface } from "@/components/ui/primitives";
+import { getErrorMessage, studentAcademicApi, type SubjectDetails } from "@/lib/api";
+
+type SubjectTab = "overview" | "assignments" | "quizzes";
+
+function formatDate(value?: string | null) {
+  if (!value) return "Không giới hạn";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" }).format(date);
 }
 
-export default function SubjectPage() {
-    const { id } = useParams();
-    const subjectName = decodeURIComponent(id as string);
-    const { token } = useAuth();
-    const router = useRouter();
+export default function StudentSubjectPage() {
+  const params = useParams<{ id: string }>();
+  const subjectName = decodeURIComponent(params.id);
+  const [data, setData] = useState<SubjectDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<SubjectTab>("overview");
 
-    const [data, setData] = useState<SubjectDetails | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'overview' | 'assignments' | 'quizzes'>('overview');
+  const loadSubject = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try { setData(await studentAcademicApi.getSubject(subjectName)); }
+    catch (loadError) { setError(getErrorMessage(loadError, "Không thể tải môn học.")); }
+    finally { setLoading(false); }
+  }, [subjectName]);
 
-    useEffect(() => {
-        const fetchDetails = async () => {
-            try {
-                const response = await fetch(`${API_URL}/api/student/subjects/${encodeURIComponent(subjectName)}`, {
-                    headers: { 'Authorization': `Bearer ${token}` },
-                });
-                if (response.ok) {
-                    const result = await response.json();
-                    setData(result);
-                }
-            } catch (err) {
-                console.error('Failed to fetch subject details:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
+  useEffect(() => { void loadSubject(); }, [loadSubject]);
 
-        if (token && subjectName) {
-            fetchDetails();
-        }
-    }, [token, subjectName]);
+  if (loading) return <><PageHeader title={subjectName} description="Đang tải nội dung môn học..." /><Skeleton className="h-72" /></>;
+  if (error || !data) return <ErrorState title="Không tải được môn học" description={error || "Không tìm thấy dữ liệu môn học."} action={<Button variant="secondary" onClick={() => void loadSubject()}>Thử lại</Button>} />;
 
-    if (loading) {
-        return (
-            <div style={{
-                minHeight: '100vh',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: '#0f172a',
-            }}>
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
-            </div>
-        );
-    }
+  const activeAssignments = data.assignments.filter((item) => item.status !== "submitted").length;
+  const pendingQuizzes = data.quizzes.filter((item) => !item.has_attempted).length;
 
-    if (!data) {
-        return (
-            <div style={{ minHeight: '100vh', padding: '40px', background: '#0f172a', color: 'white' }}>
-                <p>Không tìm thấy thông tin môn học.</p>
-                <button onClick={() => router.back()}>Quay lại</button>
-            </div>
-        );
-    }
+  return (
+    <>
+      <PageHeader title={data.subject} description="Theo dõi giáo viên, bài tập và bài kiểm tra của môn học này." actions={data.class_info?.online_enabled && data.class_info.meeting_link ? <a href={data.class_info.meeting_link.startsWith("http") ? data.class_info.meeting_link : `https://${data.class_info.meeting_link}`} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-emerald-700 px-4 text-sm font-bold text-white hover:bg-emerald-800"><Video className="size-4" />Vào lớp trực tuyến</a> : undefined} />
 
-    return (
-        <div style={{
-            minHeight: '100vh',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
-            color: '#e2e8f0',
-            paddingBottom: '40px'
-        }}>
-            {/* Header */}
-            <div style={{
-                backgroundColor: '#1e293b',
-                padding: '24px',
-                borderBottom: '1px solid #334155',
-                position: 'sticky', top: 0, zIndex: 10
-            }}>
-                <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-                    <button
-                        onClick={() => router.push('/student')}
-                        style={{
-                            background: 'none', border: 'none', color: '#94a3b8',
-                            display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
-                            marginBottom: '16px', fontSize: '14px', fontWeight: 600
-                        }}
-                    >
-                        <ArrowLeft size={18} /> Quay lại Dashboard
-                    </button>
+      <Surface className="mb-6 flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3"><div className="grid size-11 shrink-0 place-items-center rounded-[12px] bg-brand-soft text-brand-strong"><UserRound className="size-5" /></div><div><p className="text-xs font-bold uppercase tracking-[0.06em] text-ink-soft">Giáo viên phụ trách</p><h2 className="mt-1 font-extrabold text-ink">{data.class_info?.teacher_name || "Chưa phân công"}</h2></div></div>
+        <div className="flex flex-wrap gap-2">{data.class_info?.teacher_email && <a className="inline-flex min-h-10 items-center gap-2 rounded-[10px] border border-line px-3 text-sm font-bold text-ink hover:bg-surface-subtle" href={`mailto:${data.class_info.teacher_email}`}><Mail className="size-4" />Email</a>}{data.class_info?.teacher_phone && <a className="inline-flex min-h-10 items-center gap-2 rounded-[10px] border border-line px-3 text-sm font-bold text-ink hover:bg-surface-subtle" href={`tel:${data.class_info.teacher_phone}`}><Phone className="size-4" />Gọi điện</a>}</div>
+      </Surface>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexWrap: 'wrap', gap: '24px' }}>
-                        <div>
-                            <h1 style={{ fontSize: '32px', fontWeight: 800, color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <BookOpen size={32} color="#60a5fa" />
-                                {data.subject}
-                            </h1>
+      <div className="mb-5 flex gap-1 overflow-x-auto rounded-[12px] border border-line bg-surface p-1" role="tablist" aria-label="Nội dung môn học">{[
+        ["overview", "Tổng quan"], ["assignments", `Bài tập (${data.assignments.length})`], ["quizzes", `Kiểm tra (${data.quizzes.length})`],
+      ].map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={tab === key} onClick={() => setTab(key as SubjectTab)} className={`min-h-10 whitespace-nowrap rounded-[9px] px-4 text-sm font-bold transition-colors ${tab === key ? "bg-brand text-white" : "text-ink-soft hover:bg-surface-subtle hover:text-ink"}`}>{label}</button>)}</div>
 
-                            {/* Teacher Info Card */}
-                            <div style={{
-                                display: 'flex', alignItems: 'center', gap: '16px', marginTop: '16px',
-                                backgroundColor: 'rgba(51, 65, 85, 0.5)', padding: '12px 20px', borderRadius: '16px',
-                                border: '1px solid rgba(148, 163, 184, 0.2)'
-                            }}>
-                                <div style={{
-                                    width: '48px', height: '48px', borderRadius: '50%',
-                                    backgroundColor: '#475569', overflow: 'hidden',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}>
-                                    {data.class_info?.teacher_avatar ? (
-                                        <img src={`${API_URL}${data.class_info.teacher_avatar}`} alt="GV" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    ) : (
-                                        <User size={24} color="#94a3b8" />
-                                    )}
-                                </div>
-                                <div>
-                                    <p style={{ color: '#e2e8f0', margin: 0, fontWeight: 700, fontSize: '16px' }}>
-                                        {data.class_info?.teacher_name || '...'}
-                                    </p>
-                                    <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
-                                        {data.class_info?.teacher_phone && (
-                                            <a href={`tel:${data.class_info.teacher_phone}`} style={{
-                                                color: '#94a3b8', fontSize: '13px', textDecoration: 'none',
-                                                display: 'flex', alignItems: 'center', gap: '4px',
-                                                transition: 'color 0.2s'
-                                            }} className="hover:text-blue-400">
-                                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e' }}></div>
-                                                {data.class_info.teacher_phone}
-                                            </a>
-                                        )}
-                                        {data.class_info?.teacher_email && (
-                                            <a href={`mailto:${data.class_info.teacher_email}`} style={{
-                                                color: '#94a3b8', fontSize: '13px', textDecoration: 'none',
-                                                display: 'flex', alignItems: 'center', gap: '4px'
-                                            }}>
-                                                • {data.class_info.teacher_email}
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+      {tab === "overview" && <div className="grid gap-4 md:grid-cols-2"><Surface className="p-5"><div className="flex items-start justify-between"><div><p className="text-sm font-bold text-ink-soft">Bài tập cần làm</p><p className="mt-3 text-3xl font-extrabold text-ink">{activeAssignments}</p></div><div className="grid size-11 place-items-center rounded-[12px] bg-brand-soft text-brand-strong"><BookOpenCheck className="size-5" /></div></div><Button className="mt-5" variant="secondary" onClick={() => setTab("assignments")}>Xem bài tập <ArrowRight className="size-4" /></Button></Surface><Surface className="p-5"><div className="flex items-start justify-between"><div><p className="text-sm font-bold text-ink-soft">Kiểm tra chưa làm</p><p className="mt-3 text-3xl font-extrabold text-ink">{pendingQuizzes}</p></div><div className="grid size-11 place-items-center rounded-[12px] bg-brand-soft text-brand-strong"><Brain className="size-5" /></div></div><Button className="mt-5" variant="secondary" onClick={() => setTab("quizzes")}>Xem bài kiểm tra <ArrowRight className="size-4" /></Button></Surface></div>}
 
-                        {data.class_info?.online_enabled && data.class_info.meeting_link && (
-                            <a
-                                href={data.class_info.meeting_link.startsWith('http') ? data.class_info.meeting_link : `https://${data.class_info.meeting_link}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '10px',
-                                    backgroundColor: '#059669', color: 'white',
-                                    padding: '12px 24px', borderRadius: '12px',
-                                    textDecoration: 'none', fontWeight: 700,
-                                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.4)',
-                                    animation: 'pulse 2s infinite',
-                                    height: 'fit-content',
-                                    alignSelf: 'center'
-                                }}
-                            >
-                                <Video size={20} />
-                                Vào lớp Online
-                            </a>
-                        )}
-                    </div>
-                </div>
-            </div>
+      {tab === "assignments" && (data.assignments.length ? <div className="grid gap-3">{data.assignments.map((assignment) => <Surface key={assignment.id} className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="font-extrabold text-ink">{assignment.title}</h3><p className="mt-2 flex items-center gap-2 text-sm text-ink-soft"><Clock3 className="size-4" />Hạn nộp: {formatDate(assignment.deadline)}</p></div>{assignment.status === "submitted" ? <div className="text-sm font-bold text-success"><span className="inline-flex items-center gap-2"><CheckCircle2 className="size-4" />Đã nộp</span>{assignment.score !== null && <p className="mt-1 text-right text-lg">{assignment.score} điểm</p>}</div> : <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] bg-brand px-4 text-sm font-bold text-white hover:bg-brand-strong" href={`/student/assignment/${assignment.id}`}>Làm bài <ArrowRight className="size-4" /></Link>}</Surface>)}</div> : <EmptyState title="Chưa có bài tập" description="Giáo viên chưa giao bài tập cho môn học này." icon={BookOpenCheck} />)}
 
-            <div style={{ maxWidth: '1000px', margin: '32px auto', padding: '0 24px' }}>
-                {/* Tabs */}
-                <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', borderBottom: '1px solid #334155' }}>
-                    {[
-                        { id: 'overview', label: 'Tổng quan', icon: ClipboardList },
-                        { id: 'assignments', label: 'Bài tập', icon: FileText },
-                        { id: 'quizzes', label: 'Kiểm tra', icon: Brain },
-                    ].map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as 'overview' | 'assignments' | 'quizzes')}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '8px',
-                                padding: '12px 20px',
-                                background: 'none', border: 'none',
-                                borderBottom: activeTab === tab.id ? '3px solid #60a5fa' : '3px solid transparent',
-                                color: activeTab === tab.id ? 'white' : '#94a3b8',
-                                fontSize: '16px', fontWeight: 600, cursor: 'pointer',
-                                transition: 'all 0.2s'
-                            }}
-                        >
-                            <tab.icon size={18} />
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Content */}
-                {activeTab === 'overview' && (
-                    <div style={{ display: 'grid', gap: '24px' }}>
-                        {/* Notifications Placeholder */}
-                        <div style={{
-                            backgroundColor: '#1e293b', borderRadius: '16px', padding: '24px',
-                            border: '1px solid #334155'
-                        }}>
-                            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <AlertCircle size={20} color="#fbbf24" />
-                                Thông báo & Nhắc nhở
-                            </h3>
-                            {data.notifications.length > 0 ? (
-                                <div>Let&apos;s list notifications here...</div>
-                            ) : (
-                                <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>Không có thông báo mới từ giáo viên.</p>
-                            )}
-                        </div>
-
-                        {/* Surveys Placeholder */}
-                        <div style={{
-                            backgroundColor: '#1e293b', borderRadius: '16px', padding: '24px',
-                            border: '1px solid #334155'
-                        }}>
-                            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <MessageSquare size={20} color="#f472b6" />
-                                Khảo sát ý kiến
-                            </h3>
-                            <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>Không có khảo sát nào đang mở.</p>
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === 'assignments' && (
-                    <div style={{ display: 'grid', gap: '16px' }}>
-                        {data.assignments.length > 0 ? (
-                            data.assignments.map(assign => (
-                                <div key={assign.id} style={{
-                                    backgroundColor: '#1e293b', padding: '20px', borderRadius: '16px',
-                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                    border: '1px solid #334155'
-                                }}>
-                                    <div>
-                                        <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'white', marginBottom: '4px' }}>
-                                            {assign.title}
-                                        </h3>
-                                        <div style={{ display: 'flex', gap: '12px', color: '#94a3b8', fontSize: '14px' }}>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                <Clock size={14} />
-                                                Hạn: {assign.deadline ? new Date(assign.deadline).toLocaleDateString('vi-VN') : 'Không giới hạn'}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div style={{ textAlign: 'right' }}>
-                                        {assign.status === 'submitted' ? (
-                                            <div>
-                                                <span style={{ color: '#34d399', fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'end' }}>
-                                                    <CheckCircle size={14} /> Đã nộp
-                                                </span>
-                                                {assign.score !== null && (
-                                                    <div style={{ fontSize: '18px', fontWeight: 800, color: '#34d399', marginTop: '4px' }}>
-                                                        {assign.score} điểm
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <Link href={`/student/assignment/${assign.id}`} style={{
-                                                padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white',
-                                                borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '14px'
-                                            }}>
-                                                Làm bài
-                                            </Link>
-                                        )}
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
-                                Chưa có bài tập nào.
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {activeTab === 'quizzes' && (
-                    <div style={{ display: 'grid', gap: '16px' }}>
-                        {data.quizzes.length > 0 ? (
-                            data.quizzes.map(quiz => (
-                                <div key={quiz.id} style={{
-                                    backgroundColor: '#1e293b', padding: '20px', borderRadius: '16px',
-                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                    border: '1px solid #334155'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                        <div style={{
-                                            width: '48px', height: '48px', borderRadius: '12px',
-                                            backgroundColor: 'rgba(139, 92, 246, 0.15)', color: '#8b5cf6',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                        }}>
-                                            <Brain size={24} />
-                                        </div>
-                                        <div>
-                                            <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'white', marginBottom: '4px' }}>
-                                                {quiz.title}
-                                            </h3>
-                                            <p style={{ color: '#94a3b8', fontSize: '14px', margin: 0 }}>
-                                                {quiz.total_questions} câu hỏi
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        {quiz.has_attempted ? (
-                                            <div style={{ textAlign: 'right' }}>
-                                                <span style={{ color: '#34d399', fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'end' }}>
-                                                    <CheckCircle size={14} /> Hoàn thành
-                                                </span>
-                                                {quiz.score !== null && (
-                                                    <div style={{ fontSize: '18px', fontWeight: 800, color: '#34d399', marginTop: '4px' }}>
-                                                        {quiz.score}%
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <Link href={`/student/quiz/${quiz.id}`} style={{
-                                                padding: '8px 16px', backgroundColor: '#8b5cf6', color: 'white',
-                                                borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '14px'
-                                            }}>
-                                                Vào kiểm tra
-                                            </Link>
-                                        )}
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
-                                Chưa có bài kiểm tra nào.
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            <style jsx>{`
-                @keyframes pulse {
-                    0% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7); }
-                    70% { box-shadow: 0 0 0 10px rgba(5, 150, 105, 0); }
-                    100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
-                }
-            `}</style>
-        </div>
-    );
+      {tab === "quizzes" && (data.quizzes.length ? <div className="grid gap-3">{data.quizzes.map((quiz) => <Surface key={quiz.id} className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="font-extrabold text-ink">{quiz.title}</h3><p className="mt-2 text-sm text-ink-soft">{quiz.total_questions} câu hỏi</p></div>{quiz.has_attempted ? <div className="text-sm font-bold text-success"><span className="inline-flex items-center gap-2"><CheckCircle2 className="size-4" />Đã hoàn thành</span>{quiz.score !== null && <p className="mt-1 text-right text-lg">{quiz.score}%</p>}</div> : <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] bg-brand px-4 text-sm font-bold text-white hover:bg-brand-strong" href={`/student/quiz/${quiz.id}`}>Vào kiểm tra <ArrowRight className="size-4" /></Link>}</Surface>)}</div> : <EmptyState title="Chưa có bài kiểm tra" description="Giáo viên chưa mở bài kiểm tra cho môn học này." icon={Brain} />)}
+    </>
+  );
 }

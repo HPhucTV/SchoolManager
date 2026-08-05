@@ -1,157 +1,84 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import MetricCard from '@/components/dashboard/MetricCard';
-import RecentActivities from '@/components/dashboard/RecentActivities';
-import Notifications from '@/components/dashboard/Notifications';
-import FeaturedClass from '@/components/dashboard/FeaturedClass';
-import { Smile, Heart, Brain, CalendarDays } from 'lucide-react';
-import { dashboardApi, DashboardMetrics } from '@/lib/api';
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { ArrowRight, BookOpenCheck, Brain, CalendarDays, Heart, School, Smile, Users } from "lucide-react";
 
-export default function Dashboard() {
+import { dashboardApi, getErrorMessage, type DashboardMetrics } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { ErrorState } from "@/components/ui/feedback";
+import { Button, PageHeader, Skeleton, Surface } from "@/components/ui/primitives";
+
+const metricConfig = [
+  { key: "happiness" as const, label: "Mức độ hạnh phúc", icon: Smile },
+  { key: "engagement" as const, label: "Mức độ gắn kết", icon: Heart },
+  { key: "mental_health" as const, label: "Sức khỏe tinh thần", icon: Brain },
+];
+
+const quickActions = [
+  { href: "/teacher/lop-hoc", label: "Quản lý lớp học", description: "Xem lớp, học sinh và hoạt động gần đây.", icon: School },
+  { href: "/teacher/bai-tap", label: "Giao bài tập", description: "Tạo bài, theo dõi lượt nộp và chấm điểm.", icon: BookOpenCheck },
+  { href: "/teacher/kiem-tra", label: "Tạo bài kiểm tra", description: "Quản lý đề kiểm tra và trạng thái phát hành.", icon: Users },
+  { href: "/teacher/thoi-khoa-bieu", label: "Thời khóa biểu", description: "Sắp xếp lịch dạy theo lớp và môn học.", icon: CalendarDays },
+];
+
+export default function TeacherDashboard() {
+  const { user } = useAuth();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        const data = await dashboardApi.getMetrics();
-        setMetrics(data);
-      } catch (err) {
-        console.error('Failed to fetch metrics:', err);
-        setError('Không thể tải dữ liệu');
-        // Fallback to default values
-        setMetrics({
-          happiness: { value: '87%', change: '↑ 5% so với tuần trước', change_type: 'positive' },
-          engagement: { value: '92%', change: '↑ 8% so với tuần trước', change_type: 'positive' },
-          mental_health: { value: '85%', change: '↓ 2% so với tuần trước', change_type: 'negative' },
-          activities: { value: '12/15', subtitle: '✓ Hoàn thành 80%' },
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMetrics();
+  const loadMetrics = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setMetrics(await dashboardApi.getMetrics());
+    } catch (loadError) {
+      setError(getErrorMessage(loadError, "Không thể tải dữ liệu tổng quan."));
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-        <div style={{
-          width: '48px',
-          height: '48px',
-          border: '4px solid #e5e7eb',
-          borderTopColor: '#14b8a6',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }} />
-        <style jsx>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
-  }
+  useEffect(() => {
+    void loadMetrics();
+  }, [loadMetrics]);
 
   return (
-    <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
-      {error && (
-        <div style={{
-          marginBottom: '16px',
-          padding: '12px 16px',
-          backgroundColor: 'rgba(251, 191, 36, 0.15)',
-          borderRadius: '8px',
-          color: '#fbbf24',
-          fontSize: '14px'
-        }}>
-          ⚠️ {error} - Đang hiển thị dữ liệu mẫu
-        </div>
+    <>
+      <PageHeader title={`Chào ${user?.name || "thầy cô"}`} description="Theo dõi tín hiệu lớp học và đi nhanh đến các tác vụ giảng dạy thường dùng." />
+
+      {error ? (
+        <ErrorState title="Không tải được tổng quan" description={error} action={<Button variant="secondary" onClick={() => void loadMetrics()}>Thử lại</Button>} />
+      ) : (
+        <section aria-labelledby="teacher-metrics-title">
+          <div className="mb-3 flex items-center justify-between"><h2 id="teacher-metrics-title" className="text-base font-extrabold text-ink">Tín hiệu lớp học</h2><span className="text-xs text-ink-soft">Dữ liệu mới nhất từ hệ thống</span></div>
+          <Surface className="grid overflow-hidden sm:grid-cols-2 xl:grid-cols-4">
+            {loading ? Array.from({ length: 4 }, (_, index) => <div key={index} className="border-b border-line p-5 sm:border-r xl:border-b-0"><Skeleton className="h-24" /></div>) : (
+              <>
+                {metricConfig.map(({ key, label, icon: Icon }) => {
+                  const metric = metrics?.[key];
+                  return <div key={key} className="border-b border-line p-5 sm:border-r xl:border-b-0"><div className="flex items-start justify-between"><div><p className="text-sm font-bold text-ink-soft">{label}</p><p className="mt-3 text-3xl font-extrabold tracking-[-0.04em] text-ink">{metric?.value || "Chưa có"}</p></div><div className="grid size-11 place-items-center rounded-[12px] bg-brand-soft text-brand-strong"><Icon className="size-5" /></div></div><p className="mt-3 text-xs leading-5 text-ink-soft">{metric?.change || "Chưa đủ dữ liệu so sánh"}</p></div>;
+                })}
+                <div className="p-5"><div className="flex items-start justify-between"><div><p className="text-sm font-bold text-ink-soft">Hoạt động tuần này</p><p className="mt-3 text-3xl font-extrabold tracking-[-0.04em] text-ink">{metrics?.activities.value || "Chưa có"}</p></div><div className="grid size-11 place-items-center rounded-[12px] bg-brand-soft text-brand-strong"><CalendarDays className="size-5" /></div></div><p className="mt-3 text-xs leading-5 text-ink-soft">{metrics?.activities.subtitle || "Chưa có hoạt động được ghi nhận"}</p></div>
+              </>
+            )}
+          </Surface>
+        </section>
       )}
 
-      {/* Metric Cards */}
-      <div className="metric-grid" style={{
-        display: 'grid',
-        gap: '16px',
-        marginBottom: '20px',
-      }}>
-        <style jsx global>{`
-          .metric-grid {
-            grid-template-columns: repeat(4, 1fr);
-          }
-          @media (max-width: 1024px) {
-            .metric-grid {
-              grid-template-columns: repeat(2, 1fr);
-            }
-          }
-          @media (max-width: 640px) {
-            .metric-grid {
-              grid-template-columns: 1fr;
-            }
-          }
-          .bottom-grid {
-            grid-template-columns: 1.5fr 1fr;
-          }
-          @media (max-width: 1024px) {
-            .bottom-grid {
-              grid-template-columns: 1fr;
-            }
-          }
-        `}</style>
-        <MetricCard
-          title="Mức độ Sôi nổi"
-          value={metrics?.happiness.value || '87%'}
-          change={metrics?.happiness.change || '↑ 5% so với tuần trước'}
-          changeType={metrics?.happiness.change_type as 'positive' | 'negative' | 'neutral' || 'positive'}
-          icon={Smile}
-          iconBgColor="linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)"
-          valueColor="#34d399"
-          onClick={() => window.location.href = '/teacher/thong-ke'}
-        />
-        <MetricCard
-          title="Mức độ Gắn kết"
-          value={metrics?.engagement.value || '92%'}
-          change={metrics?.engagement.change || '↑ 8% so với tuần trước'}
-          changeType={metrics?.engagement.change_type as 'positive' | 'negative' | 'neutral' || 'positive'}
-          icon={Heart}
-          iconBgColor="linear-gradient(135deg, #f472b6 0%, #ec4899 100%)"
-          valueColor="#34d399"
-        />
-        <MetricCard
-          title="Sức khỏe Tinh thần"
-          value={metrics?.mental_health.value || '85%'}
-          change={metrics?.mental_health.change || '↓ 2% so với tuần trước'}
-          changeType={metrics?.mental_health.change_type as 'positive' | 'negative' | 'neutral' || 'negative'}
-          icon={Brain}
-          iconBgColor="linear-gradient(135deg, #fb923c 0%, #f97316 100%)"
-          valueColor="#34d399"
-        />
-        <MetricCard
-          title="Hoạt động Tuần này"
-          value={metrics?.activities.value || '12/15'}
-          subtitle={metrics?.activities.subtitle || '✓ Hoàn thành 80%'}
-          icon={CalendarDays}
-          iconBgColor="linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)"
-          valueColor="#818cf8"
-        />
-      </div>
-
-      {/* Bottom Section */}
-      <div className="bottom-grid" style={{
-        display: 'grid',
-        gap: '16px',
-      }}>
-        {/* Recent Activities */}
-        <RecentActivities />
-
-        {/* Right Sidebar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Notifications />
-          <FeaturedClass />
+      <section className="mt-7" aria-labelledby="teacher-actions-title">
+        <h2 id="teacher-actions-title" className="text-base font-extrabold text-ink">Tác vụ giảng dạy</h2>
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          {quickActions.map((action) => (
+            <Link key={action.href} href={action.href} className="group flex items-center gap-4 rounded-[14px] border border-line bg-surface p-5 transition-[border-color,transform,box-shadow] hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-[0_12px_30px_rgba(28,52,84,0.07)]">
+              <div className="grid size-11 shrink-0 place-items-center rounded-[12px] bg-brand-soft text-brand-strong"><action.icon className="size-5" /></div>
+              <div className="min-w-0 flex-1"><h3 className="font-extrabold text-ink">{action.label}</h3><p className="mt-1 text-sm leading-6 text-ink-soft">{action.description}</p></div>
+              <ArrowRight className="size-5 shrink-0 text-ink-soft transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          ))}
         </div>
-      </div>
-    </div>
+      </section>
+    </>
   );
 }

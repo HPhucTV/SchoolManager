@@ -346,15 +346,19 @@ Lát cắt đầu tiên đã hoàn thành và có evidence chạy local:
 |---|---|---|
 | Safety baseline | Hoàn thành | Shared authorization policy, secret fail-fast, scoped RBAC, upload validation |
 | Dependency hygiene | Hoàn thành | `pip-audit` và `npm audit` đều báo 0 vulnerability đã biết |
-| Backend policy tests | Hoàn thành | 10 test pass cho role, class scope, answer visibility, schedule và search |
+| Backend policy và workflow tests | Hoàn thành | 14 test pass cho role, class scope, answer visibility và CRUD Admin/coursework/quiz/schedule |
 | CI | Hoàn thành | Frontend audit/lint/build; backend audit/pytest |
 | Design foundation | Hoàn thành | Campus Blue tokens, Be Vietnam Pro, Button, Surface, states và `RoleShell` |
 | Pilot screens | Hoàn thành | Landing, login, Admin Overview responsive; public/auth hỗ trợ system dark mode |
 | Browser smoke | Hoàn thành | 7 ảnh baseline, không console error, không tràn ngang |
+| Core school workflows | Hoàn thành | Admin people/classes; Teacher classes/assignments/quizzes/schedule; Student dashboard/subjects/coursework/schedule |
+| Frontend API seam | Hoàn thành | `apiRequest`, `ApiError` và module academic/admin/coursework/extensions; `src/lib/api.ts` chỉ còn compatibility facade |
+| Workflow primitives | Hoàn thành | DataTable, FilterToolbar, Pagination, Field, Dialog và ConfirmDialog có keyboard/focus behavior chung |
+| Phase 2 browser smoke | Hoàn thành | 3 role trên production build, desktop/mobile, dialog/drawer, không console error hoặc tràn ngang |
 
 Các giới hạn còn chủ động giữ lại:
 
-- `RoleShell` mới đang được dùng ở Admin; Teacher và Student sẽ migrate trong giai đoạn 2 để tránh một diff không thể review.
+- `RoleShell` hiện được dùng cho cả Admin, Teacher và Student. Các feature wellbeing, gamification và mini-game chuyên biệt vẫn được giữ cho giai đoạn 4.
 - Alembic hiện là adoption baseline cho các cột quiz cũ, chưa phải lịch sử khởi tạo toàn bộ schema.
 - Pytest còn một `StarletteDeprecationWarning` từ FastAPI TestClient về lớp tương thích `httpx`; mã ứng dụng không còn cảnh báo `class Config` của Pydantic v2.
 - Certificate đã bị xóa khỏi working tree nhưng vẫn tồn tại trong Git history cũ. Người vận hành phải thu hồi và cấp lại certificate bên ngoài repo.

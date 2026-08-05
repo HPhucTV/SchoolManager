@@ -1,599 +1,177 @@
-/* eslint-disable */
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useAuth } from '@/lib/auth';
-import { Plus, Users, ArrowRight, GraduationCap, Calendar, Clock, MoreVertical, Search, Filter, BookOpen } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowRight, BookOpen, Copy, GraduationCap, Plus, Users, Video } from "lucide-react";
+import toast from "react-hot-toast";
+
+import { apiRequest, getErrorMessage } from "@/lib/api";
+import { Dialog, EmptyState, ErrorState } from "@/components/ui/feedback";
+import { Field, Input, Select } from "@/components/ui/forms";
+import { Button, PageHeader, Skeleton, Surface } from "@/components/ui/primitives";
+import { FilterToolbar } from "@/components/ui/workflow";
 
 interface ClassData {
-    id: number;
-    name: string;
-    grade: string | null;
-    created_at: string;
-    happiness_score: number;
-    engagement_score: number;
-    mental_health_score: number;
-    student_count?: number; // Optional if not returned by list endpoint yet
-    teacher_id?: number;
-    is_online_session_active?: boolean;
-    meeting_link?: string;
-    class_code?: string;
-    online_enabled?: boolean;
+  id: number;
+  name: string;
+  grade: string | null;
+  created_at: string;
+  happiness_score: number;
+  engagement_score: number;
+  mental_health_score: number;
+  student_count?: number;
+  meeting_link?: string;
+  class_code?: string;
+  online_enabled?: boolean;
 }
 
-import { API_URL } from '@/lib/api';
-
 export default function ClassListPage() {
-    const { token, user } = useAuth();
-    const router = useRouter();
-    const [classes, setClasses] = useState<ClassData[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [createdClass, setCreatedClass] = useState<ClassData | null>(null);
-    const [newClassData, setNewClassData] = useState({ name: '', grade: '', online_enabled: false });
-    const [creating, setCreating] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
+  const [classes, setClasses] = useState<ClassData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [createdClass, setCreatedClass] = useState<ClassData | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({ name: "", grade: "", online_enabled: false });
 
-    const fetchClasses = useCallback(async () => {
-        if (!token) return; // Ensure token exists before fetching
-        try {
-            setLoading(true);
-            const response = await fetch(`${API_URL}/api/classes`, {
-                cache: 'no-store',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setClasses(data);
-            }
-        } catch (error) {
-            console.error('Failed to fetch classes:', error);
-            toast.error('Không thể tải danh sách lớp học');
-        } finally {
-            setLoading(false);
-        }
-    }, [token]);
-
-    useEffect(() => {
-        if (token) {
-            fetchClasses();
-        } else {
-            // If there's no token, we might not be logged in or still loading auth.
-            // But we shouldn't stay in loading state forever if token never comes.
-            // Ideally useAuth controls unauthenticated redirects, so we just wait for token.
-            const timeoutId = setTimeout(() => {
-                if (!token && loading) setLoading(false);
-            }, 5000);
-            return () => clearTimeout(timeoutId);
-        }
-    }, [fetchClasses, token]);
-
-    const handleCreateClass = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newClassData.name) {
-            toast.error('Vui lòng nhập tên lớp học');
-            return;
-        }
-
-        try {
-            setCreating(true);
-            console.log('[CREATE CLASS] Starting creation...', newClassData);
-
-            const response = await fetch(`${API_URL}/api/classes`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(newClassData)
-            });
-
-            console.log('[CREATE CLASS] Response Status:', response.status);
-
-            if (response.ok) {
-                const newClass = await response.json();
-                console.log('[CREATE CLASS] Created Successfully:', newClass);
-                toast.success('Tạo lớp học thành công!');
-                // setShowCreateModal(false); // Do not close immediately
-                setCreatedClass(newClass);
-                setNewClassData({ name: '', grade: '', online_enabled: false });
-                setClasses(prev => [newClass, ...prev]);
-                fetchClasses(); // Refresh list
-            } else {
-                const errorText = await response.text();
-                console.error('[CREATE CLASS] Failed:', errorText);
-                toast.error(`Không thể tạo lớp học: ${response.status}`);
-            }
-        } catch (error) {
-            console.error('[CREATE CLASS] Network Error:', error);
-            toast.error('Lỗi kết nối tới máy chủ');
-        } finally {
-            setCreating(false);
-        }
-    };
-
-    const filteredClasses = classes.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (c.grade && c.grade.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-
-    if (loading) {
-        return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-            </div>
-        );
+  const loadClasses = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setClasses(await apiRequest<ClassData[]>("/api/classes", { cache: "no-store" }));
+    } catch (loadError) {
+      setError(getErrorMessage(loadError, "Không thể tải danh sách lớp học."));
+    } finally {
+      setLoading(false);
     }
+  }, []);
 
-    return (
-        <div style={{
-            paddingBottom: '40px',
-            width: '100%',
-            overflow: 'visible'
-        }}>
-            {/* Header */}
-            <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '32px'
-            }}>
-                <div>
-                    <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>
-                        Quản lý Lớp học
-                    </h1>
-                    <p style={{ color: '#94a3b8', marginTop: '4px' }}>
-                        Danh sách các lớp học bạn đang phụ trách
-                    </p>
-                </div>
-                <button
-                    onClick={() => setShowCreateModal(true)}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '12px 24px',
-                        backgroundColor: '#14b8a6',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '12px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 6px -1px rgba(34, 197, 94, 0.4)',
-                        transition: 'all 0.2s'
-                    }}
-                >
-                    <Plus size={20} />
-                    Tạo lớp học mới
-                </button>
-            </div>
+  useEffect(() => {
+    void loadClasses();
+  }, [loadClasses]);
 
-            {/* Filters */}
-            <div style={{
-                display: 'flex',
-                gap: '16px',
-                marginBottom: '24px',
-                backgroundColor: '#1e293b',
-                padding: '16px',
-                borderRadius: '16px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-            }}>
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    flex: 1,
-                    backgroundColor: '#0f172a',
-                    padding: '10px 16px',
-                    borderRadius: '12px',
-                    border: '1px solid #334155'
-                }}>
-                    <Search size={20} color="#9ca3af" />
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm lớp học..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            border: 'none',
-                            outline: 'none',
-                            backgroundColor: 'transparent',
-                            width: '100%',
-                            fontSize: '14px'
-                        }}
-                    />
-                </div>
-                {/* Add more filters if needed */}
-            </div>
+  const filteredClasses = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase("vi");
+    if (!query) return classes;
+    return classes.filter((schoolClass) => `${schoolClass.name} ${schoolClass.grade || ""}`.toLocaleLowerCase("vi").includes(query));
+  }, [classes, search]);
 
-            {/* Class Grid */}
-            {filteredClasses.length > 0 ? (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-                    gap: '24px',
-                    width: '100%',
-                    boxSizing: 'border-box'
-                }}>
-                    {filteredClasses.map((cls) => (
-                        <div key={cls.id} style={{
-                            backgroundColor: '#1e293b',
-                            borderRadius: '20px',
-                            padding: '24px',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-                            border: '1px solid #334155',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
-                            cursor: 'pointer'
-                        }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateY(-4px)';
-                                e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'none';
-                                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
-                            }}
-                            onClick={() => router.push(`/teacher/lop-hoc/${cls.id}`)}
-                        >
-                            <div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                                    <div style={{
-                                        width: '48px',
-                                        height: '48px',
-                                        borderRadius: '12px',
-                                        backgroundColor: 'rgba(52, 211, 153, 0.15)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}>
-                                        <GraduationCap size={24} color="#16a34a" />
-                                    </div>
-                                    <div style={{
-                                        padding: '6px 12px',
-                                        borderRadius: '20px',
-                                        fontSize: '12px',
-                                        fontWeight: 600,
-                                        backgroundColor: '#0f172a',
-                                        color: '#94a3b8'
-                                    }}>
-                                        {cls.grade ? `Khối ${cls.grade}` : 'Chưa phân khối'}
-                                    </div>
-                                </div>
+  const createClass = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setCreating(true);
+    try {
+      const newClass = await apiRequest<ClassData>("/api/classes", { method: "POST", body: JSON.stringify(form) });
+      setCreatedClass(newClass);
+      setClasses((current) => [newClass, ...current.filter((item) => item.id !== newClass.id)]);
+      setForm({ name: "", grade: "", online_enabled: false });
+      toast.success("Đã tạo lớp học.");
+    } catch (createError) {
+      toast.error(getErrorMessage(createError, "Không thể tạo lớp học."));
+    } finally {
+      setCreating(false);
+    }
+  };
 
-                                <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#e2e8f0', marginBottom: '8px' }}>
-                                    {cls.name}
-                                </h3>
+  const closeDialog = () => {
+    if (creating) return;
+    setDialogOpen(false);
+    setCreatedClass(null);
+  };
 
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', color: '#94a3b8', fontSize: '14px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <Users size={16} />
-                                        <span>35 Học sinh</span> {/* Mock data if undefined */}
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <Calendar size={16} />
-                                        <span>HK1 - 2025</span>
-                                    </div>
-                                </div>
+  const copyText = async (value: string, label: string) => {
+    await navigator.clipboard.writeText(value);
+    toast.success(`Đã sao chép ${label}.`);
+  };
 
-                                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                                    {[
-                                        { label: 'Hạnh phúc', value: cls.happiness_score, color: '#fbbf24' },
-                                        { label: 'Gắn kết', value: cls.engagement_score, color: '#ec4899' },
-                                        { label: 'Tinh thần', value: cls.mental_health_score, color: '#f97316' }
-                                    ].map(stat => (
-                                        <div key={stat.label} style={{
-                                            flex: 1,
-                                            backgroundColor: '#0f172a',
-                                            borderRadius: '8px',
-                                            padding: '8px',
-                                            textAlign: 'center'
-                                        }}>
-                                            <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '2px' }}>{stat.label}</div>
-                                            <div style={{ fontSize: '14px', fontWeight: 700, color: stat.color }}>{Number(stat.value)}%</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+  const joinLink = createdClass?.class_code && typeof window !== "undefined"
+    ? `${window.location.origin}/join?code=${createdClass.class_code}`
+    : "";
 
-                            <div style={{
-                                paddingTop: '16px',
-                                borderTop: '1px solid #f3f4f6',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center'
-                            }}>
-                                <span style={{ fontSize: '13px', color: '#64748b' }}>
-                                    Cập nhật 2 giờ trước
-                                </span>
-                                <span style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    color: '#14b8a6',
-                                    fontSize: '14px',
-                                    fontWeight: 600
-                                }}>
-                                    Xem chi tiết <ArrowRight size={16} />
-                                </span>
+  return (
+    <>
+      <PageHeader
+        title="Lớp học của tôi"
+        description="Quản lý học sinh, nội dung học tập và lớp trực tuyến theo từng lớp phụ trách."
+        actions={<Button onClick={() => setDialogOpen(true)}><Plus className="size-4" />Tạo lớp học</Button>}
+      />
 
-                            </div>
-
-                            {/* Online Class Button */}
-                            {
-                                cls.meeting_link && (
-                                    <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #e5e7eb' }}>
-                                        <a
-                                            href={cls.meeting_link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            onClick={(e) => e.stopPropagation()}
-                                            style={{
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                                padding: '10px', borderRadius: '10px',
-                                                backgroundColor: '#eef2ff', color: '#4f46e5',
-                                                textDecoration: 'none', fontWeight: 600, fontSize: '14px',
-                                                transition: 'background-color 0.2s'
-                                            }}
-                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e0e7ff'}
-                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#eef2ff'}
-                                        >
-                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#14b8a6' }}></div>
-                                            Vào lớp học Online
-                                        </a>
-                                    </div>
-                                )
-                            }
-                        </div>
-                    ))}
-                </div>
+      {error ? (
+        <ErrorState title="Không tải được lớp học" description={error} action={<Button variant="secondary" onClick={() => void loadClasses()}>Thử lại</Button>} />
+      ) : (
+        <Surface className="overflow-hidden">
+          <FilterToolbar searchValue={search} onSearchChange={setSearch} searchLabel="Tìm theo tên hoặc khối lớp" />
+          <div className="p-4 sm:p-5">
+            {loading ? (
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="h-64" />)}
+              </div>
+            ) : filteredClasses.length === 0 ? (
+              <EmptyState title="Chưa có lớp học" description="Tạo lớp đầu tiên để giao bài và theo dõi học sinh." action={<Button onClick={() => setDialogOpen(true)}>Tạo lớp học</Button>} icon={BookOpen} />
             ) : (
-                <div style={{
-                    textAlign: 'center',
-                    padding: '60px 20px',
-                    backgroundColor: '#1e293b',
-                    borderRadius: '24px',
-                    border: '2px dashed #e5e7eb'
-                }}>
-                    <div style={{
-                        width: '64px',
-                        height: '64px',
-                        backgroundColor: '#0f172a',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: '0 auto 16px'
-                    }}>
-                        <BookOpen size={32} color="#9ca3af" />
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {filteredClasses.map((schoolClass) => (
+                  <article key={schoolClass.id} className="flex min-h-64 flex-col rounded-[14px] border border-line bg-surface p-5 transition-[border-color,transform,box-shadow] hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-[0_14px_34px_rgba(28,52,84,0.08)]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="grid size-11 place-items-center rounded-[12px] bg-brand-soft text-brand-strong"><GraduationCap className="size-5" /></div>
+                      <span className="rounded-full bg-surface-subtle px-2.5 py-1 text-xs font-bold text-ink-soft">{schoolClass.grade ? `Khối ${schoolClass.grade}` : "Chưa phân khối"}</span>
                     </div>
-                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
-                        Chưa có lớp học nào
-                    </h3>
-                    <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
-                        Bắt đầu bằng cách tạo lớp học đầu tiên của bạn
-                    </p>
-                    <button
-                        onClick={() => setShowCreateModal(true)}
-                        style={{
-                            padding: '10px 20px',
-                            backgroundColor: '#14b8a6',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '10px',
-                            fontWeight: 600,
-                            cursor: 'pointer'
-                        }}
-                    >
-                        Tạo lớp học ngay
-                    </button>
-                </div>
-            )
-            }
+                    <h2 className="mt-5 text-xl font-extrabold text-ink">{schoolClass.name}</h2>
+                    <p className="mt-1 inline-flex items-center gap-2 text-sm text-ink-soft"><Users className="size-4" />{typeof schoolClass.student_count === "number" ? `${schoolClass.student_count} học sinh` : "Chưa cập nhật sĩ số"}</p>
 
-            {/* Create Class Modal */}
-            {
-                showCreateModal && (
-                    <div style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: 'rgba(0,0,0,0.5)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 100
-                    }}>
-                        <div style={{
-                            backgroundColor: '#1e293b',
-                            borderRadius: '24px',
-                            padding: '32px',
-                            width: '100%',
-                            maxWidth: '500px',
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-                        }}>
-                            {createdClass ? (
-                                <div style={{ textAlign: 'center' }}>
-                                    <div style={{
-                                        width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#dcfce7',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px'
-                                    }}>
-                                        <Users size={32} color="#16a34a" />
-                                    </div>
-                                    <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px', color: '#e2e8f0' }}>
-                                        Tạo lớp học thành công!
-                                    </h2>
-                                    <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
-                                        Lớp <strong>{createdClass.name}</strong> đã sẵn sàng.
-                                    </p>
+                    <dl className="mt-5 grid grid-cols-3 gap-2 border-t border-line pt-4 text-center">
+                      {[
+                        ["Hạnh phúc", schoolClass.happiness_score],
+                        ["Gắn kết", schoolClass.engagement_score],
+                        ["Tinh thần", schoolClass.mental_health_score],
+                      ].map(([label, value]) => (
+                        <div key={String(label)}><dt className="text-[11px] text-ink-soft">{label}</dt><dd className="mt-1 text-sm font-extrabold text-ink">{Number(value) || 0}%</dd></div>
+                      ))}
+                    </dl>
 
-                                    <div style={{ backgroundColor: '#0f172a', padding: '20px', borderRadius: '16px', marginBottom: '24px', textAlign: 'left' }}>
-                                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
-                                            Mã lớp học
-                                        </label>
-                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                                            <code style={{
-                                                flex: 1, padding: '12px', borderRadius: '8px', backgroundColor: '#334155',
-                                                color: '#38bdf8', fontSize: '18px', fontWeight: 'bold', fontFamily: 'monospace', textAlign: 'center'
-                                            }}>
-                                                {createdClass.class_code}
-                                            </code>
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(createdClass.class_code || '');
-                                                    toast.success('Đã sao chép mã lớp');
-                                                }}
-                                                style={{ padding: '0 16px', borderRadius: '8px', backgroundColor: '#334155', border: 'none', cursor: 'pointer', color: 'white' }}
-                                            >
-                                                Copy
-                                            </button>
-                                        </div>
-
-                                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
-                                            Link tham gia
-                                        </label>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <input
-                                                readOnly
-                                                value={`${window.location.origin}/join?code=${createdClass.class_code}`}
-                                                style={{
-                                                    flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#334155',
-                                                    border: 'none', color: '#cbd5e1', fontSize: '13px'
-                                                }}
-                                            />
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(`${window.location.origin}/join?code=${createdClass.class_code}`);
-                                                    toast.success('Đã sao chép link');
-                                                }}
-                                                style={{ padding: '0 16px', borderRadius: '8px', backgroundColor: '#334155', border: 'none', cursor: 'pointer', color: 'white' }}
-                                            >
-                                                Copy
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={() => {
-                                            setShowCreateModal(false);
-                                            setCreatedClass(null);
-                                        }}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px 24px',
-                                            borderRadius: '12px',
-                                            backgroundColor: '#14b8a6',
-                                            color: 'white',
-                                            fontWeight: 600,
-                                            border: 'none',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        Hoàn tất
-                                    </button>
-                                </div>
-                            ) : (
-                                <form onSubmit={handleCreateClass}>
-                                    <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px', color: '#e2e8f0' }}>
-                                        Tạo lớp học mới
-                                    </h2>
-                                    <div style={{ marginBottom: '20px' }}>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
-                                            Tên lớp học
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={newClassData.name}
-                                            onChange={(e) => setNewClassData({ ...newClassData, name: e.target.value })}
-                                            placeholder="Ví dụ: 10A1, Lớp Toán thầy A..."
-                                            style={{
-                                                width: '100%',
-                                                padding: '12px',
-                                                borderRadius: '12px',
-                                                border: '1px solid #d1d5db',
-                                                fontSize: '16px',
-                                                outline: 'none',
-                                                transition: 'border-color 0.2s'
-                                            }}
-                                            autoFocus
-                                        />
-                                    </div>
-                                    <div style={{ marginBottom: '32px' }}>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
-                                            Khối lớp (Tùy chọn)
-                                        </label>
-                                        <select
-                                            value={newClassData.grade}
-                                            onChange={(e) => setNewClassData({ ...newClassData, grade: e.target.value })}
-                                            style={{
-                                                width: '100%',
-                                                padding: '12px',
-                                                borderRadius: '12px',
-                                                border: '1px solid #d1d5db',
-                                                fontSize: '16px',
-                                                outline: 'none',
-                                                backgroundColor: '#1e293b',
-                                                color: '#e2e8f0'
-                                            }}
-                                        >
-                                            <option value="">Chọn khối...</option>
-                                            <option value="10">Khối 10</option>
-                                            <option value="11">Khối 11</option>
-                                            <option value="12">Khối 12</option>
-                                            <option value="Khác">Khác</option>
-                                        </select>
-                                    </div>
-
-                                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowCreateModal(false)}
-                                            style={{
-                                                padding: '12px 20px',
-                                                borderRadius: '12px',
-                                                border: '1px solid #d1d5db',
-                                                backgroundColor: '#1e293b',
-                                                color: '#cbd5e1',
-                                                fontWeight: 600,
-                                                cursor: 'pointer'
-                                            }}
-                                        >
-                                            Hủy bỏ
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            disabled={creating}
-                                            style={{
-                                                padding: '12px 24px',
-                                                borderRadius: '12px',
-                                                backgroundColor: '#14b8a6',
-                                                color: 'white',
-                                                fontWeight: 600,
-                                                border: 'none',
-                                                cursor: creating ? 'not-allowed' : 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '8px'
-                                            }}
-                                        >
-                                            {creating ? 'Đang tạo...' : 'Tạo lớp học'}
-                                        </button>
-                                    </div>
-                                </form>
-                            )}
-                        </div>
+                    <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-5">
+                      {schoolClass.meeting_link && (
+                        <a href={schoolClass.meeting_link} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-[9px] bg-emerald-50 px-3 text-xs font-bold text-success dark:bg-emerald-950/40">
+                          <Video className="size-4" />Vào lớp online
+                        </a>
+                      )}
+                      <Link href={`/teacher/lop-hoc/${schoolClass.id}`} className="ml-auto inline-flex min-h-9 items-center gap-2 rounded-[9px] px-3 text-xs font-bold text-brand-strong hover:bg-brand-soft">
+                        Xem chi tiết <ArrowRight className="size-4" />
+                      </Link>
                     </div>
-                )
-            }
-        </div >
-    );
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        </Surface>
+      )}
+
+      <Dialog
+        open={dialogOpen}
+        onClose={closeDialog}
+        title={createdClass ? "Lớp học đã sẵn sàng" : "Tạo lớp học"}
+        description={createdClass ? "Chia sẻ mã lớp để học sinh tham gia." : "Lớp mới sẽ được gắn với tài khoản giáo viên hiện tại."}
+        footer={createdClass ? <Button onClick={closeDialog}>Hoàn tất</Button> : (
+          <><Button variant="secondary" onClick={closeDialog} disabled={creating}>Hủy</Button><Button type="submit" form="teacher-class-form" disabled={creating}>{creating ? "Đang tạo..." : "Tạo lớp học"}</Button></>
+        )}
+      >
+        {createdClass ? (
+          <div className="grid gap-4">
+            <div className="rounded-[12px] border border-line bg-surface-subtle p-4">
+              <p className="text-xs font-bold text-ink-soft">Mã lớp học</p>
+              <div className="mt-2 flex gap-2"><code className="flex-1 rounded-[9px] bg-surface px-3 py-2 text-center text-lg font-extrabold tracking-[0.14em] text-brand-strong">{createdClass.class_code}</code><Button variant="secondary" size="icon" aria-label="Sao chép mã lớp" onClick={() => void copyText(createdClass.class_code || "", "mã lớp")}><Copy className="size-4" /></Button></div>
+            </div>
+            {joinLink && <div className="rounded-[12px] border border-line bg-surface-subtle p-4"><p className="text-xs font-bold text-ink-soft">Link tham gia</p><div className="mt-2 flex gap-2"><Input readOnly value={joinLink} /><Button variant="secondary" size="icon" aria-label="Sao chép link tham gia" onClick={() => void copyText(joinLink, "link tham gia")}><Copy className="size-4" /></Button></div></div>}
+          </div>
+        ) : (
+          <form id="teacher-class-form" className="grid gap-5" onSubmit={createClass}>
+            <Field label="Tên lớp học" name="teacher-class-name" required><Input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required placeholder="10A1" /></Field>
+            <Field label="Khối lớp" name="teacher-class-grade" helper="Có thể để trống nếu đây là lớp chuyên đề."><Select value={form.grade} onChange={(event) => setForm((current) => ({ ...current, grade: event.target.value }))}><option value="">Chưa phân khối</option><option value="10">Khối 10</option><option value="11">Khối 11</option><option value="12">Khối 12</option><option value="Khác">Khác</option></Select></Field>
+            <label className="flex items-start gap-3 rounded-[12px] border border-line bg-surface-subtle p-4"><input type="checkbox" checked={form.online_enabled} onChange={(event) => setForm((current) => ({ ...current, online_enabled: event.target.checked }))} className="mt-1 size-4 accent-brand" /><span><span className="block text-sm font-bold text-ink">Bật lớp học trực tuyến</span><span className="mt-1 block text-xs leading-5 text-ink-soft">Cho phép tạo và chia sẻ phòng học online cho lớp này.</span></span></label>
+          </form>
+        )}
+      </Dialog>
+    </>
+  );
 }
