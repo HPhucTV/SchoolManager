@@ -29,7 +29,7 @@ def test_admin_can_provision_teacher_class_and_student(
     teacher_id = teacher_response.json()["id"]
 
     class_response = client.post(
-        "/api/auth/classes",
+        "/api/classes",
         headers=headers,
         json={"name": "10A Workflow", "grade": "10", "teacher_id": teacher_id},
     )

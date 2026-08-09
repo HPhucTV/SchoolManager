@@ -12,11 +12,9 @@ from app.application.notifications import add_class_notifications
 from app.application.transactions import transaction
 from app.domain import assessment as policy
 from app.infrastructure.quiz_bank import generate_questions
-from app.infrastructure.quiz_documents import parse_quiz_docx
 from app.schemas.assessment import (
     MessageResponse,
     QuizCreateRequest,
-    QuizQuestionCreateRequest,
     QuizResponse,
     QuizResultResponse,
     QuizSubmissionResponse,
@@ -168,24 +166,6 @@ class Assessment:
         quiz = self._quiz(quiz_id)
         self._require_manager(actor, quiz, allow_admin=True)
         with transaction(self.db):
-            battles = self.db.query(models.QuizBattle).filter(models.QuizBattle.quiz_id == quiz_id).all()
-            for battle in battles:
-                participants = self.db.query(models.BattleParticipant).filter(
-                    models.BattleParticipant.battle_id == battle.id,
-                ).all()
-                for participant in participants:
-                    self.db.query(models.BattleAnswer).filter(
-                        models.BattleAnswer.participant_id == participant.id,
-                    ).delete(synchronize_session=False)
-                self.db.query(models.BattleParticipant).filter(
-                    models.BattleParticipant.battle_id == battle.id,
-                ).delete(synchronize_session=False)
-                self.db.query(models.BattleAnswer).filter(
-                    models.BattleAnswer.battle_id == battle.id,
-                ).delete(synchronize_session=False)
-            self.db.query(models.QuizBattle).filter(
-                models.QuizBattle.quiz_id == quiz_id,
-            ).delete(synchronize_session=False)
             self.db.query(models.QuizResult).filter(
                 models.QuizResult.quiz_id == quiz_id,
             ).delete(synchronize_session=False)
@@ -299,14 +279,3 @@ class Assessment:
             completed_at=completed_at,
             show_answers=quiz.show_answers,
         )
-
-    def import_questions(self, actor: models.User, contents: bytes) -> list[QuizQuestionCreateRequest]:
-        if actor.role != "teacher":
-            raise ApplicationError(ErrorCode.FORBIDDEN, "Only teachers can upload quiz files")
-        try:
-            return [QuizQuestionCreateRequest.model_validate(question) for question in parse_quiz_docx(contents)]
-        except Exception as exc:
-            raise ApplicationError(
-                ErrorCode.INTERNAL,
-                "Failed to parse document. Please ensure standard format.",
-            ) from exc

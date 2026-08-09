@@ -21,16 +21,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str = Field(min_length=32)
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    AUTH_COOKIE_NAME: str = "schoolmanager_session"
     FRONTEND_URL: str = "http://localhost:3000"
     TRUSTED_PROXY_HOSTS: Union[List[str], str] = ["127.0.0.1", "::1"]
     
-    # Email (SMTP)
-    SMTP_SERVER: str = "smtp.gmail.com"
-    SMTP_PORT: int = 587
-    SMTP_USER: Optional[str] = None
-    SMTP_PASSWORD: Optional[str] = None
-    SMTP_FROM_EMAIL: str = "noreply@happyschools.vn"
-
     # Database
     DATABASE_URL: Optional[str] = None
     DATABASE_URL_SYNC: Optional[str] = "sqlite:///./sql_app.db"
@@ -38,12 +32,6 @@ class Settings(BaseSettings):
     # NOTE: external AI provider configuration was removed since
     # ChatGPT/Gemini APIs are no longer used.  Keep dataset-based logic only.
 
-    # Redis
-    REDIS_HOST: str = "redis"
-    REDIS_PORT: int = 6379
-    REDIS_DB: int = 0
-    REDIS_PASSWORD: Optional[str] = None
-    
     @field_validator("CORS_ORIGINS", "TRUSTED_PROXY_HOSTS", mode="before")
     @classmethod
     def parse_list_setting(cls, v: Union[str, List[str]]) -> Union[List[str], str]:

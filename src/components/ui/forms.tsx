@@ -3,7 +3,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const controlClassName =
-  "min-h-11 w-full rounded-[10px] border border-line bg-surface px-3.5 text-sm text-ink shadow-sm outline-none transition-[border-color,box-shadow,background-color] placeholder:text-ink-soft/70 hover:border-brand/35 focus:border-brand focus:ring-4 focus:ring-brand/10 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:opacity-70";
+  "min-h-11 w-full rounded-[12px] border border-line bg-surface-elevated px-3.5 text-sm text-ink shadow-[0_3px_10px_var(--shadow-color)] outline-none transition-[border-color,box-shadow,background-color] placeholder:text-ink-soft/65 hover:border-brand/35 focus:border-brand focus:ring-4 focus:ring-brand/10 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:opacity-70";
 
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className, ...props }, ref) => <input ref={ref} className={cn(controlClassName, className)} {...props} />,

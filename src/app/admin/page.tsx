@@ -44,6 +44,8 @@ interface Metric {
   value: number;
   icon: LucideIcon;
   note: string;
+  tone: string;
+  bar: string;
 }
 
 const roleLabels: Record<string, string> = {
@@ -95,10 +97,10 @@ export default function AdminDashboard() {
   }
 
   const metrics: Metric[] = [
-    { label: "Giáo viên", value: stats.total_teachers, icon: Users, note: "Tài khoản giảng dạy" },
-    { label: "Học sinh", value: stats.total_students, icon: GraduationCap, note: "Hồ sơ đang quản lý" },
-    { label: "Lớp học", value: stats.total_classes, icon: BookOpen, note: "Lớp trên hệ thống" },
-    { label: "Bài kiểm tra", value: stats.total_quizzes, icon: FileQuestion, note: "Đề đã được tạo" },
+    { label: "Giáo viên", value: stats.total_teachers, icon: Users, note: "Tài khoản giảng dạy", tone: "bg-brand-soft text-brand-strong", bar: "bg-brand" },
+    { label: "Học sinh", value: stats.total_students, icon: GraduationCap, note: "Hồ sơ đang quản lý", tone: "bg-mint-soft text-mint", bar: "bg-mint" },
+    { label: "Lớp học", value: stats.total_classes, icon: BookOpen, note: "Lớp trên hệ thống", tone: "bg-sun-soft text-sun", bar: "bg-sun" },
+    { label: "Bài kiểm tra", value: stats.total_quizzes, icon: FileQuestion, note: "Đề đã được tạo", tone: "bg-coral-soft text-coral", bar: "bg-coral" },
   ];
 
   return (
@@ -130,16 +132,18 @@ export default function AdminDashboard() {
               key={metric.label}
               className={cn(
                 "flex min-h-36 items-start justify-between gap-4 p-5 sm:p-6",
+                "relative overflow-hidden",
                 index > 0 && "border-t border-line sm:border-t-0 sm:border-l",
                 index === 2 && "sm:border-l-0 sm:border-t xl:border-l xl:border-t-0",
               )}
             >
+              <div className={cn("absolute inset-x-0 top-0 h-1", metric.bar)} aria-hidden="true" />
               <div>
                 <p className="text-sm font-semibold text-ink-soft">{metric.label}</p>
                 <p className="mt-3 text-4xl font-extrabold tracking-[-0.05em] text-ink">{metric.value}</p>
                 <p className="mt-2 text-xs leading-5 text-ink-soft">{metric.note}</p>
               </div>
-              <div className="grid size-11 shrink-0 place-items-center rounded-[12px] bg-brand-soft text-brand-strong">
+              <div className={cn("grid size-11 shrink-0 place-items-center rounded-[13px]", metric.tone)}>
                 <metric.icon className="size-5" strokeWidth={1.8} />
               </div>
             </div>
@@ -172,7 +176,7 @@ export default function AdminDashboard() {
                   .toUpperCase();
                 return (
                   <div key={recentUser.id} className="flex items-center gap-3 px-5 py-4 sm:px-6">
-                    <div className="grid size-10 shrink-0 place-items-center rounded-[11px] bg-surface-subtle text-xs font-extrabold text-brand-strong">
+                    <div className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-brand-soft text-xs font-extrabold text-brand-strong">
                       {initials}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -206,7 +210,7 @@ export default function AdminDashboard() {
               <Link
                 key={action.href}
                 href={action.href}
-                className="group flex min-h-14 items-center gap-3 rounded-[11px] border border-line px-3.5 text-sm font-bold text-ink transition-colors hover:border-brand/35 hover:bg-brand-soft"
+                className="group flex min-h-14 items-center gap-3 rounded-[14px] border border-line bg-surface-elevated px-3.5 text-sm font-bold text-ink transition-[border-color,background-color,transform] hover:translate-x-0.5 hover:border-brand/35 hover:bg-brand-soft"
               >
                 <action.icon className="size-[18px] text-brand-strong" strokeWidth={1.8} />
                 <span className="flex-1">{action.label}</span>

@@ -33,6 +33,7 @@ export default function TeacherQuizzesPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [classFilter, setClassFilter] = useState("");
   const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
@@ -46,6 +47,10 @@ export default function TeacherQuizzesPage() {
       const [quizData, classData] = await Promise.all([teacherQuizzesApi.list(), teacherAcademicApi.getClasses()]);
       setQuizzes(quizData);
       setClasses(classData);
+      const requestedClassId = new URLSearchParams(window.location.search).get("classId");
+      if (requestedClassId && classData.some((item) => String(item.id) === requestedClassId)) {
+        setClassFilter(requestedClassId);
+      }
     } catch (loadError) {
       setError(getErrorMessage(loadError, "Không thể tải danh sách bài kiểm tra."));
     } finally {
@@ -55,12 +60,12 @@ export default function TeacherQuizzesPage() {
 
   useEffect(() => { void loadData(); }, [loadData]);
 
-  const filtered = useMemo(() => quizzes.filter((quiz) => (!status || quiz.status === status) && `${quiz.title} ${quiz.subject || ""} ${quiz.topic || ""}`.toLowerCase().includes(search.toLowerCase())), [quizzes, search, status]);
+  const filtered = useMemo(() => quizzes.filter((quiz) => (!classFilter || String(quiz.class_id) === classFilter) && (!status || quiz.status === status) && `${quiz.title} ${quiz.subject || ""} ${quiz.topic || ""}`.toLowerCase().includes(search.toLowerCase())), [quizzes, classFilter, search, status]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const openCreate = () => {
-    setForm({ ...INITIAL_FORM, class_id: classes[0]?.id ? String(classes[0].id) : "" });
+    setForm({ ...INITIAL_FORM, class_id: classFilter || (classes[0]?.id ? String(classes[0].id) : "") });
     setDialogOpen(true);
   };
 
@@ -104,7 +109,7 @@ export default function TeacherQuizzesPage() {
   return (
     <>
       <PageHeader title="Bài kiểm tra" description="Tạo đề từ ngân hàng câu hỏi nội bộ, phát hành cho lớp và quản lý trạng thái làm bài." actions={<Button onClick={openCreate} disabled={!classes.length}><Plus className="size-4" />Tạo bài kiểm tra</Button>} />
-      {error ? <ErrorState title="Không tải được bài kiểm tra" description={error} action={<Button variant="secondary" onClick={() => void loadData()}>Thử lại</Button>} /> : <Surface className="overflow-hidden"><FilterToolbar searchValue={search} onSearchChange={(value) => { setSearch(value); setPage(1); }} searchLabel="Tìm theo tên, môn hoặc chủ đề"><Select aria-label="Lọc trạng thái" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }} className="w-40"><option value="">Tất cả trạng thái</option><option value="draft">Bản nháp</option><option value="active">Đang mở</option><option value="closed">Đã đóng</option></Select></FilterToolbar><DataTable ariaLabel="Danh sách bài kiểm tra" columns={columns} rows={rows} rowKey={(quiz) => quiz.id} loading={loading} emptyTitle="Chưa có bài kiểm tra" emptyDescription="Tạo đề đầu tiên từ ngân hàng câu hỏi của hệ thống." /><Pagination page={Math.min(page, totalPages)} totalPages={totalPages} totalItems={filtered.length} itemLabel="bài kiểm tra" onPageChange={setPage} /></Surface>}
+      {error ? <ErrorState title="Không tải được bài kiểm tra" description={error} action={<Button variant="secondary" onClick={() => void loadData()}>Thử lại</Button>} /> : <Surface className="overflow-hidden"><FilterToolbar searchValue={search} onSearchChange={(value) => { setSearch(value); setPage(1); }} searchLabel="Tìm theo tên, môn hoặc chủ đề"><Select aria-label="Lọc theo lớp" value={classFilter} onChange={(event) => { setClassFilter(event.target.value); setPage(1); }} className="w-44"><option value="">Tất cả lớp</option>{classes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select><Select aria-label="Lọc trạng thái" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }} className="w-40"><option value="">Tất cả trạng thái</option><option value="draft">Bản nháp</option><option value="active">Đang mở</option><option value="closed">Đã đóng</option></Select></FilterToolbar><DataTable ariaLabel="Danh sách bài kiểm tra" columns={columns} rows={rows} rowKey={(quiz) => quiz.id} loading={loading} emptyTitle="Chưa có bài kiểm tra" emptyDescription="Tạo đề đầu tiên từ ngân hàng câu hỏi của hệ thống." /><Pagination page={Math.min(page, totalPages)} totalPages={totalPages} totalItems={filtered.length} itemLabel="bài kiểm tra" onPageChange={setPage} /></Surface>}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} title="Tạo bài kiểm tra" description="Hệ thống chọn câu hỏi từ ngân hàng nội bộ theo chủ đề và mức độ đã chọn." size="large" footer={<><Button variant="secondary" onClick={() => setDialogOpen(false)}>Hủy</Button><Button onClick={() => void createQuiz()} disabled={busy || !form.title || !form.subject || !form.topic || !form.class_id || totalQuestions <= 0}>{busy ? "Đang tạo đề..." : `Tạo đề ${totalQuestions} câu`}</Button></>}>
         <div className="grid gap-4 sm:grid-cols-2"><Field label="Tên bài kiểm tra" name="quiz-title" required><Input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></Field><Field label="Lớp" name="quiz-class" required><Select value={form.class_id} onChange={(event) => setForm({ ...form, class_id: event.target.value })}>{classes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></Field><Field label="Môn học" name="quiz-subject" required><Input value={form.subject} onChange={(event) => setForm({ ...form, subject: event.target.value })} placeholder="Ví dụ: Toán" /></Field><Field label="Chủ đề" name="quiz-topic" required><Input value={form.topic} onChange={(event) => setForm({ ...form, topic: event.target.value })} placeholder="Ví dụ: Phương trình bậc hai" /></Field><Field label="Hạn làm bài" name="quiz-deadline"><Input type="datetime-local" value={form.deadline} onChange={(event) => setForm({ ...form, deadline: event.target.value })} /></Field></div>

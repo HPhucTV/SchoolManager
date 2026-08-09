@@ -48,6 +48,10 @@ export default function TeacherAssignmentsPage() {
       const [assignmentData, classData] = await Promise.all([assignmentsApi.list(), teacherAcademicApi.getClasses()]);
       setAssignments(assignmentData);
       setClasses(classData);
+      const requestedClassId = new URLSearchParams(window.location.search).get("classId");
+      if (requestedClassId && classData.some((item) => String(item.id) === requestedClassId)) {
+        setClassFilter(requestedClassId);
+      }
     } catch (loadError) {
       setError(getErrorMessage(loadError, "Không thể tải danh sách bài tập."));
     } finally {
@@ -63,7 +67,7 @@ export default function TeacherAssignmentsPage() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ ...EMPTY_FORM, class_id: classes[0]?.id ? String(classes[0].id) : "" });
+    setForm({ ...EMPTY_FORM, class_id: classFilter || (classes[0]?.id ? String(classes[0].id) : "") });
     setQuestions([{ ...NEW_QUESTION }]);
     setEditorOpen(true);
   };

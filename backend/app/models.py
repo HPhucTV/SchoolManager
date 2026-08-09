@@ -16,30 +16,8 @@ class User(Base):
     
     # Student specific fields
     class_id = Column(Integer, ForeignKey("classes.id"), nullable=True)
-    happiness_score = Column(Float, default=100)
-    engagement_score = Column(Float, default=100)
-    mental_health_score = Column(Float, default=100)
-    status = Column(String, default="excellent") # excellent, good, attention, warning
-    
-    # Gamification fields
-    xp_points = Column(Integer, default=0)
-    level = Column(Integer, default=1)
-    coins = Column(Integer, default=50)
-    streak_days = Column(Integer, default=0)
-    last_active_date = Column(String, nullable=True)
-    equipped_title = Column(String, nullable=True)
-    
-    # Notification Preferences
-    email_enabled = Column(Boolean, default=True)
-    notify_assignments = Column(Boolean, default=True)
-    notify_activities = Column(Boolean, default=True)
-    notify_surveys = Column(Boolean, default=True)
-
     student_class = relationship("Class", back_populates="students", foreign_keys=[class_id])
     teacher_class = relationship("Class", back_populates="teacher", foreign_keys="Class.teacher_id")
-
-    # reports written by this user (when role == 'teacher')
-    reports = relationship("TeacherReport", back_populates="teacher", cascade="all, delete-orphan")
 
 class Class(Base):
     __tablename__ = "classes"
@@ -49,9 +27,7 @@ class Class(Base):
     grade = Column(String)
     teacher_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     student_count = Column(Integer, default=0)
-    meeting_link = Column(String, nullable=True)
     class_code = Column(String, unique=True, index=True)
-    online_enabled = Column(Boolean, default=False)
     created_at = Column(String, default=None)
 
     teacher = relationship("User", back_populates="teacher_class", foreign_keys=[teacher_id])
@@ -75,20 +51,6 @@ class Schedule(Base):
     class_info = relationship("Class", back_populates="schedules")
     teacher = relationship("User", foreign_keys=[teacher_id])
 
-
-class Activity(Base) :
-    __tablename__ = "activities"
-
-    id = Column(Integer, primary_key=True, index=True)
-    class_id = Column(Integer, ForeignKey("classes.id"))
-    title = Column(String, index=True)
-    type = Column(String)
-    description = Column(String, nullable=True)
-    scheduled_date = Column(String)
-    status = Column(String, default="scheduled")
-    participants_count = Column(Integer, default=0)
-    progress = Column(Integer, default=0)
-    created_at = Column(String, nullable=True)
 
 class Assignment(Base):
     __tablename__ = "assignments"
@@ -215,24 +177,7 @@ class Notification(Base):
     action_url = Column(String, nullable=True)
     action_label = Column(String, nullable=True)
     created_at = Column(String)
-    file_url = Column(String, nullable=True)
-    file_name = Column(String, nullable=True)
-
     user = relationship("User", foreign_keys=[user_id])
-
-# Teacher reports allow instructors to create free‑form notes or analyses about their class.
-class TeacherReport(Base):
-    __tablename__ = "teacher_reports"
-
-    id = Column(Integer, primary_key=True, index=True)
-    teacher_id = Column(Integer, ForeignKey("users.id"), index=True)
-    class_id = Column(Integer, ForeignKey("classes.id"), index=True)
-    report_type = Column(String)   # e.g. 'học lực', 'vắng mặt', 'kỷ luật', etc.
-    content = Column(Text)
-    created_at = Column(String)
-
-    teacher = relationship("User", back_populates="reports", foreign_keys=[teacher_id])
-    class_info = relationship("Class")
 
 class QuizResult(Base):
     __tablename__ = "quiz_results"
@@ -284,121 +229,4 @@ class SOSAlert(Base):
     student = relationship("User", foreign_keys=[student_id])
     reviewer = relationship("User", foreign_keys=[reviewed_by])
 
-# ========================
-# Feature 3: Gamification
-# ========================
-
-class Badge(Base):
-    __tablename__ = "badges"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True)
-    description = Column(String)
-    icon = Column(String) # emoji or icon name
-    category = Column(String) # academic, social, streak, special
-    requirement_type = Column(String) # quiz_score, streak, assignment, mood
-    requirement_value = Column(Integer) # e.g. 7 for 7-day streak
-    xp_reward = Column(Integer, default=10)
-    coin_reward = Column(Integer, default=5)
-
-class UserBadge(Base):
-    __tablename__ = "user_badges"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), index=True)
-    badge_id = Column(Integer, ForeignKey("badges.id"))
-    earned_at = Column(String)
-    
-    user = relationship("User", foreign_keys=[user_id])
-    badge = relationship("Badge")
-
-class ShopItem(Base):
-    __tablename__ = "shop_items"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    description = Column(String)
-    item_type = Column(String) # avatar_frame, title, theme, sticker
-    icon = Column(String)
-    price = Column(Integer) # in coins
-    is_active = Column(Boolean, default=True)
-
-class Purchase(Base):
-    __tablename__ = "purchases"
-    
-    id = Column(Integer, primary_key=True, index=True) 
-    user_id = Column(Integer, ForeignKey("users.id"), index=True)
-    item_id = Column(Integer, ForeignKey("shop_items.id"))
-    purchased_at = Column(String)
-    
-    user = relationship("User", foreign_keys=[user_id])
-    item = relationship("ShopItem")
-
-
-
-# ========================
-# Feature 7: Quiz Battle
-# ========================
-
-class QuizBattle(Base):
-    __tablename__ = "quiz_battles"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    quiz_id = Column(Integer, ForeignKey("quizzes.id"))
-    created_by = Column(Integer, ForeignKey("users.id"))
-    status = Column(String, default="waiting") # waiting, active, finished
-    current_question = Column(Integer, default=0)
-    time_per_question = Column(Integer, default=30) # seconds
-    battle_code = Column(String, unique=True, index=True)
-    started_at = Column(String, nullable=True)
-    finished_at = Column(String, nullable=True)
-    created_at = Column(String)
-    
-    quiz = relationship("Quiz")
-    creator = relationship("User", foreign_keys=[created_by])
-
-class BattleParticipant(Base):
-    __tablename__ = "battle_participants"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    battle_id = Column(Integer, ForeignKey("quiz_battles.id"), index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), index=True)
-    score = Column(Integer, default=0)
-    answers_correct = Column(Integer, default=0)
-    answers_total = Column(Integer, default=0)
-    joined_at = Column(String)
-    
-    battle = relationship("QuizBattle")
-    user = relationship("User", foreign_keys=[user_id])
-
-class BattleAnswer(Base):
-    __tablename__ = "battle_answers"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    battle_id = Column(Integer, ForeignKey("quiz_battles.id"), index=True)
-    participant_id = Column(Integer, ForeignKey("battle_participants.id"), index=True)
-    question_index = Column(Integer)
-    answer = Column(String)
-    is_correct = Column(Boolean)
-    time_taken = Column(Float) # seconds
-    points_earned = Column(Integer, default=0)
-    answered_at = Column(String)
-    
-    battle = relationship("QuizBattle")
-    participant = relationship("BattleParticipant")
-
-# ========================
-# Global Search
-# ========================
-
-class SearchHistory(Base):
-    __tablename__ = "search_history"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), index=True)
-    query = Column(String, index=True)
-    result_type = Column(String, nullable=True)   # students, classes, assignments, quizzes, activities
-    result_id = Column(Integer, nullable=True)
-    searched_at = Column(String)
-
-    user = relationship("User", foreign_keys=[user_id])
+# Keep model registration centralized in this module for Alembic metadata discovery.

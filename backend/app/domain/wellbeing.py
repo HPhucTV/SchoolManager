@@ -3,23 +3,14 @@
 from dataclasses import dataclass
 
 
-def adjusted_mental_health_score(*, current_score: float, mood_level: int) -> float:
-    if mood_level <= 2:
-        return max(0, current_score - 2)
-    if mood_level >= 4:
-        return min(100, current_score + 1)
-    return current_score
-
-
-def student_status(*, happiness: float, engagement: float, mental_health: float) -> str:
-    average = (happiness + engagement + mental_health) / 3
-    if average >= 80:
-        return "excellent"
-    if average >= 60:
-        return "good"
-    if average >= 40:
+def mood_checkin_status(*, average: float, has_recent_checkin: bool) -> str:
+    if not has_recent_checkin:
+        return "no_data"
+    if average <= 2:
+        return "warning"
+    if average < 3.5:
         return "attention"
-    return "warning"
+    return "stable"
 
 
 def can_review_student(*, role: str, actor_id: int, class_teacher_id: int | None) -> bool:

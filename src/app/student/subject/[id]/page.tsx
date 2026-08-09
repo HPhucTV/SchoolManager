@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowRight, BookOpenCheck, Brain, CheckCircle2, Clock3, Mail, Phone, UserRound, Video } from "lucide-react";
+import { ArrowRight, BookOpenCheck, Brain, CheckCircle2, Clock3, Mail, Phone, UserRound } from "lucide-react";
 
 import { EmptyState, ErrorState } from "@/components/ui/feedback";
 import { Button, PageHeader, Skeleton, Surface } from "@/components/ui/primitives";
@@ -43,7 +43,7 @@ export default function StudentSubjectPage() {
 
   return (
     <>
-      <PageHeader title={data.subject} description="Theo dõi giáo viên, bài tập và bài kiểm tra của môn học này." actions={data.class_info?.online_enabled && data.class_info.meeting_link ? <a href={data.class_info.meeting_link.startsWith("http") ? data.class_info.meeting_link : `https://${data.class_info.meeting_link}`} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-emerald-700 px-4 text-sm font-bold text-white hover:bg-emerald-800"><Video className="size-4" />Vào lớp trực tuyến</a> : undefined} />
+      <PageHeader title={data.subject} description="Theo dõi giáo viên, bài tập và bài kiểm tra của môn học này." />
 
       <Surface className="mb-6 flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3"><div className="grid size-11 shrink-0 place-items-center rounded-[12px] bg-brand-soft text-brand-strong"><UserRound className="size-5" /></div><div><p className="text-xs font-bold uppercase tracking-[0.06em] text-ink-soft">Giáo viên phụ trách</p><h2 className="mt-1 font-extrabold text-ink">{data.class_info?.teacher_name || "Chưa phân công"}</h2></div></div>

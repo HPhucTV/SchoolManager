@@ -4,6 +4,7 @@
   --font-sans: var(--font-be-vietnam);
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
   --color-surface-subtle: var(--surface-subtle);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
@@ -15,23 +16,38 @@
   --color-danger: var(--danger);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-mint: var(--mint);
+  --color-mint-soft: var(--mint-soft);
+  --color-sun: var(--sun);
+  --color-sun-soft: var(--sun-soft);
+  --color-coral: var(--coral);
+  --color-coral-soft: var(--coral-soft);
 }
 
 :root {
-  color-scheme: light dark;
-  --canvas: #f5f7fb;
-  --surface: #ffffff;
-  --surface-subtle: #edf2f8;
+  color-scheme: light;
+  --canvas: #f4f7fb;
+  --surface: #fffefa;
+  --surface-elevated: #ffffff;
+  --surface-subtle: #edf4fb;
   --ink: #17233b;
-  --ink-soft: #52627a;
-  --line: #d9e2ee;
-  --brand: #1557b0;
-  --brand-strong: #0d438e;
-  --brand-soft: #e7f0fb;
-  --teal: #0f766e;
+  --ink-soft: #586981;
+  --line: #dce5ef;
+  --brand: #2864dc;
+  --brand-strong: #1749a6;
+  --brand-soft: #eaf2ff;
+  --teal: #167f72;
   --danger: #b42318;
   --success: #087a55;
   --warning: #9a5b00;
+  --mint: #14835f;
+  --mint-soft: #e6f7ef;
+  --sun: #a86200;
+  --sun-soft: #fff4d8;
+  --coral: #b44d45;
+  --coral-soft: #fff0ed;
+  --grid-line: rgb(40 100 220 / 0.055);
+  --shadow-color: rgb(39 66 101 / 0.12);
 
   /* Compatibility aliases for legacy screens during the staged migration. */
   --background: var(--canvas);
@@ -42,30 +58,68 @@
   --text-secondary: var(--ink-soft);
   --text-muted: #6b7890;
   --subtle-bg: var(--surface-subtle);
-  --hover-bg: #e5ecf5;
+  --hover-bg: #e6eef8;
   --accent-teacher: var(--teal);
   --accent-teacher-light: #e2f4f1;
   --accent-student: var(--brand);
   --accent-student-light: var(--brand-soft);
 }
 
+[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #101827;
+  --surface: #172235;
+  --surface-elevated: #1b2940;
+  --surface-subtle: #202e45;
+  --ink: #eef4fb;
+  --ink-soft: #a9b8cc;
+  --line: #30415a;
+  --brand: #6b9df0;
+  --brand-strong: #8bb5f5;
+  --brand-soft: #1a3356;
+  --teal: #52b9ae;
+  --danger: #ff8a82;
+  --success: #61cda7;
+  --warning: #efb758;
+  --mint: #66c8a5;
+  --mint-soft: #173a35;
+  --sun: #f0bd63;
+  --sun-soft: #3c301b;
+  --coral: #f2968d;
+  --coral-soft: #422a2e;
+  --grid-line: rgb(139 181 245 / 0.06);
+  --shadow-color: rgb(3 10 22 / 0.34);
+  --text-muted: #8292a8;
+  --hover-bg: #24344d;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
-    --canvas: #0f1725;
-    --surface: #162136;
-    --surface-subtle: #1c2940;
-    --ink: #edf3fb;
-    --ink-soft: #a8b7ca;
-    --line: #2d3b52;
-    --brand: #4b8fdf;
-    --brand-strong: #71a9e8;
-    --brand-soft: #172e4d;
-    --teal: #47b3a8;
-    --danger: #ff8178;
-    --success: #53c69c;
-    --warning: #e6a94f;
-    --text-muted: #8190a5;
-    --hover-bg: #223149;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --canvas: #101827;
+    --surface: #172235;
+    --surface-elevated: #1b2940;
+    --surface-subtle: #202e45;
+    --ink: #eef4fb;
+    --ink-soft: #a9b8cc;
+    --line: #30415a;
+    --brand: #6b9df0;
+    --brand-strong: #8bb5f5;
+    --brand-soft: #1a3356;
+    --teal: #52b9ae;
+    --danger: #ff8a82;
+    --success: #61cda7;
+    --warning: #efb758;
+    --mint: #66c8a5;
+    --mint-soft: #173a35;
+    --sun: #f0bd63;
+    --sun-soft: #3c301b;
+    --coral: #f2968d;
+    --coral-soft: #422a2e;
+    --grid-line: rgb(139 181 245 / 0.06);
+    --shadow-color: rgb(3 10 22 / 0.34);
+    --text-muted: #8292a8;
+    --hover-bg: #24344d;
   }
 }
 
@@ -87,6 +141,21 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.school-grid {
+  background-color: var(--canvas);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.page-intro {
+  background:
+    linear-gradient(115deg, color-mix(in srgb, var(--brand-soft) 80%, var(--surface)), var(--surface) 58%),
+    var(--surface);
+  box-shadow: 0 16px 40px var(--shadow-color);
+}
+
 button,
 input,
 select,
@@ -106,7 +175,7 @@ a {
 
 ::selection {
   background: var(--brand);
-  color: #ffffff;
+  color: #f8fbff;
 }
 
 ::-webkit-scrollbar {

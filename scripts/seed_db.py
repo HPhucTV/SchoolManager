@@ -132,29 +132,13 @@ def seed_data():
         "Bạch Văn Dũng", "Phùng Thị Liên", "Lê Quang Hiếu", "Trần Thị Diệu",
         "Nguyễn Hữu Phát", "Đàm Thị Thanh", "Vương Đình Lộc", "Huỳnh Thị Mỹ",
     ]
-    statuses = ["excellent", "good", "attention", "warning"]
-    score_ranges = {
-        "excellent": (82, 98), "good": (65, 82),
-        "attention": (48, 65), "warning": (30, 48),
-    }
-
     all_students = []
     for i, name in enumerate(student_names):
         cls = classes[i // 8]
-        status = statuses[i % 4]
-        sr = score_ranges[status]
         s = models.User(
             email=f"hs.{name.split()[-1].lower()}{i}@happyschools.vn",
             hashed_password=PW, name=name, role="student",
-            class_id=cls.id, status=status,
-            happiness_score=random.randint(*sr),
-            engagement_score=random.randint(*sr),
-            mental_health_score=random.randint(*sr),
-            xp_points=random.randint(0, 500),
-            level=random.randint(1, 6),
-            coins=random.randint(10, 200),
-            streak_days=random.randint(0, 15),
-            last_active_date=ts(random.randint(0, 3)),
+            class_id=cls.id,
         )
         db.add(s)
         all_students.append(s)
@@ -198,30 +182,6 @@ def seed_data():
                 schedule_count += 1
     db.commit()
     print(f"  ✅ {schedule_count} tiết học")
-
-    # ═══════════════════════════════════════════════════════════════
-    # 4. ACTIVITIES (Hoạt động)
-    # ═══════════════════════════════════════════════════════════════
-    activities_data = [
-        ("Hội trại Xuân 2026", "Hoạt động ngoại khoá", "Hội trại chào mừng xuân mới với các trò chơi thi đua giữa các lớp", "completed", 85),
-        ("Thi đua Hoa điểm 10", "Sự kiện", "Phong trào thi đua giành nhiều điểm 10 trong học kỳ 2", "in-progress", 65),
-        ("Ngày hội STEM", "Workshop", "Triển lãm các dự án khoa học sáng tạo của học sinh", "scheduled", 0),
-        ("Câu lạc bộ Tiếng Anh", "CLB", "Buổi sinh hoạt câu lạc bộ Tiếng Anh giao lưu với trường bạn", "in-progress", 40),
-        ("Thi Hùng biện", "Sự kiện", "Cuộc thi hùng biện chủ đề 'Tuổi trẻ và Tương lai'", "upcoming", 0),
-        ("Thể thao Mùa xuân", "Thể dục thể thao", "Giải bóng đá, cầu lông, bóng bàn giữa các lớp", "in-progress", 50),
-        ("Ngày Nhà giáo 20/11", "Sự kiện", "Chương trình văn nghệ chào mừng ngày Nhà giáo Việt Nam", "completed", 100),
-        ("Tham quan dã ngoại", "Hoạt động ngoại khoá", "Chuyến tham quan học tập tại Đà Lạt", "scheduled", 0),
-    ]
-    for i, (title, act_type, desc, status, progress) in enumerate(activities_data):
-        db.add(models.Activity(
-            class_id=classes[i % len(classes)].id,
-            title=title, type=act_type, description=desc,
-            scheduled_date=ts(30 - i * 5) if status == "completed" else future_ts(i * 7),
-            status=status, participants_count=random.randint(20, 120),
-            progress=progress, created_at=ts(45 - i * 3),
-        ))
-    db.commit()
-    print(f"  ✅ {len(activities_data)} hoạt động")
 
     # ═══════════════════════════════════════════════════════════════
     # 5. ASSIGNMENTS + QUESTIONS + SUBMISSIONS + ANSWERS
@@ -418,7 +378,6 @@ def seed_data():
         ("🏆 Chúc mừng!", "Bạn đã đạt Level 3! Nhận 20 xu thưởng", "system"),
         ("📊 Kết quả kiểm tra", "Kết quả kiểm tra Tiếng Anh đã được công bố", "quiz"),
         ("💚 Sức khoẻ tinh thần", "Hãy dành ít phút ghi lại cảm xúc của bạn hôm nay", "system"),
-        ("🎮 Quiz Battle", "Thầy Minh vừa tạo phòng Quiz Battle mới!", "event"),
     ]
 
     notif_count = 0
@@ -500,67 +459,6 @@ def seed_data():
     print(f"  ✅ {len(sos_students)} cảnh báo SOS")
 
     # ═══════════════════════════════════════════════════════════════
-    # 10. GAMIFICATION — Badges + Shop Items + UserBadges
-    # ═══════════════════════════════════════════════════════════════
-    from app.routers.gamification import DEFAULT_BADGES, DEFAULT_SHOP_ITEMS
-
-    badge_objs = []
-    for bd in DEFAULT_BADGES:
-        b = models.Badge(**bd)
-        db.add(b)
-        badge_objs.append(b)
-    db.commit()
-    for b in badge_objs:
-        db.refresh(b)
-
-    for item_data in DEFAULT_SHOP_ITEMS:
-        db.add(models.ShopItem(**item_data))
-    db.commit()
-
-    # Award some badges to students
-    badge_count = 0
-    for student in all_students:
-        n_badges = random.randint(1, 4)
-        selected_badges = random.sample(badge_objs, n_badges)
-        for badge in selected_badges:
-            db.add(models.UserBadge(
-                user_id=student.id, badge_id=badge.id,
-                earned_at=ts(random.randint(1, 30)),
-            ))
-            badge_count += 1
-    db.commit()
-    print(f"  ✅ {len(DEFAULT_BADGES)} huy hiệu + {len(DEFAULT_SHOP_ITEMS)} vật phẩm + {badge_count} huy hiệu đã nhận")
-
-    # ═══════════════════════════════════════════════════════════════
-    # 11. TEACHER REPORTS
-    # ═══════════════════════════════════════════════════════════════
-    reports_data = [
-        ("học lực", "Nhìn chung lớp 10A1 có kết quả học tập ổn định. 60% học sinh đạt loại Giỏi, 30% Khá, 10% Trung bình. Cần chú ý hỗ trợ thêm cho nhóm học sinh yếu môn Toán."),
-        ("vắng mặt", "Trong tháng 2/2026, lớp có 5 lượt vắng. Học sinh Nguyễn Văn An vắng 2 buổi có phép (ốm). Hoàng Văn Nam vắng 3 buổi không phép - đã liên hệ phụ huynh."),
-        ("kỷ luật", "Lớp chấp hành tốt nội quy. Có 1 trường hợp vi phạm nói chuyện trong giờ học, đã nhắc nhở."),
-    ]
-    for rtype, content in reports_data:
-        db.add(models.TeacherReport(
-            teacher_id=teacher_10a1.id, class_id=classes[0].id,
-            report_type=rtype, content=content,
-            created_at=ts(random.randint(1, 15)),
-        ))
-    db.commit()
-    print(f"  ✅ {len(reports_data)} báo cáo giáo viên")
-
-    # ═══════════════════════════════════════════════════════════════
-    # 12. SEARCH HISTORY (sample)
-    # ═══════════════════════════════════════════════════════════════
-    search_queries = ["Toán", "Nguyễn Văn An", "10A1", "kiểm tra", "bài tập"]
-    for q_text in search_queries:
-        db.add(models.SearchHistory(
-            user_id=teacher_10a1.id, query=q_text,
-            searched_at=ts(random.randint(0, 5)),
-        ))
-    db.commit()
-    print(f"  ✅ {len(search_queries)} lịch sử tìm kiếm")
-
-    # ═══════════════════════════════════════════════════════════════
     # DONE
     # ═══════════════════════════════════════════════════════════════
     db.close()
@@ -579,11 +477,8 @@ def seed_data():
     print(f"   • {schedule_count} tiết trong thời khoá biểu")
     print(f"   • {len(all_assignments)} bài tập + {submission_count} bài nộp")
     print(f"   • {len(all_quizzes)} bài kiểm tra + {result_count} kết quả")
-    print(f"   • {len(activities_data)} hoạt động ngoại khoá")
     print(f"   • {notif_count} thông báo")
     print(f"   • {mood_count} nhật ký cảm xúc + {len(sos_students)} cảnh báo SOS")
-    print(f"   • {len(DEFAULT_BADGES)} huy hiệu + {len(DEFAULT_SHOP_ITEMS)} vật phẩm shop")
-    print(f"   • {len(reports_data)} báo cáo giáo viên")
 
 
 if __name__ == "__main__":

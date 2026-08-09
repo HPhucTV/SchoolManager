@@ -150,7 +150,7 @@ export default function StudentsManagement() {
   const importStudents = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!importFile || !importClassId) {
-      toast.error("Chọn lớp học và file Excel trước khi import.");
+      toast.error("Chọn lớp học và file CSV trước khi import.");
       return;
     }
     setBusy(true);
@@ -316,7 +316,7 @@ export default function StudentsManagement() {
         ) : (
           <form id="student-import-form" className="grid gap-5" onSubmit={importStudents}>
             <Button type="button" variant="secondary" className="w-full" onClick={() => void adminApi.downloadStudentTemplate().catch((downloadError) => toast.error(getErrorMessage(downloadError, "Không thể tải file mẫu.")))}>
-              <Download className="size-4" />Tải file mẫu .xlsx
+              <Download className="size-4" />Tải file mẫu .csv
             </Button>
             <Field label="Lớp nhận học sinh" name="import-class" required>
               <Select value={importClassId} onChange={(event) => setImportClassId(event.target.value)} required>
@@ -324,8 +324,8 @@ export default function StudentsManagement() {
                 {classes.map((schoolClass) => <option key={schoolClass.id} value={schoolClass.id}>{schoolClass.name}</option>)}
               </Select>
             </Field>
-            <Field label="File danh sách" name="import-file" required helper={importFile ? `Đã chọn: ${importFile.name}` : "Định dạng .xlsx hoặc .xls."}>
-              <Input type="file" accept=".xlsx,.xls" onChange={(event) => setImportFile(event.target.files?.[0] || null)} required />
+            <Field label="File danh sách" name="import-file" required helper={importFile ? `Đã chọn: ${importFile.name}` : "Định dạng CSV UTF-8."}>
+              <Input type="file" accept=".csv,text/csv" onChange={(event) => setImportFile(event.target.files?.[0] || null)} required />
             </Field>
           </form>
         )}

@@ -1,18 +1,16 @@
 """HTTP adapter for assessment use cases."""
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app import models
 from app.api.errors import map_application_errors
 from app.application.assessment import Assessment
-from app.application.errors import ApplicationError, ErrorCode
 from app.database import get_db
 from app.routers.auth import get_current_user
 from app.schemas.assessment import (
     MessageResponse,
     QuizCreateRequest,
-    QuizQuestionCreateRequest,
     QuizResponse,
     QuizResultResponse,
     QuizSubmissionResponse,
@@ -22,7 +20,6 @@ from app.schemas.assessment import (
 
 
 router = APIRouter()
-MAX_DOCX_BYTES = 5 * 1024 * 1024
 
 
 @router.get("", response_model=list[QuizResponse])
@@ -42,21 +39,6 @@ async def create_quiz(
 ):
     with map_application_errors():
         return Assessment(db).create_quiz(current_user, quiz_data)
-
-
-@router.post("/upload-docx", response_model=list[QuizQuestionCreateRequest])
-async def upload_docx(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
-):
-    with map_application_errors():
-        if not file.filename or not file.filename.lower().endswith(".docx"):
-            raise ApplicationError(ErrorCode.INVALID_REQUEST, "Only .docx files are supported")
-        contents = await file.read(MAX_DOCX_BYTES + 1)
-        if len(contents) > MAX_DOCX_BYTES:
-            raise ApplicationError(ErrorCode.PAYLOAD_TOO_LARGE, "File không được vượt quá 5 MB")
-        return Assessment(db).import_questions(current_user, contents)
 
 
 @router.put("/{quiz_id}", response_model=QuizResponse)

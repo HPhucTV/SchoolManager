@@ -26,7 +26,7 @@ Các biến bắt buộc cho Compose:
 - `TRUSTED_PROXY_HOSTS`: CIDR/host của reverse proxy thật.
 - `NEXT_PUBLIC_API_URL`: public API URL được inline lúc build frontend.
 
-SMTP là tùy chọn. Không commit `.env`, certificate/private key, dump database hoặc screenshot chứa dữ liệu thật.
+Email delivery không nằm trong application hiện tại; notification chỉ ở trong ứng dụng. Không commit `.env`, certificate/private key, dump database hoặc screenshot chứa dữ liệu thật.
 
 Kiểm tra interpolation trước khi deploy (output có thể chứa secret, không đính kèm công khai):
 
@@ -74,16 +74,16 @@ Expected:
 
 Không đưa instance vào traffic chỉ dựa trên liveness.
 
-## 4. TLS và reverse proxy
+## 4. TLS và reverse proxy bên ngoài Compose
 
-Provision TLS certificate ngoài repository (Let's Encrypt, managed load balancer hoặc PKI của tổ chức). `certs/` chỉ chứa README; private key/certificate bị Git ignore. Certificate từng tồn tại trong Git history cũ phải được coi là compromised và thu hồi.
+Compose mặc định chỉ chạy PostgreSQL, FastAPI và Next.js. Provision reverse proxy/TLS ngoài repository (managed load balancer, Caddy/Nginx do operator quản lý hoặc ingress của platform). Certificate từng tồn tại trong Git history cũ phải được coi là compromised và thu hồi.
 
-Nginx phải:
+Reverse proxy phải:
 
 - terminate TLS và redirect HTTP sang HTTPS;
 - forward `X-Forwarded-For`, `X-Forwarded-Proto` và `X-Request-ID`;
 - chỉ cho phép trusted proxy range đã cấu hình;
-- giới hạn upload/body phù hợp với API (avatar 5 MB; DOCX theo policy backend).
+- giới hạn upload/body phù hợp với API (avatar 5 MB; CSV học sinh 2 MB).
 
 ## 5. Logs và incident correlation
 
@@ -112,6 +112,8 @@ Trước upgrade:
 2. Backup database và kiểm tra restore trên môi trường tách biệt.
 3. Ghi image/git revision hiện tại để rollback.
 4. Chạy quality gates và smoke test staging.
+
+Riêng migration `20260806_0003`, đọc [migration note](MIGRATION_20260806_0003.md): downgrade không phục hồi row của bảng legacy đã bị drop.
 
 ```bash
 git pull --ff-only origin main

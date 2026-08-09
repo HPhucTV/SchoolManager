@@ -12,10 +12,6 @@ connect_args = {}
 if "sqlite" in SQLALCHEMY_DATABASE_URL:
     connect_args = {"check_same_thread": False}
 
-# Handle PostgreSQL connection string for sync engine
-if SQLALCHEMY_DATABASE_URL.startswith("postgresql+asyncpg"):
-    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("+asyncpg", "")
-
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args=connect_args
 )

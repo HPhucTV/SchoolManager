@@ -1,162 +1,138 @@
-# Kiến trúc hệ thống SchoolManager
+# Kiến trúc SchoolManager
 
-## Tổng quan
-
-```
-                        ┌──────────────────────┐
-                        │    Nginx (SSL)       │
-                        │    Port: 80/443      │
-                        └──────────┬───────────┘
-                                   │
-                    ┌──────────────┴──────────────┐
-                    │                             │
-          ┌─────────▼─────────┐        ┌──────────▼──────────┐
-          │   Next.js 16      │        │    FastAPI           │
-          │   (Frontend)      │        │    (Backend)         │
-          │   Port: 3000      │        │    Port: 8001        │
-          └───────────────────┘        └──────────┬───────────┘
-                                                  │
-                                    ┌─────────────┼─────────────┐
-                                    │             │             │
-                          ┌─────────▼──┐  ┌───────▼────┐  ┌────▼─────┐
-                          │ PostgreSQL │  │ Redis      │  │ JSON     │
-                          │ Port: 5432 │  │ Cache      │  │ Datasets │
-                          └────────────┘  └────────────┘  └──────────┘
-```
-
-## Luồng backend theo vertical slice
-
-Các domain đã migrate đi theo luồng `router -> application -> domain/SQLAlchemy`:
+SchoolManager là modular monolith gồm Next.js 16, FastAPI/SQLAlchemy và PostgreSQL (SQLite cho local/test). Phạm vi sản phẩm được khóa ở quản lý trường học cốt lõi cộng wellbeing tối thiểu.
 
 ```text
-FastAPI router
-  -> request schema + HTTP error mapping
-  -> Coursework / Assessment / Wellbeing application interface
-  -> pure domain policy + direct SQLAlchemy access
-  -> one transaction + durable audit event
-  -> actor-specific response schema
+Browser
+  -> Next.js RoleShell + feature pages
+  -> typed HTTP client (src/lib/api)
+  -> FastAPI router
+  -> application use case + domain policy
+  -> SQLAlchemy transaction
+  -> PostgreSQL / SQLite
 ```
 
-Quy tắc đóng góp:
+Reverse proxy, TLS, backup, log aggregation và alerting là hạ tầng bên ngoài Compose mặc định.
 
-- Router chỉ xử lý transport và validation tại biên HTTP; không query hoặc commit trực tiếp.
-- Application module sở hữu một use case hoàn chỉnh và là interface test chính.
-- Domain policy phải thuần để test trực tiếp, không import FastAPI/SQLAlchemy.
-- Không thêm generic repository khi SQLAlchemy vẫn là database adapter duy nhất.
-- Request schema và response schema theo vai trò không dùng chung để tránh lộ dữ liệu chấm điểm.
+## Product boundary
 
-Lý do và trade-off được ghi tại [ADR-001](decisions/ADR-001-backend-vertical-slices.md).
+Giữ lại:
 
-## Lát cắt Phase 4: wellbeing và engagement
+- authentication, RBAC và quản trị tài khoản;
+- lớp học, danh sách học sinh và mã tham gia;
+- bài tập, nộp/chấm bài, quiz thường;
+- thời khóa biểu và thông báo trong ứng dụng;
+- `MoodEntry` và `SOSAlert` với privacy policy.
 
-Wellbeing đã được đưa vào cùng mô hình vertical slice thay vì mở rộng router thành một service riêng:
+Đã nghỉ hưu:
+
+- mini-games, Quiz Battle, AI Tutor/chatbot và AI grading heuristic;
+- gamification economy, shop, badge, leaderboard và global search;
+- Activities, invitation email, teacher reports và các trang analytics/statistics trùng lặp;
+- Jitsi/online-class state, SMTP delivery, DOCX/XLSX import và Redis cache;
+- API/resource workflow trùng lặp.
+
+## Frontend
+
+`src/app` là route adapter. Shared `RoleShell`, semantic Campus Blue tokens và UI primitives cung cấp navigation, form, table, dialog, loading/empty/error state cho cả ba role.
 
 ```text
-wellness router
-  -> wellbeing request/response schemas
-  -> WellbeingApplication (use cases + transaction + audit)
-  -> wellbeing domain policies (mood, SOS, class summary)
-  -> SQLAlchemy models
+src/app/                 route theo admin/teacher/student
+src/components/ui/       primitive và workflow dùng chung
+src/components/settings/ AccountSettings dùng chung ba role
+src/lib/api/client.ts    cookie credentials, parse response, error mapping
+src/lib/api/*.ts         contract theo academic/coursework/wellbeing/insights
 ```
 
-Các quyết định bảo vệ dữ liệu:
+Quy tắc:
 
-- Mood emoji dùng allow-list và ghi chú bị giới hạn 500 ký tự.
-- SOS giới hạn message/reviewer note 1.000 ký tự; nội dung message không xuất hiện trong audit event.
-- SOS ẩn danh trả về `student_id: null` và không cho phép đoán danh tính từ response.
-- Teacher chỉ xem hoặc cập nhật SOS thuộc lớp của mình; SOS đã resolved không thể mở lại.
-- Class wellness summary không trả raw mood emoji hoặc điểm cá nhân nhạy cảm.
+- `/teacher/bai-tap` và `/teacher/kiem-tra` là hai workflow canonical; class detail chỉ link có `classId`.
+- `/api/classes` là class contract duy nhất.
+- Ba route Cài đặt chỉ bọc `AccountSettings`.
+- Email đăng nhập hiển thị read-only vì JWT hiện định danh bằng email; thay đổi email cần auth contract mới.
 
-Frontend engagement dùng `src/lib/api/extensions.ts` làm seam typed cho wellbeing, gamification, notifications, AI Tutor, Quiz Battle và games. Route page chỉ điều phối state và dùng UI primitives chung; polling Quiz Battle và timer game đều có cleanup khi unmount.
-
-## Operational boundary (Phase 5)
-
-HTTP boundary dùng `RequestContextMiddleware` để gắn `X-Request-ID` cho mọi response và ghi một JSON event `http_request_completed` gồm method, path, status, duration và request ID. Error handler ghi event theo status nhưng không log body, token, exception message hoặc dữ liệu học sinh; lỗi 500 chỉ trả thông báo chung và correlation ID.
+### Browser session
 
 ```text
-Client / reverse proxy
-  -> validate or generate X-Request-ID
-  -> FastAPI route + application policy
-  -> response/error with X-Request-ID
-  -> structured JSON event for correlation
+POST /api/auth/login
+  -> trả Bearer token cho client tương thích
+  -> đặt cookie HttpOnly/SameSite=Lax cho browser
+GET /api/auth/users/me
+  -> hydrate AuthProvider từ cookie, không đọc localStorage
+POST /api/auth/logout
+  -> xóa cookie, luôn idempotent
 ```
 
-Health contract:
+Cookie chỉ bật `Secure` trong production. Local development phải dùng cùng hostname cho frontend và backend. Bearer header có độ ưu tiên cao hơn cookie để explicit API credential không âm thầm fallback sang phiên browser khác.
 
-- `/health/live`: process liveness, không chạm database.
-- `/health/ready`: chạy `SELECT 1`, trả 503 khi database chưa sẵn sàng.
-- `/health`: alias readiness cho platform cũ.
+## Backend vertical slices
 
-Đây là observability baseline, chưa phải metrics/tracing/alerting stack. Operator phải thu thập stdout/stderr có cấu trúc và đặt cảnh báo theo readiness/error rate ở hạ tầng triển khai.
+Assessment, coursework và wellbeing dùng luồng:
 
-## Schema và account provisioning
+```text
+router -> validated schema -> application interface
+       -> pure policy + SQLAlchemy -> one transaction + audit event
+       -> actor-specific response
+```
 
-Application import không tự tạo bảng. Local/Docker chạy explicit bootstrap theo thứ tự:
+Router còn lại được giữ nhỏ và factual. Không tạo generic repository khi SQLAlchemy là database adapter duy nhất. Chi tiết trade-off ở [ADR-001](decisions/ADR-001-backend-vertical-slices.md).
+
+### Factual projections
+
+`SchoolInsights` là read-only application interface cho ba projection nhỏ, không tạo bảng hoặc analytics pipeline mới:
+
+```text
+Schedule + Assignment + Submission + QuizResult + Notification + SOSAlert
+  -> /api/dashboard/today
+  -> /api/classes/{class_id}/gradebook
+  -> /api/student/gradebook
+```
+
+Điểm bài tập được quy đổi từ `Submission.total_score / Assignment.total_points`; điểm quiz dùng `QuizResult.percentage`. Giá trị trung bình chỉ tính mục đã có điểm. Attention queue chỉ chứa SOS đang mở, bài quá hạn chưa nộp và quiz dưới 50%, tối đa tám mục trên dashboard để giữ trọng tâm.
+
+### Privacy boundary
+
+- Answer key không xuất hiện trong student response trước policy cho phép.
+- Mood history chỉ chủ tài khoản đọc được.
+- SOS ẩn danh trả `student_id: null`; message không nằm trong audit event.
+- Today projection không làm lộ danh tính của SOS ẩn danh và luôn giới hạn theo lớp giáo viên phụ trách.
+- Teacher chỉ xử lý SOS của học sinh thuộc lớp mình.
+- Class wellbeing tính từ mood check-in gần đây; không duy trì điểm sức khỏe tổng hợp trên `users`.
+
+## Models đang hoạt động
+
+- `User`, `Class`, `Schedule`
+- `Assignment`, `Question`, `Submission`, `Answer`
+- `Quiz`, `QuizQuestion`, `QuizResult`
+- `Notification`
+- `MoodEntry`, `SOSAlert`
+- `AuditEvent`
+
+Các bảng feature đã nghỉ hưu được drop bởi migration `20260806_0003`.
+
+## Bootstrap và migration
 
 ```text
 python -m scripts.provision_schema
-  -> create current SQLAlchemy schema baseline (idempotent, no data)
+  -> create current metadata baseline, không seed
 alembic upgrade head
-  -> apply/adopt versioned migration deltas
+  -> adopt/apply versioned deltas
 python -m scripts.create_admin
-  -> interactive first admin, no default password
+  -> tạo admin đầu tiên qua prompt
 ```
 
-`scripts/seed_db.py` ở root là demo seed riêng, tự chặn `ENVIRONMENT=production` và không được copy vào backend image. Alembic hiện là adoption baseline cho schema legacy, chưa phải lịch sử tạo toàn bộ database từ revision đầu tiên.
+Alembic vẫn là adoption history, chưa phải lịch sử tạo schema từ revision đầu. Migration `0003` là destructive de-scope; đọc [migration note](MIGRATION_20260806_0003.md), backup và restore-test trước production.
 
-## Vai trò người dùng
+## Operational boundary
 
-| Vai trò | Mô tả | Trang chính |
-|---------|-------|-------------|
-| **Admin** | Quản trị hệ thống, CRUD users/classes | `/admin` |
-| **Teacher** | Quản lý lớp, tạo quiz, xem analytics | `/teacher` |
-| **Student** | Làm quiz, gamification, mood tracking | `/student` |
+`RequestContextMiddleware` gắn `X-Request-ID` và ghi structured HTTP event không chứa body/token/SOS message. `/health/live` kiểm tra process; `/health/ready` kiểm tra database. Repository chưa cung cấp metrics, tracing, centralized logging hoặc alert delivery.
 
-Parent còn xuất hiện trong một số ý tưởng/model legacy nhưng build hiện tại không có `/parent` page hoặc `/api/parent` router; không coi đây là public role contract.
+Compose mặc định chỉ gồm:
 
-## Luồng Authentication
+| Service | Port | Mục đích |
+|---|---:|---|
+| `db` | 5432 | PostgreSQL |
+| `backend` | 8001 | FastAPI |
+| `frontend` | 3000 | Next.js |
 
-```
-Client                    Backend                   Database
-  │                         │                         │
-  │── POST /auth/login ────▶│                         │
-  │                         │── Verify credentials ──▶│
-  │                         │◀── User data ──────────│
-  │                         │── Generate JWT          │
-  │◀── { token, user } ────│                         │
-  │                         │                         │
-  │── GET /api/* ──────────▶│                         │
-  │   (Bearer token)        │── Validate JWT          │
-  │                         │── Process request ─────▶│
-  │◀── Response ───────────│                         │
-```
-
-## Docker Services
-
-| Service | Image | Port | Mục đích |
-|---------|-------|------|----------|
-| `db` | postgres:15-alpine | 5432 | Database chính |
-| `backend` | Custom (FastAPI) | 8001 | REST API |
-| `frontend` | Custom (Next.js) | 3000 | Web UI |
-| `redis` | redis:7-alpine | internal | Cache tùy chọn; API vẫn phải degrade an toàn khi cache unavailable |
-| `nginx` | nginx:alpine | 80, 443 | Reverse proxy + SSL |
-| `certbot` | certbot/certbot | — | SSL cert renewal |
-
-## Database Models
-
-Các bảng chính trong `backend/app/models.py`:
-
-- **User** — Tài khoản người dùng (public contract hiện tại: admin, teacher, student)
-- **Class** — Lớp học
-- **Student** — Thông tin học sinh (liên kết User + Class)
-- **Quiz / Question** — Bài kiểm tra & câu hỏi
-- **QuizSubmission** — Bài làm của học sinh
-- **Assignment / Submission** — Bài tập & nộp bài
-- **Activity** — Hoạt động & sự kiện
-- **Schedule** — Thời khóa biểu
-- **MoodEntry** — Nhật ký cảm xúc
-- **SOSAlert** — Cảnh báo khẩn cấp
-- **Badge / UserBadge** — Huy hiệu
-- **GameScore** — Điểm gamification
-- **Notification** — Thông báo
-- **QuizBattle** — Trận đấu quiz
+TLS/reverse proxy phải được operator cấu hình ngoài Compose.

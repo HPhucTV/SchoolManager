@@ -22,7 +22,7 @@ Các dial thiết kế:
 - Cấu trúc URL tiếng Việt hiện tại đã tạo thành thói quen sử dụng. Không đổi slug trong giai đoạn trùng tu giao diện.
 - Ba vai trò chính đã có luồng riêng và phần lớn chức năng nghiệp vụ đã tồn tại.
 - Màn hình đăng nhập có chủ đề học đường rõ ràng. Chủ đề này được giữ bằng ảnh thật và logo; khối SVG nhân vật hơn 500 dòng được loại bỏ để form dễ bảo trì và tôn trọng reduced-motion.
-- Tailwind v4, Recharts và Lucide đã có sẵn. Giai đoạn đầu không thêm component library mới.
+- Tailwind v4 và Lucide đã có sẵn. Không thêm component library mới.
 
 ### 2.2 Vấn đề cần loại bỏ
 
@@ -142,9 +142,9 @@ flowchart TD
 
 ### Student workspace
 
-- Navigation đơn giản, ưu tiên Lịch học, Môn học, Bài cần làm, Thành tích và Hỗ trợ.
+- Navigation đơn giản, ưu tiên Lịch học, Môn học, Bài cần làm, Thông báo và Hỗ trợ.
 - Giọng điệu thân thiện hơn nhưng vẫn dùng chung token và component.
-- Gamification là một feature, không được chi phối toàn bộ dashboard bằng nhiều màu accent.
+- Wellbeing là luồng hỗ trợ riêng tư, không phải điểm số hoặc gamification profile.
 
 ## 5. Kiến trúc code đích
 
@@ -165,7 +165,6 @@ src/
     quizzes/
     schedule/
     wellness/
-    gamification/
     notifications/
   lib/
     http/                      # client, error mapping, auth transport
@@ -271,16 +270,16 @@ Mục tiêu: đưa business logic ra khỏi router mà không tạo microservice
 
 Điều kiện hoàn thành: router chỉ làm transport, policy được test trực tiếp, không tăng số abstraction không có consumer.
 
-### Giai đoạn 4: Student wellbeing và engagement
+### Giai đoạn 4: Student wellbeing và communication
 
-Mục tiêu: làm trải nghiệm học sinh thân thiện nhưng không biến thành giao diện trò chơi hỗn loạn.
+Mục tiêu: làm trải nghiệm học sinh thân thiện, riêng tư và tập trung vào học tập.
 
-- Migrate wellness, mood journal, notification, achievement, quiz battle và mini-games.
+- Migrate mood journal, SOS và notification trong ứng dụng.
 - Áp dụng privacy-first cho dữ liệu sức khỏe tinh thần.
 - Giữ animation ở mức phản hồi; cung cấp reduced-motion.
-- Đánh giá lại AI tutor và chatbot như feature độc lập, có state và quota rõ ràng.
+- Loại synthetic wellbeing score; summary chỉ tính từ MoodEntry/check-in thật.
 
-Điều kiện hoàn thành: dữ liệu wellbeing có policy test; mobile và keyboard navigation pass; gamification không phá palette chung.
+Điều kiện hoàn thành: dữ liệu wellbeing có policy test; mobile và keyboard navigation pass; response không lộ mood/SOS nhạy cảm.
 
 ### Giai đoạn 5: Open-source readiness và release
 
@@ -338,15 +337,15 @@ Không nằm trong lát cắt đầu tiên:
 - Ưu tiên security baseline trước khi gọi phiên bản mới là ổn định.
 - Migrate theo vertical slice, không rewrite toàn bộ cùng lúc.
 
-## 10. Trạng thái triển khai ngày 2026-08-05
+## 10. Trạng thái triển khai ngày 2026-08-09
 
-Lát cắt đầu tiên đã hoàn thành và có evidence chạy local:
+Chương trình renovation đã hoàn thành baseline và có evidence chạy local:
 
 | Hạng mục | Trạng thái | Evidence |
 |---|---|---|
 | Safety baseline | Hoàn thành | Shared authorization policy, secret fail-fast, scoped RBAC, upload validation |
 | Dependency hygiene | Hoàn thành baseline | `npm audit --audit-level=high` báo 0 vulnerability; `python -m pip_audit -r requirements.txt` báo không có vulnerability đã biết |
-| Backend policy và workflow tests | Hoàn thành | 30 test pass cho role, class scope, domain/application/OpenAPI workflow, wellbeing, operational readiness và first-admin provisioning |
+| Backend policy và workflow tests | Hoàn thành | 36 test pass cho role, class scope, domain/application/OpenAPI workflow, wellbeing, insights, migration, operational readiness và first-admin provisioning |
 | CI | Hoàn thành | Frontend audit/lint/typecheck/build; backend audit/compileall/pytest |
 | Design foundation | Hoàn thành | Campus Blue tokens, Be Vietnam Pro, Button, Surface, states và `RoleShell` |
 | Pilot screens | Hoàn thành | Landing, login, Admin Overview responsive; public/auth hỗ trợ system dark mode |
@@ -356,16 +355,18 @@ Lát cắt đầu tiên đã hoàn thành và có evidence chạy local:
 | Workflow primitives | Hoàn thành | DataTable, FilterToolbar, Pagination, Field, Dialog và ConfirmDialog có keyboard/focus behavior chung |
 | Phase 2 browser smoke | Hoàn thành | 3 role trên production build, desktop/mobile, dialog/drawer, không console error hoặc tràn ngang |
 | Phase 3 backend deepening | Hoàn thành cho assessment/coursework | `Coursework` và `Assessment` application interface; router không query/commit; schema theo actor; transaction, error mapping và audit event dùng chung |
-| Phase 4 student wellbeing và engagement | Hoàn thành lát cắt chính | Wellbeing application/policy/schema + 14 workflow tests; Campus Blue cho mood, notifications, achievements, AI Tutor, Quiz Battle và mini-games; production build smoke desktop/mobile/dark/keyboard không console error hoặc tràn ngang |
-| Phase 5 open-source readiness và release | Hoàn thành baseline | README/API/ARCHITECTURE/CONTRIBUTING/DEPLOYMENT khớp code; issue/PR evidence templates; explicit schema/admin provisioning; request ID, structured error logs, liveness/readiness; audit và 30 test pass |
+| Phase 4 student wellbeing | Hoàn thành lát cắt chính | MoodEntry/SOS privacy-first; class summary từ check-in thật; notification chỉ trong ứng dụng |
+| Phase 5 open-source readiness và release | Hoàn thành baseline | README/API/ARCHITECTURE/CONTRIBUTING/DEPLOYMENT khớp code; issue/PR evidence templates; explicit schema/admin provisioning; request ID, structured error logs, liveness/readiness và quality gates |
+| Product de-scope | Hoàn thành implementation | Bỏ game/AI/Quiz Battle/gamification/search/analytics/activities/invitation/Jitsi/SMTP và workflow trùng; migration `20260806_0003` có test |
+| Today + gradebook + attention | Hoàn thành implementation | Ba read-only projection từ dữ liệu thật; dashboard teacher/student và sổ điểm lớp không thêm route menu hoặc bảng mới |
+| HttpOnly browser session | Hoàn thành implementation | Cookie SameSite, Secure production, logout idempotent và Bearer compatibility; frontend không lưu auth trong localStorage |
 
 Các giới hạn còn chủ động giữ lại:
 
-- `RoleShell` hiện được dùng cho cả Admin, Teacher và Student. Các feature wellbeing, gamification và mini-game đã đi qua lát cắt Phase 4; các route legacy ngoài danh sách này vẫn cần migrate dần.
-- Alembic hiện là adoption baseline cho các cột quiz cũ, chưa phải lịch sử khởi tạo toàn bộ schema.
-- Các router ngoài assessment/coursework vẫn là legacy slice và chỉ được migrate khi domain tương ứng được triển khai; ADR-001 cấm thêm generic repository dùng trước nhu cầu.
+- `RoleShell` hiện được dùng cho cả Admin, Teacher và Student; các màn hình cốt lõi tiếp tục được migrate dần khỏi inline style khi có thay đổi nghiệp vụ.
+- Alembic vẫn là adoption baseline, chưa phải lịch sử khởi tạo toàn bộ schema. Migration de-scope `0003` mất dữ liệu legacy và cần backup/restore plan.
+- Router assessment/coursework/wellbeing dùng application interface; các router CRUD nhỏ còn lại không được bọc generic repository nếu chưa có seam thật.
 - Pytest còn một `StarletteDeprecationWarning` từ FastAPI TestClient về lớp tương thích `httpx`; mã ứng dụng không còn cảnh báo `class Config` của Pydantic v2.
 - Certificate đã bị xóa khỏi working tree nhưng vẫn tồn tại trong Git history cũ. Người vận hành phải thu hồi và cấp lại certificate bên ngoài repo.
-- Session frontend vẫn lưu token trong `localStorage`; migration sang cookie HttpOnly cần một thay đổi hợp đồng auth riêng.
 - Login/API chưa có rate limiting; đây là security hardening còn mở và cần thiết kế theo deployment topology trước khi bật.
 - Observability Phase 5 mới là baseline request ID/structured event/health probe; metrics, tracing, log aggregation và alert delivery thuộc hạ tầng triển khai và chưa được cấu hình trong repo.

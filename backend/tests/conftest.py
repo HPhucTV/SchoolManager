@@ -2,7 +2,6 @@ import os
 from collections.abc import Iterator
 
 import pytest
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -11,24 +10,10 @@ from sqlalchemy.pool import StaticPool
 
 os.environ.setdefault("ENVIRONMENT", "test")
 os.environ.setdefault("SECRET_KEY", "test-only-secret-key-with-at-least-thirty-two-characters")
-os.environ.setdefault("REDIS_HOST", "127.0.0.1")
 
 from app import models, security  # noqa: E402
 from app.database import get_db  # noqa: E402
-from app.routers import (  # noqa: E402
-    activities,
-    analytics,
-    assignments,
-    auth,
-    classes,
-    dashboard,
-    quiz_battle,
-    quizzes,
-    schedule_api,
-    search,
-    students,
-    wellness,
-)
+from app.main import app as fastapi_app  # noqa: E402
 
 
 @pytest.fixture()
@@ -49,26 +34,17 @@ def db_session() -> Iterator[Session]:
 
 @pytest.fixture()
 def client(db_session: Session) -> Iterator[TestClient]:
-    app = FastAPI()
-    app.include_router(auth.router, prefix="/api/auth")
-    app.include_router(classes.router, prefix="/api/classes")
-    app.include_router(activities.router, prefix="/api/activities")
-    app.include_router(assignments.router, prefix="/api/assignments")
-    app.include_router(quizzes.router, prefix="/api/quizzes")
-    app.include_router(quiz_battle.router, prefix="/api/battle")
-    app.include_router(analytics.router, prefix="/api/analytics")
-    app.include_router(dashboard.router, prefix="/api/dashboard")
-    app.include_router(schedule_api.router, prefix="/api/schedules")
-    app.include_router(search.router, prefix="/api/search")
-    app.include_router(students.router, prefix="/api/students")
-    app.include_router(wellness.router, prefix="/api/wellness")
+    app = fastapi_app
 
     def override_get_db() -> Iterator[Session]:
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as test_client:
-        yield test_client
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.fixture()

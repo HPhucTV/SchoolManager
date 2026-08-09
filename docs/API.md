@@ -1,45 +1,14 @@
 # SchoolManager API
 
-FastAPI sinh OpenAPI trực tiếp từ code. Khi tài liệu này và schema khác nhau, dùng schema tại `GET /api/openapi.json` làm nguồn cuối cùng.
+FastAPI sinh OpenAPI từ code tại `GET /api/openapi.json`; schema đó là nguồn chi tiết cuối cùng. Local API mặc định ở `http://127.0.0.1:8001` và Swagger ở `/docs`.
 
-## Base URL và công cụ
+## Authentication và error contract
 
-| Môi trường | URL |
-|---|---|
-| Local | `http://127.0.0.1:8001` |
-| Swagger UI | `{BASE_URL}/docs` |
-| ReDoc | `{BASE_URL}/redoc` |
-| OpenAPI JSON | `{BASE_URL}/api/openapi.json` |
+Web frontend xác thực bằng cookie `schoolmanager_session` có `HttpOnly`, `SameSite=Lax` và `Secure` trong production. API client/CLI vẫn có thể gửi `Authorization: Bearer <access_token>`; Bearer được ưu tiên nếu cả header và cookie cùng tồn tại. Server luôn kiểm tra role và class/resource scope; frontend không phải security boundary.
 
-Không mặc định một production hostname trong client hoặc tài liệu. Operator cấu hình `NEXT_PUBLIC_API_URL` cho từng môi trường.
+`POST /api/auth/login` tiếp tục trả `access_token` để giữ tương thích và đồng thời đặt cookie cho browser. `POST /api/auth/logout` xóa cookie theo cách idempotent. Frontend không lưu token hoặc user profile trong `localStorage`.
 
-## Authentication
-
-Các endpoint chứa dữ liệu trường học yêu cầu JWT Bearer token và tiếp tục kiểm tra role/class scope ở application layer.
-
-```http
-Authorization: Bearer <access_token>
-```
-
-Đăng nhập dùng email, không dùng username:
-
-```http
-POST /api/auth/login
-Content-Type: application/json
-
-{
-  "email": "teacher@school.example",
-  "password": "<local-or-user-password>"
-}
-```
-
-Response trả `access_token`, `token_type` và user hiện tại. Repository không cung cấp shared demo password; xem `README.md` nếu cần seed local.
-
-## Request ID và error contract
-
-Mọi HTTP response có header `X-Request-ID`. Client có thể gửi một ID gồm tối đa 128 ký tự an toàn (`A-Z`, `a-z`, `0-9`, `.`, `_`, `:`, `-`); server sẽ thay ID không hợp lệ.
-
-HTTP error do application trả về có dạng:
+Mọi response có `X-Request-ID`. Error do application trả về có dạng:
 
 ```json
 {
@@ -48,106 +17,106 @@ HTTP error do application trả về có dạng:
 }
 ```
 
-Validation error giữ `detail` dạng danh sách FastAPI. Lỗi 500 không trả exception, SQL hoặc credential; dùng `request_id` để đối chiếu structured log.
+## Endpoint đang hỗ trợ
 
-## Health checks (không cần authentication)
-
-| Method | Endpoint | Ý nghĩa |
-|---|---|---|
-| GET | `/health/live` | Process đang nhận request |
-| GET | `/health/ready` | Database trả lời `SELECT 1`; lỗi trả 503 |
-| GET | `/health` | Alias của readiness, không xuất hiện trong OpenAPI |
-
-Không dùng liveness để quyết định đưa instance vào traffic; load balancer nên dùng readiness.
-
-## Core vertical slices
-
-### Authentication và admin — `/api/auth`
+### Identity — `/api/auth`
 
 | Method | Endpoint | Scope |
 |---|---|---|
 | POST | `/login` | Public |
-| GET, PUT | `/users/me` | User hiện tại |
+| POST | `/logout` | Public; xóa browser session cookie |
+| GET, PUT | `/users/me` | User hiện tại; email đăng nhập không đổi qua UI |
 | POST | `/change-password` | User hiện tại |
-| POST | `/users/me/avatar` | User hiện tại; JPEG/PNG/WebP, tối đa 5 MB |
+| POST | `/users/me/avatar` | JPEG/PNG/WebP, tối đa 5 MB |
 | GET, POST | `/users` | Admin |
 | PUT, DELETE | `/users/{user_id}` | Admin |
 | POST | `/users/{user_id}/reset-password` | Admin |
-| GET, POST | `/classes` | Admin operations dưới auth router |
-| PUT | `/classes/{class_id}` | Admin |
 
-### Classes và activities
+### Classes — `/api/classes`
 
-| Method | Endpoint | Ghi chú |
+| Method | Endpoint | Scope |
 |---|---|---|
-| GET, POST | `/api/classes` | List/create theo role |
-| GET, PUT | `/api/classes/{class_id}` | Class scope bắt buộc |
-| GET | `/api/classes/{class_id}/students` | Không cho student đọc lớp khác |
-| GET | `/api/classes/{class_id}/timeline` | Timeline lớp |
-| GET, POST | `/api/activities` | Authenticated |
-| PUT, PATCH, DELETE | `/api/activities/{activity_id}` | Teacher/admin policy |
+| GET, POST | `/api/classes` | List theo role; create cho admin/teacher |
+| GET, PUT | `/api/classes/{class_id}` | Class scope |
+| GET | `/api/classes/{class_id}/students` | Admin hoặc teacher sở hữu lớp |
+| GET | `/api/classes/{class_id}/gradebook?page=&page_size=` | Admin hoặc teacher sở hữu lớp; điểm factual có phân trang |
+
+Đây là contract lớp duy nhất; `/api/auth/classes` đã nghỉ hưu.
+
+### Admin — `/api/admin`
+
+| Method | Endpoint | Scope |
+|---|---|---|
+| GET | `/stats` | Aggregate số user/lớp/quiz |
+| GET | `/student-template` | Tải CSV UTF-8 mẫu |
+| POST | `/import-students?class_id=...` | Import CSV UTF-8, tối đa 2 MB |
+
+CSV có đúng ba cột `Họ tên, Email, Mật khẩu`; mật khẩu từ 8 đến 72 byte.
 
 ### Coursework — `/api/assignments`
 
-| Method | Endpoint | Ghi chú |
+| Method | Endpoint | Scope |
 |---|---|---|
-| GET, POST | `/api/assignments` | Danh sách/tạo assignment |
-| GET, PUT, DELETE | `/api/assignments/{assignment_id}` | Role-specific response/policy |
-| POST | `/api/assignments/{assignment_id}/submit` | Student submit |
-| GET | `/api/assignments/{assignment_id}/my-submission` | Student |
-| GET | `/api/assignments/{assignment_id}/submissions` | Teacher của lớp |
-| PUT | `/api/assignments/submissions/{submission_id}/grade` | Teacher của lớp |
-| PATCH | `/api/assignments/{assignment_id}/close` | Teacher của lớp |
-| POST | `/api/assignments/upload-docx` | DOCX validation tại boundary |
+| GET, POST | `/api/assignments` | List/tạo bài tập |
+| GET, PUT, DELETE | `/api/assignments/{assignment_id}` | Resource policy |
+| POST | `/api/assignments/{assignment_id}/submit` | Student của lớp |
+| GET | `/api/assignments/{assignment_id}/my-submission` | Student hiện tại |
+| GET | `/api/assignments/{assignment_id}/submissions` | Teacher sở hữu lớp |
+| PUT | `/api/assignments/submissions/{submission_id}/grade` | Chấm thủ công |
+| PATCH | `/api/assignments/{assignment_id}/close` | Teacher sở hữu lớp |
+
+Import DOCX và heuristic “AI grade” đã bị loại bỏ. Giáo viên tạo câu hỏi trong form và chấm tự luận thủ công.
 
 ### Assessment — `/api/quizzes`
 
-| Method | Endpoint | Ghi chú |
+| Method | Endpoint | Scope |
 |---|---|---|
-| GET, POST | `/api/quizzes` | List/create quiz |
-| GET, PUT, DELETE | `/api/quizzes/{quiz_id}` | Role/class policy |
+| GET, POST | `/api/quizzes` | List/tạo quiz thường |
+| GET, PUT, DELETE | `/api/quizzes/{quiz_id}` | Resource policy |
 | GET | `/api/quizzes/{quiz_id}/my-result` | Student result |
-| POST | `/api/quizzes/{quiz_id}/submit` | Student submit |
-| POST | `/api/quizzes/upload-docx` | Parse DOCX thành câu hỏi draft |
+| POST | `/api/quizzes/{quiz_id}/submit` | Student của lớp |
 
-Student response không chứa đáp án trước khi policy `show_answers` cho phép.
+Student response không chứa answer key trước khi policy cho phép. Import DOCX, AI Tutor và Quiz Battle không còn trong contract.
 
-### Wellbeing — `/api/wellness`
+### Student workspace — `/api/student`
 
-| Method | Endpoint | Ghi chú |
+| Method | Endpoint | Scope |
 |---|---|---|
-| POST | `/mood` | Student; emoji allow-list, note tối đa 500 ký tự |
-| GET | `/mood/history` | Student; `days` từ 1-90 |
-| GET | `/mood/analytics` | Student aggregate |
-| POST | `/sos` | Student; hỗ trợ ẩn danh |
-| GET | `/sos/alerts` | Teacher chỉ thấy lớp mình; admin theo policy |
-| PATCH | `/sos/{alert_id}` | Teacher/admin transition policy |
-| GET | `/class/{class_id}` | Summary riêng tư, không trả raw mood cá nhân |
+| GET | `/dashboard` | Tên lớp và tiến độ bài tập factual |
+| GET | `/gradebook` | Điểm đã chấm theo môn từ submission và quiz result |
+| POST | `/join-class` | Tham gia bằng `class_code` |
+| GET | `/subjects` | Môn học rút ra từ assignment/quiz |
+| GET | `/subjects/{subject_name}` | Nội dung môn và liên hệ giáo viên |
 
-SOS ẩn danh trả `student_id: null`; audit event không ghi nội dung message.
+Profile/avatar/assignment/quiz duplicate dưới prefix này đã nghỉ hưu; dùng resource API chuẩn ở trên.
 
-## Legacy/engagement route groups
-
-Các group sau đang tồn tại và được frontend sử dụng, nhưng chưa phải tất cả đã migrate sang vertical slice. Kiểm tra Swagger và test evidence trước khi thay contract.
+### Schedules và notifications
 
 | Prefix | Chức năng |
 |---|---|
-| `/api/schedules` | Thời khóa biểu |
-| `/api/battle` | Quiz Battle |
-| `/api/gamification` | Check-in, badge, leaderboard, shop |
-| `/api/notifications` | Thông báo |
-| `/api/ai`, `/api/ai-tutor` | Chat/advice dựa trên dataset nội bộ |
-| `/api/games` | Crossword |
-| `/api/analytics` | Trends, early warning, class report |
-| `/api/search` | Search và suggestions |
-| `/api/dashboard`, `/api/statistics` | Dashboard aggregates |
-| `/api/student`, `/api/teacher/reports` | Role-specific workflows |
+| `/api/schedules` | CRUD thời khóa biểu và lịch của user hiện tại |
+| `/api/dashboard/metrics` | Số lớp, học sinh, bài tập/quiz đang mở |
+| `/api/dashboard/today` | Lịch hôm nay, việc gần hạn, thông báo chưa đọc và tín hiệu cần chú ý theo role |
+| `/api/notifications` | Thông báo trong ứng dụng, không gửi email/đính kèm file |
 
-Không có `/api/parent` router trong build hiện tại. Parent role vẫn tồn tại trong một phần model legacy nhưng chưa được công bố là public API.
+`/api/dashboard/today` chỉ dùng dữ liệu hiện có. Teacher nhận SOS đang mở, bài quá hạn chưa nộp và quiz dưới 50% trong phạm vi lớp phụ trách; student không nhận attention queue và không thấy bài đã hoàn thành trong danh sách việc cần làm. SOS ẩn danh luôn trả `student_id: null`.
 
-## Thay đổi contract
+### Wellbeing — `/api/wellness`
 
-- Cập nhật schema/type frontend trong `src/lib/api/` cùng PR.
-- Thêm test OpenAPI hoặc application workflow cho endpoint thay đổi.
-- Ghi migration/compatibility note trong PR template.
-- Không đưa secret, token, mood note, SOS message hay dữ liệu học sinh thật vào example/log/screenshot.
+| Method | Endpoint | Scope |
+|---|---|---|
+| POST | `/mood` | Student; emoji allow-list, note tối đa 500 ký tự |
+| GET | `/mood/history` | Student; `days` từ 1–90 |
+| GET | `/mood/analytics` | Aggregate từ MoodEntry thật |
+| POST | `/sos` | Student; hỗ trợ ẩn danh |
+| GET | `/sos/alerts` | Teacher theo class scope; admin |
+| PATCH | `/sos/{alert_id}` | Luồng xử lý SOS |
+| GET | `/class/{class_id}` | Summary riêng tư từ check-in gần đây |
+
+Không còn các cột điểm wellbeing tổng hợp trên `users`; response không trả raw mood cá nhân cho giáo viên.
+
+## Route đã nghỉ hưu
+
+Các prefix sau không xuất hiện trong OpenAPI: `/api/activities`, `/api/analytics`, `/api/statistics`, `/api/students`, `/api/invitations`, `/api/teacher/reports`, `/api/games`, `/api/gamification`, `/api/battle`, `/api/search`, cùng toàn bộ AI Tutor/chatbot API.
+
+Xem [migration 20260806_0003](MIGRATION_20260806_0003.md) trước khi nâng cấp database có dữ liệu cũ.

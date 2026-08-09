@@ -61,15 +61,6 @@ class Wellbeing:
         )
         with transaction(self.db):
             self.db.add(entry)
-            actor.mental_health_score = policy.adjusted_mental_health_score(
-                current_score=actor.mental_health_score,
-                mood_level=request.mood_level,
-            )
-            actor.status = policy.student_status(
-                happiness=actor.happiness_score,
-                engagement=actor.engagement_score,
-                mental_health=actor.mental_health_score,
-            )
             self.db.flush()
             record_audit_event(
                 self.db,
@@ -130,9 +121,6 @@ class Wellbeing:
         )
         with transaction(self.db):
             self.db.add(alert)
-            actor.mental_health_score = max(0, actor.mental_health_score - 5)
-            if actor.mental_health_score < 40:
-                actor.status = "warning"
             self.db.flush()
             if actor.class_id:
                 school_class = self.db.query(models.Class).filter(models.Class.id == actor.class_id).first()
@@ -248,7 +236,7 @@ class Wellbeing:
         cutoff = (datetime.now() - timedelta(days=7)).isoformat()
         summaries: list[StudentWellnessSummary] = []
         mood_averages: list[float] = []
-        status_counts = {"excellent": 0, "good": 0, "attention": 0, "warning": 0}
+        status_counts = {"stable": 0, "attention": 0, "warning": 0, "no_data": 0}
         for student in students:
             moods = self.db.query(models.MoodEntry).filter(
                 models.MoodEntry.student_id == student.id,
@@ -257,11 +245,12 @@ class Wellbeing:
             average = sum(mood.mood_level for mood in moods) / len(moods) if moods else 0
             if moods:
                 mood_averages.append(average)
-            status_counts[student.status] = status_counts.get(student.status, 0) + 1
+            status = policy.mood_checkin_status(average=average, has_recent_checkin=bool(moods))
+            status_counts[status] += 1
             summaries.append(StudentWellnessSummary(
                 id=student.id,
                 name=student.name,
-                status=student.status,
+                status=status,
                 avg_mood=round(average, 1),
                 has_recent_checkin=bool(moods),
             ))

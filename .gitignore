@@ -8,6 +8,11 @@ __pycache__/
 out/
 build/
 artifacts/
+*.tsbuildinfo
+
+# Ảnh avatar do người dùng upload lúc chạy, không phải asset của repo
+backend/static/avatars/*
+!backend/static/avatars/.gitkeep
 
 # Logs
 npm-debug.log*

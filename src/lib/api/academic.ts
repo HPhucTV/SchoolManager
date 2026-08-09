@@ -1,23 +1,11 @@
 import { apiRequest } from "./client";
 
-export interface OnlineSession {
-  active: boolean;
-  room_url: string | null;
-}
-
 export interface StudentDashboard {
   student: {
     name: string;
     class_name?: string | null;
-    happiness_score: number;
-    engagement_score: number;
-    mental_health_score: number;
-    status: string;
   };
-  online_session?: OnlineSession;
   assignments_status?: { total: number; completed: number; pending: number };
-  recent_activities?: Array<{ id: number; title: string; description?: string; created_at?: string }>;
-  pending_surveys?: Array<{ id: number; title: string; completed: boolean }>;
 }
 
 export interface StudentSubject {
@@ -30,8 +18,6 @@ export interface StudentSubject {
 export interface SubjectDetails {
   subject: string;
   class_info: {
-    meeting_link: string | null;
-    online_enabled: boolean;
     teacher_name: string;
     teacher_email?: string;
     teacher_phone?: string;
@@ -65,11 +51,7 @@ export interface StudentClassDetails extends TeacherClassSummary {
   teacher_id?: number | null;
   teacher_name?: string | null;
   student_count: number;
-  happiness_score: number;
-  engagement_score: number;
-  mental_health_score: number;
-  meeting_link?: string | null;
-  online_enabled: boolean;
+  class_code?: string | null;
 }
 
 interface SchedulePayload {
