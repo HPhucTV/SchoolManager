@@ -21,23 +21,34 @@ const SUBJECT_ICONS: Array<[RegExp, LucideIcon]> = [
   [/thể dục/i, Dumbbell],
 ];
 
+const SUBJECT_TONES: Array<[RegExp, string]> = [
+  [/toán/i, "bg-brand-soft text-brand-strong"],
+  [/(văn|việt)/i, "bg-coral-soft text-coral"],
+  [/(anh|ngoại ngữ)/i, "bg-mint-soft text-mint"],
+  [/(lý|hóa|sinh|khoa học)/i, "bg-sun-soft text-sun"],
+  [/(sử|địa)/i, "bg-mint-soft text-mint"],
+  [/(nhạc|mỹ thuật|vẽ)/i, "bg-coral-soft text-coral"],
+  [/thể dục/i, "bg-sun-soft text-sun"],
+];
+
 function getSubjectIcon(name: string) {
   return SUBJECT_ICONS.find(([pattern]) => pattern.test(name))?.[1] ?? GraduationCap;
 }
 
 export default function SubjectCard({ name, teacher, taskCount = 0 }: SubjectCardProps) {
   const icon = createElement(getSubjectIcon(name), { className: "size-5", "aria-hidden": true });
+  const tone = SUBJECT_TONES.find(([pattern]) => pattern.test(name))?.[1] ?? "bg-brand-soft text-brand-strong";
 
   return (
     <Link
       href={`/student/subject/${encodeURIComponent(name)}`}
-      className="group flex h-full flex-col rounded-[14px] border border-line bg-surface p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-[0_12px_30px_rgba(28,52,84,0.08)]"
+      className="group flex h-full flex-col rounded-[18px] border border-line bg-surface p-5 shadow-[0_10px_28px_var(--shadow-color)] transition-[border-color,box-shadow,transform] hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_16px_36px_var(--shadow-color)]"
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="grid size-11 place-items-center rounded-[12px] bg-brand-soft text-brand-strong">
+        <div className={`grid size-11 place-items-center rounded-[13px] ${tone}`}>
           {icon}
         </div>
-        {taskCount > 0 && <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800">{taskCount} việc cần làm</span>}
+        {taskCount > 0 && <span className="rounded-full bg-sun-soft px-2.5 py-1 text-xs font-bold text-sun">{taskCount} việc cần làm</span>}
       </div>
       <h3 className="mt-5 text-base font-extrabold text-ink">{name}</h3>
       <p className="mt-1 flex-1 text-sm leading-6 text-ink-soft">Giáo viên: {teacher}</p>

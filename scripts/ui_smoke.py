@@ -1,11 +1,12 @@
-"""Visual smoke checks for the renovated public and admin pilot screens."""
+"""Visual smoke checks for the public pages and role-based dashboard shell."""
 
+import os
 from pathlib import Path
 
 from playwright.sync_api import Page, sync_playwright
 
 
-BASE_URL = "http://127.0.0.1:3000"
+BASE_URL = os.environ.get("SCHOOLMANAGER_UI_BASE_URL", "http://127.0.0.1:3000")
 OUTPUT_DIR = Path(__file__).resolve().parents[1] / "artifacts" / "ui"
 
 
@@ -22,7 +23,7 @@ def assert_no_em_dash(page: Page) -> None:
 def check_landing(page: Page) -> None:
     page.set_viewport_size({"width": 1440, "height": 1000})
     page.goto(BASE_URL, wait_until="networkidle")
-    assert page.get_by_role("heading", name="Cùng vận hành một trường học").is_visible()
+    assert page.get_by_role("heading", name="Mỗi ngày ở trường, gọn gàng hơn.").is_visible()
     assert page.get_by_role("link", name="Đăng nhập", exact=True).first.is_visible()
     assert page.locator("img[alt]").count() >= 3
     assert_no_horizontal_overflow(page)
@@ -37,7 +38,7 @@ def check_landing(page: Page) -> None:
     page.emulate_media(color_scheme="light", reduced_motion="reduce")
     page.set_viewport_size({"width": 390, "height": 844})
     page.reload(wait_until="networkidle")
-    assert page.get_by_role("heading", name="Cùng vận hành một trường học").is_visible()
+    assert page.get_by_role("heading", name="Mỗi ngày ở trường, gọn gàng hơn.").is_visible()
     assert_no_horizontal_overflow(page)
     page.screenshot(path=OUTPUT_DIR / "landing-mobile.png", full_page=True)
 

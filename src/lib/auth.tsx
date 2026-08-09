@@ -3,21 +3,23 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
-interface User {
+export interface User {
     id: number;
     email: string;
     name: string;
     role: 'admin' | 'teacher' | 'student';
+    phone_number?: string | null;
+    avatar_url?: string | null;
     class_id?: number;
     class_name?: string;
 }
 
 interface AuthContextType {
     user: User | null;
-    token: string | null;
     isLoading: boolean;
     login: (email: string, password: string) => Promise<User>;
-    logout: () => void;
+    updateUser: (updatedUser: User) => void;
+    logout: () => Promise<void>;
     isTeacher: boolean;
     isStudent: boolean;
     isAdmin: boolean;
@@ -29,25 +31,36 @@ import { API_URL } from '@/lib/api';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Check for existing token on mount
-        const savedToken = localStorage.getItem('token');
-        const savedUser = localStorage.getItem('user');
+        let active = true;
 
-        if (savedToken && savedUser) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setToken(savedToken);
-            setUser(JSON.parse(savedUser));
-        }
-        setIsLoading(false);
+        // One-time cleanup for browsers upgrading from localStorage-based auth.
+        window.localStorage.removeItem('token');
+        window.localStorage.removeItem('user');
+
+        void fetch(`${API_URL}/api/auth/users/me`, {
+            credentials: 'include',
+            cache: 'no-store',
+        })
+            .then(async (response) => {
+                if (!active || !response.ok) return;
+                setUser(await response.json());
+            })
+            .finally(() => {
+                if (active) setIsLoading(false);
+            });
+
+        return () => {
+            active = false;
+        };
     }, []);
 
     const login = async (email: string, password: string) => {
         const response = await fetch(`${API_URL}/api/auth/login`, {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
         });
@@ -67,29 +80,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const data = await response.json();
 
-        setToken(data.access_token);
         setUser(data.user);
-
-        localStorage.setItem('token', data.access_token);
-        localStorage.setItem('user', JSON.stringify(data.user));
         return data.user;
     };
 
     const router = useRouter();
 
-    const logout = () => {
-        setToken(null);
-        setUser(null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        router.push('/login');
+    const logout = async () => {
+        try {
+            await fetch(`${API_URL}/api/auth/logout`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+        } finally {
+            setUser(null);
+            window.localStorage.removeItem('token');
+            window.localStorage.removeItem('user');
+            router.replace('/login');
+        }
+    };
+
+    const updateUser = (updatedUser: User) => {
+        setUser(updatedUser);
     };
 
     const value: AuthContextType = {
         user,
-        token,
         isLoading,
         login,
+        updateUser,
         logout,
         isTeacher: user?.role === 'teacher' || user?.role === 'admin',
         isStudent: user?.role === 'student',

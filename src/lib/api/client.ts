@@ -1,4 +1,4 @@
-export const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001").replace(/\/$/, "");
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001").replace(/\/$/, "");
 
 interface ApiProblem {
   detail?: unknown;
@@ -21,15 +21,9 @@ export class ApiError extends Error {
   }
 }
 
-function getToken(): string | null {
-  return typeof window === "undefined" ? null : window.localStorage.getItem("token");
-}
-
 export function getAuthHeaders(includeJson = true): HeadersInit {
-  const token = getToken();
   return {
     ...(includeJson ? { "Content-Type": "application/json" } : {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
@@ -60,6 +54,7 @@ async function parseProblem(response: Response): Promise<ApiProblem | undefined>
 export async function apiRequest<T = any>(path: string, init: RequestInit = {}): Promise<T> {
   const bodyIsFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
   const response = await fetch(`${API_URL}${path}`, {
+    credentials: "include",
     ...init,
     headers: {
       ...getAuthHeaders(!bodyIsFormData),
