@@ -6,21 +6,22 @@
 
 <p align="center"><a href="CONTRIBUTING.md">Đóng góp</a> · <a href="docs/API.md">API</a> · <a href="docs/DEPLOYMENT.md">Triển khai</a> · <a href="SECURITY.md">Bảo mật</a></p>
 
-SchoolManager kết hợp quản lý lớp, coursework, quiz, gamification và wellbeing trong một giao diện Campus Blue. Đây là dự án đang được trùng tu: các vertical slice đã có test và contract rõ ràng được ưu tiên, còn các router legacy được giữ tương thích và sẽ migrate dần.
+SchoolManager tập trung vào quản lý lớp, coursework, quiz, thời khóa biểu, thông báo trong ứng dụng và wellbeing tối thiểu trong giao diện Campus Blue. Các game, chatbot/AI Tutor, Quiz Battle, gamification economy và analytics trùng lặp đã được loại bỏ để codebase dễ hiểu và dễ đóng góp hơn.
 
 ## Tính năng hiện có
 
 - Authentication và RBAC cho admin, teacher, student.
 - Lớp học, bài tập, quiz, nộp bài/chấm điểm và thời khóa biểu.
-- Mood journal, SOS alert và class wellness với policy riêng tư.
-- Quiz Battle, gamification, thông báo, AI Tutor/chatbot dựa trên dataset nội bộ và mini-games.
+- Trung tâm Hôm nay, sổ điểm gọn và danh sách cần chú ý từ dữ liệu học tập thật.
+- Thông báo trong ứng dụng; import danh sách học sinh bằng CSV UTF-8.
+- Mood journal, SOS alert và class wellness dựa trên check-in thật với policy riêng tư.
 - Frontend Next.js responsive với Campus Blue, dark mode, keyboard focus và trạng thái loading/empty/error.
 
-Các mục trên là phạm vi code hiện tại, không phải cam kết rằng mọi router đã sẵn sàng cho production. Xem [trạng thái release](#trạng-thái-release) và [blueprint](docs/RENOVATION_BLUEPRINT.md) trước khi triển khai trường thật.
+Xem [trạng thái release](#trạng-thái-release), [blueprint](docs/RENOVATION_BLUEPRINT.md) và [migration de-scope](docs/MIGRATION_20260806_0003.md) trước khi triển khai với dữ liệu trường thật.
 
 ## Bắt đầu nhanh (local)
 
-Yêu cầu: Node.js 22, Python 3.12, npm và PowerShell hoặc shell tương đương. SQLite được dùng cho local nên không cần PostgreSQL/Redis để chạy các slice chính.
+Yêu cầu: Node.js 22, Python 3.12, npm và PowerShell hoặc shell tương đương. SQLite được dùng cho local nên không cần PostgreSQL để chạy các slice chính.
 
 ### Backend
 
@@ -37,18 +38,20 @@ alembic -c alembic.ini upgrade head
 uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
 ```
 
-Backend docs: `http://127.0.0.1:8001/docs` · liveness: `http://127.0.0.1:8001/health/live` · readiness: `http://127.0.0.1:8001/health/ready`.
+Backend docs: `http://localhost:8001/docs` · liveness: `http://localhost:8001/health/live` · readiness: `http://localhost:8001/health/ready`.
 
 ### Frontend
 
 ```powershell
 cd ..
-"NEXT_PUBLIC_API_URL=http://127.0.0.1:8001" | Set-Content -Encoding utf8 .env.local
+"NEXT_PUBLIC_API_URL=http://localhost:8001" | Set-Content -Encoding utf8 .env.local
 npm ci
 npm run dev
 ```
 
 Frontend: `http://localhost:3000`.
+
+Frontend và backend local phải dùng cùng hostname (`localhost` hoặc cùng là `127.0.0.1`) để cookie `SameSite=Lax` hoạt động đúng. Không trộn hai hostname trong URL local.
 
 ### Dữ liệu demo (chỉ local)
 
@@ -76,13 +79,13 @@ CI chạy các gate frontend và backend tương ứng tại `.github/workflows/
 
 ## Trạng thái release
 
-| Khu vực | Trạng thái | Evidence |
-|---|---|---|
-| Backend policy/workflow slice | Sẵn sàng review | Pytest và OpenAPI contract tests trong `backend/tests/` |
-| Frontend Campus Blue pilot | Sẵn sàng review | Lint, typecheck, production build và browser smoke đã chạy local |
-| Auth token storage | Cần hardening | Frontend hiện dùng `localStorage`; chưa phải cookie HttpOnly |
-| Database migration history | Baseline đang adoption | Alembic hiện chứa các migration quiz/audit; schema nền được bootstrap explicit |
-| Production operations | Cần kiểm chứng theo hạ tầng | Dùng health probes, request ID và checklist trong `docs/DEPLOYMENT.md` |
+| Khu vực                       | Trạng thái                  | Evidence                                                                       |
+| ----------------------------- | --------------------------- | ------------------------------------------------------------------------------ |
+| Backend policy/workflow slice | Sẵn sàng review             | Pytest và OpenAPI contract tests trong `backend/tests/`                        |
+| Frontend Campus Blue pilot    | Sẵn sàng review             | Lint, typecheck, production build và browser smoke đã chạy local               |
+| Browser session               | Đã harden baseline          | Cookie HttpOnly/SameSite; Secure trong production; Bearer vẫn tương thích      |
+| Database migration history    | Baseline đang adoption      | Migration `20260806_0003` có test upgrade và migration note destructive        |
+| Production operations         | Cần kiểm chứng theo hạ tầng | Dùng health probes, request ID và checklist trong `docs/DEPLOYMENT.md`         |
 
 ## Cấu trúc
 
@@ -104,6 +107,7 @@ docs/                        # API, architecture, deployment, renovation bluepri
 - [API contract](docs/API.md) — endpoint nhóm chính; Swagger là nguồn chi tiết cuối cùng.
 - [Kiến trúc](docs/ARCHITECTURE.md) — vertical slices, privacy boundary và operational flow.
 - [Triển khai](docs/DEPLOYMENT.md) — Docker, provisioning, health checks và rollback.
+- [Migration 20260806_0003](docs/MIGRATION_20260806_0003.md) — dữ liệu legacy bị xóa và restore plan.
 - [Đóng góp](CONTRIBUTING.md) — setup, quality gates và PR evidence.
 - [Security policy](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Changelog](CHANGELOG.md).
 - [Renovation blueprint](docs/RENOVATION_BLUEPRINT.md) — phases và các giới hạn đã biết.

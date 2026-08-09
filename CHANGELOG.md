@@ -12,14 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - Bắt buộc JWT secret mạnh, loại certificate/private key và mật khẩu database mặc định khỏi source.
-- Thêm policy role, class scope và resource ownership cho các luồng quản trị, lớp học, bài tập, quiz, battle, lịch học, wellness và search.
+- Thêm policy role, class scope và resource ownership cho các luồng quản trị, lớp học, bài tập, quiz, lịch học và wellness.
 - Không còn đăng ký role công khai, plaintext password fallback, answer key cho học sinh hoặc mật khẩu reset cố định.
 - Nâng dependency backend/frontend; `pip-audit` và `npm audit` hiện không còn vulnerability đã biết.
+- Chuyển browser session sang cookie HttpOnly/SameSite, bật Secure trong production và giữ Bearer compatibility cho API client.
 
 ### Added
 
 - Thêm request correlation qua `X-Request-ID`, structured HTTP/error events và health endpoints `/health/live`, `/health/ready`.
-- Thêm explicit schema bootstrap và first-admin provisioning không có default password; tổng backend suite hiện có 30 test gồm operational readiness/provisioning.
+- Thêm explicit schema bootstrap và first-admin provisioning không có default password, kèm operational readiness/provisioning tests.
 - Thêm issue template riêng cho database migration, Campus Blue design system và security hardening; PR template yêu cầu test evidence, screenshot và migration note.
 - Thêm Alembic adoption baseline, 10 test authorization, CI quality gates và browser smoke test.
 - Thêm Campus Blue semantic tokens, UI primitives và shared `RoleShell`.
@@ -31,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Thêm audit trail bền vững cho assignment/quiz bằng migration `20260805_0002`, ghi trong cùng transaction với thay đổi nghiệp vụ.
 - Thêm ADR-001 ghi lại quyết định modular-monolith vertical slice và lý do không tạo generic repository.
 - Thêm Wellbeing application/policy/schema, mood journal và SOS privacy-first với 14 workflow/authorization tests.
-- Thêm typed API seam cho wellbeing, notifications, gamification, AI Tutor, Quiz Battle và mini-games.
+- Thêm typed API seam cho wellbeing và notifications.
 
 ### Changed
 
@@ -46,8 +47,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Teacher và Student dùng chung `RoleShell`; thời khóa biểu dùng một component responsive và accessible cho cả hai vai trò.
 - Làm mỏng router assignment/quiz thành HTTP adapter; tách request schema khỏi response schema theo vai trò và chuẩn hóa application error sang HTTP status.
 - Gộp create/update/submit/grade/delete của assessment/coursework thành một transaction cho mỗi use case thay vì commit nhiều lần trong router.
-- Migrate các màn student engagement và teacher/student Quiz Battle sang Campus Blue: achievements, AI Tutor, mini-games, mood, notifications và xử lý sức khỏe tinh thần.
-- Quiz Battle chấp nhận câu trả lời rỗng khi hết giờ để không gửi payload sai schema; điểm chỉ được tính khi đáp án không rỗng và đúng.
+- Hợp nhất ba trang Cài đặt vào `AccountSettings`; hợp nhất class/coursework vào `/teacher/bai-tap` và `/teacher/kiem-tra`.
+- Chuyển import danh sách học sinh từ XLSX sang CSV UTF-8 và notification sang in-app only.
+- Dashboard chỉ hiển thị aggregate có nguồn thật; wellbeing summary được tính từ MoodEntry gần đây thay vì cột điểm tổng hợp.
+
+### Removed
+
+- Mini-games/dataset, Quiz Battle, AI Tutor/chatbot, AI grading heuristic và import DOCX.
+- Gamification economy, badge/shop/leaderboard, global search, Activities, teacher reports, invitation email và analytics/statistics trùng lặp.
+- Jitsi/online-class state, SMTP delivery, Redis cache, Recharts, `class-variance-authority`, `python-docx` và `openpyxl`.
+- API legacy `/api/auth/classes`, duplicate student profile/coursework endpoints và các route frontend teacher trùng lặp.
+- Route kết quả quiz teacher cũ không còn backend consumer; dashboard dùng danh sách quiz canonical.
+- Migration `20260806_0003` drop bảng/cột legacy; xem `docs/MIGRATION_20260806_0003.md` vì downgrade không phục hồi data row.
 
 ### Fixed
 

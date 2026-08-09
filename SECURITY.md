@@ -52,7 +52,8 @@ Chúng tôi cam kết bảo vệ các nhà nghiên cứu bảo mật khi:
 
 **🔐 Authentication & Authorization:**
 
-- JWT-based authentication cho API access
+- Cookie HttpOnly/SameSite cho browser session; `Secure` bắt buộc trong production
+- Bearer JWT tiếp tục được hỗ trợ cho API client và không được lưu trong frontend `localStorage`
 - Role-Based Access Control (RBAC) cho 3 vai trò: Admin, Teacher, Student
 - Password hashing bằng bcrypt với salt
 - Access token có thời hạn; refresh token chưa được triển khai
@@ -79,23 +80,23 @@ Chúng tôi cam kết bảo vệ các nhà nghiên cứu bảo mật khi:
 **🏗️ Infrastructure:**
 
 - Docker containerization (isolation)
-- Nginx reverse proxy có cấu hình SSL termination
-- Production phải cung cấp certificate hợp lệ bên ngoài repository trước khi bật HTTPS
+- Compose không kèm reverse proxy; operator phải cấu hình TLS termination bằng load balancer, ingress hoặc reverse proxy bên ngoài repository
+- Production phải cung cấp certificate hợp lệ bên ngoài repository trước khi nhận traffic
 - Separate production & development configurations
 - PostgreSQL với authenticated connections
 
 ### 📋 Planned Security Enhancements
 
-- [ ] Rate limiting cho API endpoints
+- [ ] Rate limiting cho login/API tại gateway hoặc shared store phù hợp deployment topology
 - [x] Request ID và structured HTTP/error event baseline
 - [ ] Centralized log collection, metrics, tracing và alert delivery
 - [ ] Enhanced input sanitization (XSS prevention)
 - [x] Security headers (CSP, HSTS, X-Frame-Options)
 - [x] Automated dependency vulnerability scanning trong CI
 - [x] Durable audit event cho các vertical slice đã migrate
-- [ ] Mở rộng audit/redaction policy sang toàn bộ router legacy (bao gồm email service logs)
+- [ ] Mở rộng audit/redaction policy sang các router CRUD còn lại
 - [ ] Two-factor authentication (2FA)
-- [ ] Session management improvements
+- [x] Browser session không lưu token trong client-accessible storage
 
 ---
 
