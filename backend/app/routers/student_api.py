@@ -1,403 +1,201 @@
+"""Student workspace endpoints that do not duplicate resource APIs."""
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from typing import List, Optional
-from app.database import get_db
+
 from app import models
-from app.routers.auth import get_current_user
-from datetime import datetime
-from pathlib import Path
-import uuid
-from pydantic import BaseModel, EmailStr, Field
+from app.application.insights import SchoolInsights
 from app.authorization import require_roles
+from app.database import get_db
+from app.routers.auth import get_current_user
+from app.schemas.insights import StudentGradebookResponse
+
 
 router = APIRouter()
 
-@router.get("/upcoming-quizzes")
-async def get_upcoming_quizzes(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    if current_user.role != "student":
-        return []
-    
-    # Fetch active quizzes for the student's class
-    quizzes = db.query(models.Quiz).filter(
-        models.Quiz.class_id == current_user.class_id,
-        models.Quiz.status == "active"
-    ).all()
-    
-    # Check attempts
-    results = []
-    for q in quizzes:
-        attempt = db.query(models.QuizResult).filter(
-            models.QuizResult.quiz_id == q.id,
-            models.QuizResult.student_id == current_user.id
-        ).first()
-        
-        results.append({
-            "id": q.id,
-            "title": q.title,
-            "subject": q.subject,
-            "total_questions": q.total_questions,
-            "has_attempted": attempt is not None,
-            "deadline": q.deadline if q.deadline else None,
-            "created_at": q.created_at
-        })
 
-    return results
+class JoinClassRequest(BaseModel):
+    class_code: str = Field(min_length=1, max_length=20)
 
-    # Original logic (disabled):
-    # assignments = db.query(models.Assignment).filter(
-    #     models.Assignment.class_id == current_user.class_id,
-    #     models.Assignment.status == "active"
-    # ).all()
-    # ...
 
-from sqlalchemy import or_
+def _student_class(db: Session, current_user: models.User) -> models.Class | None:
+    if current_user.class_id is None:
+        return None
+    return db.query(models.Class).filter(models.Class.id == current_user.class_id).first()
 
-# ... (existing imports)
 
 @router.get("/dashboard")
-async def get_student_dashboard(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    if current_user.role != "student":
-        raise HTTPException(status_code=403, detail="Only students can access this dashboard")
-    
-    # Recent activities (Class specific or School-wide)
-    activities = db.query(models.Activity).filter(
-        or_(
-            models.Activity.class_id == current_user.class_id,
-            models.Activity.class_id == None
-        )
-    ).order_by(models.Activity.created_at.desc()).limit(5).all()
-    
-    # Assignments summary
-    total_assignments = db.query(models.Assignment).filter(models.Assignment.class_id == current_user.class_id).count()
-    completed_assignments = db.query(models.Submission).filter(models.Submission.student_id == current_user.id).count()
-    
-    # Fetch surveys (Class specific or School-wide)
-    surveys = db.query(models.Activity).filter(
-        models.Activity.type.in_(["Khảo sát", "khao sat", "survey", "Survey"]),
-        or_(
-            models.Activity.class_id == current_user.class_id,
-            models.Activity.class_id == None
-        )
-    ).all()
-    
-    pending_surveys_data = []
-    for s in surveys:
-        pending_surveys_data.append({
-            "id": s.id,
-            "title": s.title,
-            "completed": False
-        })
-
-    # Check for online session
-    online_session = {
-        "active": False,
-        "room_url": None
-    }
-    
-    if current_user.class_id:
-        student_class = db.query(models.Class).filter(models.Class.id == current_user.class_id).first()
-        if student_class and student_class.online_enabled and student_class.meeting_link:
-             # Extract room name from full URL
-             # URL format: https://meet.jit.si/HappySchools_...
-             room_url = student_class.meeting_link.split("/")[-1]
-             online_session = {
-                "active": True,
-                "room_url": room_url
-            }
+def get_student_dashboard(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    require_roles(current_user, "student")
+    school_class = _student_class(db, current_user)
+    total_assignments = db.query(models.Assignment).filter(
+        models.Assignment.class_id == current_user.class_id,
+    ).count() if current_user.class_id else 0
+    completed_assignments = db.query(models.Submission.assignment_id).filter(
+        models.Submission.student_id == current_user.id,
+    ).distinct().count()
 
     return {
-        "online_session": online_session,
         "student": {
             "name": current_user.name,
-            "happiness_score": current_user.happiness_score,
-            "engagement_score": current_user.engagement_score,
-            "mental_health_score": current_user.mental_health_score,
-            "status": current_user.status,
-            "class_name": student_class.name if current_user.class_id and str(student_class) != "None" else (db.query(models.Class).filter(models.Class.id == current_user.class_id).first().name if current_user.class_id else None)
+            "class_name": school_class.name if school_class else None,
         },
-        "recent_activities": activities,
         "assignments_status": {
             "total": total_assignments,
             "completed": completed_assignments,
-            "pending": total_assignments - completed_assignments
+            "pending": max(0, total_assignments - completed_assignments),
         },
-        "pending_surveys": pending_surveys_data
     }
 
-@router.get("/assignments")
-async def get_student_assignments(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    if current_user.role != "student":
-        return []
-        
-    assignments = db.query(models.Assignment).filter(
-        models.Assignment.class_id == current_user.class_id
-    ).all()
-    
-    submissions = db.query(models.Submission).filter(models.Submission.student_id == current_user.id).all()
-    sub_map = {s.assignment_id: s for s in submissions}
-    
-    results = []
-    now = datetime.now()
-    for a in assignments:
-        sub = sub_map.get(a.id)
-        
-        deadline_passed = False
-        if a.deadline:
-            try:
-                deadline_dt = datetime.fromisoformat(a.deadline)
-                if now > deadline_dt:
-                    deadline_passed = True
-            except (ValueError, TypeError):
-                pass # Invalid date format or timezone mismatch
-        
-        results.append({
-            "id": a.id,
-            "title": a.title,
-            "deadline": a.deadline,
-            "submitted": sub is not None,
-            "graded": sub.status == "graded" if sub else False,
-            "score": sub.total_score if sub else 0,
-            "deadline_passed": deadline_passed
-        })
-    return results
 
-class JoinClassRequest(BaseModel):
-    class_code: str
+@router.get("/gradebook", response_model=StudentGradebookResponse)
+def get_student_gradebook(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    require_roles(current_user, "student")
+    return SchoolInsights(db).student_gradebook(current_user)
+
 
 @router.post("/join-class")
-async def join_class(
+def join_class(
     request: JoinClassRequest,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    if current_user.role != "student":
-        raise HTTPException(status_code=403, detail="Only students can join classes")
-
-    # Find class by code
-    # precise match, maybe case-insensitive? converting to upper just in case if codes are uppercase
-    cls = db.query(models.Class).filter(models.Class.class_code == request.class_code.upper()).first()
-    
-    if not cls:
-         raise HTTPException(status_code=404, detail="Mã lớp không hợp lệ hoặc lớp không tồn tại")
-
-    # Check if already in this class
-    if current_user.class_id == cls.id:
-        return {"message": "Bạn đã tham gia lớp học này rồi", "class_name": cls.name}
-
-    # If in another class, maybe warn? For now, allow switching (overwrite)
-    # Decrement count of old class if exists
-    if current_user.class_id:
-        old_class = db.query(models.Class).filter(models.Class.id == current_user.class_id).first()
-        if old_class:
-            old_class.student_count = max(0, old_class.student_count - 1)
-
-    # Add to new class
-    current_user.class_id = cls.id
-    cls.student_count += 1
-    
-    db.commit()
-    
-    return {
-        "message": f"Tham gia lớp {cls.name} thành công!",
-        "class_id": cls.id,
-        "class_name": cls.name
-    }
-
-class ProfileUpdate(BaseModel):
-    name: str = Field(min_length=1, max_length=100)
-    email: EmailStr
-    phone: Optional[str] = Field(default=None, max_length=30)
-
-# Profile & Upload
-@router.post("/avatar")
-async def upload_avatar(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
 ):
     require_roles(current_user, "student")
-    allowed_types = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
-    extension = allowed_types.get(file.content_type or "")
-    if extension is None:
-        raise HTTPException(status_code=415, detail="Ảnh đại diện phải là JPEG, PNG hoặc WebP")
-    contents = await file.read()
-    if len(contents) > 5 * 1024 * 1024:
-        raise HTTPException(status_code=413, detail="Ảnh đại diện không được vượt quá 5 MB")
-    upload_dir = Path("static/avatars")
-    upload_dir.mkdir(parents=True, exist_ok=True)
-    file_name = f"avatar_{current_user.id}_{uuid.uuid4().hex}{extension}"
-    (upload_dir / file_name).write_bytes(contents)
-    
-    avatar_url = f"/static/avatars/{file_name}"
-    current_user.avatar_url = avatar_url
-    db.commit()
-    
-    return {"avatar_url": avatar_url}
-
-@router.get("/profile")
-async def get_profile(current_user: models.User = Depends(get_current_user)):
-    require_roles(current_user, "student")
-    return {
-        "name": current_user.name,
-        "email": current_user.email,
-        "phone": current_user.phone_number,
-        "avatar_url": current_user.avatar_url or "/static/avatars/default.png"
-    }
-
-@router.put("/profile")
-async def update_profile(
-    data: ProfileUpdate,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    require_roles(current_user, "student")
-    duplicate_email = db.query(models.User).filter(
-        models.User.email == data.email,
-        models.User.id != current_user.id,
+    school_class = db.query(models.Class).filter(
+        models.Class.class_code == request.class_code.strip().upper(),
     ).first()
-    if duplicate_email:
-        raise HTTPException(status_code=409, detail="Email đã được sử dụng")
-    current_user.name = data.name
-    current_user.email = data.email
-    current_user.phone_number = data.phone
+    if school_class is None:
+        raise HTTPException(status_code=404, detail="Mã lớp không hợp lệ hoặc lớp không tồn tại")
+    if current_user.class_id == school_class.id:
+        return {
+            "message": "Bạn đã tham gia lớp học này rồi",
+            "class_id": school_class.id,
+            "class_name": school_class.name,
+        }
+
+    current_user.class_id = school_class.id
     db.commit()
-    return {"message": "Profile updated successfully"}
+    return {
+        "message": f"Tham gia lớp {school_class.name} thành công!",
+        "class_id": school_class.id,
+        "class_name": school_class.name,
+    }
+
 
 @router.get("/subjects")
-async def get_student_subjects(
+def get_student_subjects(
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
 ):
-    if current_user.role != "student":
+    require_roles(current_user, "student")
+    if current_user.class_id is None:
         return []
 
-    # Get subjects from Assignments
-    assignment_subjects = db.query(models.Assignment.subject).filter(
-        models.Assignment.class_id == current_user.class_id,
-        models.Assignment.subject != None
-    ).distinct().all()
+    assignment_subjects = {
+        subject
+        for subject, in db.query(models.Assignment.subject).filter(
+            models.Assignment.class_id == current_user.class_id,
+            models.Assignment.subject.isnot(None),
+        ).distinct().all()
+        if subject
+    }
+    quiz_subjects = {
+        subject
+        for subject, in db.query(models.Quiz.subject).filter(
+            models.Quiz.class_id == current_user.class_id,
+            models.Quiz.subject.isnot(None),
+            models.Quiz.status != "draft",
+        ).distinct().all()
+        if subject
+    }
+    school_class = _student_class(db, current_user)
+    teacher_name = school_class.teacher.name if school_class and school_class.teacher else "Chưa phân công"
 
-    # Get subjects from Quizzes
-    quiz_subjects = db.query(models.Quiz.subject).filter(
-        models.Quiz.class_id == current_user.class_id,
-        models.Quiz.subject != None
-    ).distinct().all()
-
-    # Merge unique subjects
-    subjects_set = set()
-    for s in assignment_subjects:
-        if s[0]: subjects_set.add(s[0])
-    for s in quiz_subjects:
-        if s[0]: subjects_set.add(s[0])
-
-    # Default subjects if empty (Mock data for better UX if nothing exists)
-    # Default subjects if empty (Mock data for better UX if nothing exists)
-    if not subjects_set:
-        subjects_set = set() # No mock data
-
-
-    # Format result
     results = []
-    # Get teacher name for the class (homeroom teacher)
-    homeroom_teacher_name = "Giáo viên"
-    if current_user.class_id:
-        cls = db.query(models.Class).filter(models.Class.id == current_user.class_id).first()
-        if cls and cls.teacher:
-            homeroom_teacher_name = cls.teacher.name
-
-    for subject in subjects_set:
-        # Try to find a specific teacher for this subject from assignments
-        # This is a heuristic since we don't have a Subject-Teacher mapping table
-        teacher_name = homeroom_teacher_name
-        
-        # Simple heuristic: Find the most frequent teacher for this subject's assignments
-        # For now, just keep it simple or use the homeroom teacher
-        
+    for subject in sorted(assignment_subjects | quiz_subjects):
+        assignment_count = db.query(models.Assignment).filter(
+            models.Assignment.class_id == current_user.class_id,
+            models.Assignment.subject == subject,
+            models.Assignment.status == "active",
+        ).count()
+        quiz_count = db.query(models.Quiz).filter(
+            models.Quiz.class_id == current_user.class_id,
+            models.Quiz.subject == subject,
+            models.Quiz.status == "active",
+        ).count()
         results.append({
-            "id": subject, # Use name as ID for now
+            "id": subject,
             "name": subject,
             "teacher": teacher_name,
-            "image_url": f"/images/subjects/{subject.lower()}.jpg" if False else None, # Placeholder
-            "task_count": 0 # Can calculation this if needed or load async
+            "task_count": assignment_count + quiz_count,
         })
-
     return results
 
+
 @router.get("/subjects/{subject_name}")
-async def get_subject_details(
+def get_subject_details(
     subject_name: str,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
 ):
-    if current_user.role != "student":
-        raise HTTPException(status_code=403, detail="Forbidden")
+    require_roles(current_user, "student")
+    school_class = _student_class(db, current_user)
+    if school_class is None:
+        raise HTTPException(status_code=404, detail="Bạn chưa tham gia lớp học")
 
-    # 1. Get Class Info (for online link)
-    class_info = None
-    if current_user.class_id:
-        cls = db.query(models.Class).filter(models.Class.id == current_user.class_id).first()
-        if cls:
-            class_info = {
-                "meeting_link": cls.meeting_link,
-                "online_enabled": cls.online_enabled,
-                "teacher_name": cls.teacher.name if cls.teacher else "Giáo viên",
-                "teacher_email": cls.teacher.email if cls.teacher else None,
-                "teacher_phone": cls.teacher.phone_number if cls.teacher else None,
-                "teacher_avatar": cls.teacher.avatar_url if cls.teacher else None
-            }
-
-    # 2. Get Assignments for this subject
     assignments = db.query(models.Assignment).filter(
-        models.Assignment.class_id == current_user.class_id,
-        models.Assignment.subject == subject_name
+        models.Assignment.class_id == school_class.id,
+        models.Assignment.subject == subject_name,
     ).all()
-
-    # Formatted assignments
-    assignments_data = []
-    for a in assignments:
-        # Check submission
-        sub = db.query(models.Submission).filter(
-            models.Submission.assignment_id == a.id,
-            models.Submission.student_id == current_user.id
+    assignment_rows = []
+    for assignment in assignments:
+        submission = db.query(models.Submission).filter(
+            models.Submission.assignment_id == assignment.id,
+            models.Submission.student_id == current_user.id,
         ).first()
-        
-        assignments_data.append({
-            "id": a.id,
-            "title": a.title,
-            "deadline": a.deadline,
-            "status": "submitted" if sub else ("active" if a.status == "active" else "closed"),
-            "score": sub.total_score if sub and sub.status == "graded" else None
+        assignment_rows.append({
+            "id": assignment.id,
+            "title": assignment.title,
+            "deadline": assignment.deadline,
+            "status": "submitted" if submission else assignment.status,
+            "score": submission.total_score if submission and submission.status == "graded" else None,
         })
 
-    # 3. Get Quizzes for this subject
     quizzes = db.query(models.Quiz).filter(
-        models.Quiz.class_id == current_user.class_id,
-        models.Quiz.subject == subject_name
+        models.Quiz.class_id == school_class.id,
+        models.Quiz.subject == subject_name,
+        models.Quiz.status != "draft",
     ).all()
-    
-    quizzes_data = []
-    for q in quizzes:
-        # Check result
-        res = db.query(models.QuizResult).filter(
-            models.QuizResult.quiz_id == q.id,
-            models.QuizResult.student_id == current_user.id
+    quiz_rows = []
+    for quiz in quizzes:
+        result = db.query(models.QuizResult).filter(
+            models.QuizResult.quiz_id == quiz.id,
+            models.QuizResult.student_id == current_user.id,
         ).first()
-
-        quizzes_data.append({
-            "id": q.id,
-            "title": q.title,
-            "total_questions": q.total_questions,
-            "has_attempted": res is not None,
-            "score": res.percentage if res else None
+        quiz_rows.append({
+            "id": quiz.id,
+            "title": quiz.title,
+            "total_questions": quiz.total_questions,
+            "has_attempted": result is not None,
+            "score": result.percentage if result else None,
         })
 
     return {
         "subject": subject_name,
-        "class_info": class_info,
-        "assignments": assignments_data,
-        "quizzes": quizzes_data,
-        # Mock some notifications/surveys for now as they are not subject-linked strictly yet
+        "class_info": {
+            "teacher_name": school_class.teacher.name if school_class.teacher else "Chưa phân công",
+            "teacher_email": school_class.teacher.email if school_class.teacher else None,
+            "teacher_phone": school_class.teacher.phone_number if school_class.teacher else None,
+        },
+        "assignments": assignment_rows,
+        "quizzes": quiz_rows,
         "notifications": [],
-        "surveys": [] 
+        "surveys": [],
     }

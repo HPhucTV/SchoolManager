@@ -36,6 +36,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     
+    # "type" mặc định là access; token mục đích khác (vd: invite) phải tự khai báo
+    # để get_current_user không chấp nhận chúng như token đăng nhập.
+    to_encode.setdefault("type", "access")
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt

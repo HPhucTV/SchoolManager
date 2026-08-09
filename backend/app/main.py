@@ -12,27 +12,15 @@ from app.api import health
 from app.config import get_settings
 from app.observability import RequestContextMiddleware, log_event, request_id_for_scope
 from app.routers import (
-    activities,
     admin,
-    ai,
-    ai_tutor,
-    analytics,
     assignments,
     auth,
     classes,
     dashboard,
-    games,
-    gamification,
-    invitations,
     notifications,
-    quiz_battle,
     quizzes,
     schedule_api,
-    search,
-    statistics,
     student_api,
-    students,
-    teacher_reports,
     wellness,
 )
 
@@ -124,30 +112,11 @@ if settings.CORS_ORIGINS:
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=settings.TRUSTED_PROXY_HOSTS)
 
 # Include routers
-app.include_router(ai.router, prefix=f"{settings.API_V1_STR}/ai", tags=["ai"])
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
-app.include_router(
-    activities.router,
-    prefix=f"{settings.API_V1_STR}/activities",
-    tags=["activities"],
-)
-app.include_router(
-    invitations.router,
-    prefix=f"{settings.API_V1_STR}/invitations",
-    tags=["invitations"],
-)
 app.include_router(
     dashboard.router,
     prefix=f"{settings.API_V1_STR}/dashboard",
     tags=["dashboard"],
-)
-app.include_router(games.router, prefix=f"{settings.API_V1_STR}/games", tags=["games"])
-app.include_router(students.router, prefix=f"{settings.API_V1_STR}/students", tags=["students"])
-
-app.include_router(
-    statistics.router,
-    prefix=f"{settings.API_V1_STR}/statistics",
-    tags=["statistics"],
 )
 app.include_router(
     assignments.router,
@@ -179,36 +148,6 @@ app.include_router(
     prefix=f"{settings.API_V1_STR}/wellness",
     tags=["wellness"],
 )
-app.include_router(
-    ai_tutor.router,
-    prefix=f"{settings.API_V1_STR}/ai-tutor",
-    tags=["ai-tutor"],
-)
-app.include_router(
-    gamification.router,
-    prefix=f"{settings.API_V1_STR}/gamification",
-    tags=["gamification"],
-)
-app.include_router(
-    analytics.router,
-    prefix=f"{settings.API_V1_STR}/analytics",
-    tags=["analytics"],
-)
-
-
-app.include_router(
-    teacher_reports.router,
-    prefix=f"{settings.API_V1_STR}/teacher/reports",
-    tags=["teacher-reports"],
-)
-
-app.include_router(
-    quiz_battle.router,
-    prefix=f"{settings.API_V1_STR}/battle",
-    tags=["quiz-battle"],
-)
-
-app.include_router(search.router, prefix=f"{settings.API_V1_STR}/search", tags=["search"])
 app.include_router(health.router, prefix="/health", tags=["health"])
 
 

@@ -136,23 +136,6 @@ class MessageResponse(BaseModel):
     message: str
 
 
-class AiGradeResultResponse(BaseModel):
-    answer_id: int
-    question_text: str
-    answer_text: str
-    ai_score: float
-    ai_feedback: str
-    max_points: float
-    question_type: str
-
-
-class AiGradeResponse(BaseModel):
-    message: str
-    total_score: float
-    total_points: float
-    results: list[AiGradeResultResponse]
-
-
 def assignment_response(
     assignment: models.Assignment,
     *,

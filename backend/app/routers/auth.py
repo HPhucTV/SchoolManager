@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
+from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File, Request, Response
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List
@@ -13,13 +13,14 @@ from app.authorization import get_accessible_class, require_roles, validate_role
 from pathlib import Path
 import secrets
 import uuid
-import json
-from app.services.cache_service import redis_service
 
 router = APIRouter()
 settings = get_settings()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_V1_STR}/auth/login",
+    auto_error=False,
+)
 
 # --- Pydantic Schemas ---
 
@@ -36,12 +37,6 @@ class UserResponse(BaseModel):
     avatar_url: Optional[str] = None
     class_id: Optional[int] = None
     class_name: Optional[str] = None
-    
-    # Notification fields
-    email_enabled: bool = True
-    notify_assignments: bool = True
-    notify_activities: bool = True
-    notify_surveys: bool = True
     
     model_config = ConfigDict(from_attributes=True)
 
@@ -66,16 +61,6 @@ class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
-    # Notification preferences
-    email_enabled: Optional[bool] = None
-    notify_assignments: Optional[bool] = None
-    notify_activities: Optional[bool] = None
-    notify_surveys: Optional[bool] = None
-
-class ClassCreate(BaseModel):
-    name: str
-    grade: str
-    teacher_id: Optional[int] = None
 
 class PasswordChangeRequest(BaseModel):
     current_password: str
@@ -83,16 +68,28 @@ class PasswordChangeRequest(BaseModel):
 
 # --- Dependency ---
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+async def get_current_user(
+    request: Request,
+    bearer_token: str | None = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    token = bearer_token or request.cookies.get(settings.AUTH_COOKIE_NAME)
+    if not token:
+        raise credentials_exception
+
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
+            raise credentials_exception
+        # Chỉ chấp nhận access token. Token mời (invite) có hạn 48h nên không
+        # được phép dùng để đăng nhập.
+        if payload.get("type") != "access":
             raise credentials_exception
     except jwt.InvalidTokenError:
         raise credentials_exception
@@ -105,7 +102,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 # --- Endpoints ---
 
 @router.post("/login", response_model=LoginResponse)
-async def login(credentials: LoginRequest, db: Session = Depends(get_db)):
+async def login(
+    credentials: LoginRequest,
+    response: Response,
+    db: Session = Depends(get_db),
+):
     user = db.query(models.User).filter(models.User.email == credentials.email).first()
     
     if not user:
@@ -131,6 +132,15 @@ async def login(credentials: LoginRequest, db: Session = Depends(get_db)):
              class_name = ", ".join([c.name for c in teacher_classes])
     
     access_token = security.create_access_token(data={"sub": user.email, "id": user.id, "role": user.role})
+    response.set_cookie(
+        key=settings.AUTH_COOKIE_NAME,
+        value=access_token,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        httponly=True,
+        secure=settings.ENVIRONMENT == "production",
+        samesite="lax",
+        path="/",
+    )
     
     return LoginResponse(
         access_token=access_token,
@@ -144,6 +154,18 @@ async def login(credentials: LoginRequest, db: Session = Depends(get_db)):
             class_id=user.class_id,
             class_name=class_name
         )
+    )
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(response: Response):
+    """Clear the browser session cookie; Bearer clients remain stateless."""
+    response.delete_cookie(
+        key=settings.AUTH_COOKIE_NAME,
+        httponly=True,
+        secure=settings.ENVIRONMENT == "production",
+        samesite="lax",
+        path="/",
     )
 
 @router.get("/users/me", response_model=UserResponse)
@@ -168,10 +190,6 @@ async def read_users_me(current_user: models.User = Depends(get_current_user), d
         avatar_url=current_user.avatar_url,
         class_id=current_user.class_id,
         class_name=class_name,
-        email_enabled=current_user.email_enabled if current_user.email_enabled is not None else True,
-        notify_assignments=current_user.notify_assignments if current_user.notify_assignments is not None else True,
-        notify_activities=current_user.notify_activities if current_user.notify_activities is not None else True,
-        notify_surveys=current_user.notify_surveys if current_user.notify_surveys is not None else True
     )
 
 @router.put("/users/me", response_model=UserResponse)
@@ -184,14 +202,8 @@ async def update_user_me(user_update: UserUpdate, current_user: models.User = De
         if existing and existing.id != current_user.id:
              raise HTTPException(status_code=400, detail="Email already registered")
         current_user.email = user_update.email
-    if user_update.phone:
-        current_user.phone_number = user_update.phone
-        
-    # Update notification preferences
-    if user_update.email_enabled is not None: current_user.email_enabled = user_update.email_enabled
-    if user_update.notify_assignments is not None: current_user.notify_assignments = user_update.notify_assignments
-    if user_update.notify_activities is not None: current_user.notify_activities = user_update.notify_activities
-    if user_update.notify_surveys is not None: current_user.notify_surveys = user_update.notify_surveys
+    if "phone" in user_update.model_fields_set:
+        current_user.phone_number = user_update.phone or None
         
     db.commit()
     db.refresh(current_user)
@@ -254,18 +266,6 @@ async def get_users(role: Optional[str] = None, db: Session = Depends(get_db), c
     if role is not None:
         validate_role(role)
 
-    # Try cache first
-    cache_key = f"users:{role}" if role else "users:all"
-    cached_data = redis_service.get(cache_key)
-    if cached_data:
-        try:
-             # Deserialize list of dicts and convert to UserResponse
-             data_list = json.loads(cached_data)
-             return [UserResponse(**item) for item in data_list]
-        except Exception as e:
-            print(f"Cache miss error: {e}")
-            pass
-
     query = db.query(models.User).options(
         joinedload(models.User.student_class),
         joinedload(models.User.teacher_class)
@@ -292,42 +292,8 @@ async def get_users(role: Optional[str] = None, db: Session = Depends(get_db), c
             class_id=user.class_id,
             class_name=class_name
         ))
-    
-    # Set cache
-    try:
-        # Pydantic v2 use model_dump(), v1 use dict()
-        # Ensure we serialize correctly
-        to_cache = [item.model_dump() for item in response]
-        redis_service.set(cache_key, json.dumps(to_cache), expire=300) # Cache 5 mins
-    except Exception as e:
-        print(f"Failed to set cache: {e}")
-        
-    return response
 
-@router.get("/classes")
-async def get_classes(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)): 
-    require_roles(current_user, "admin", "teacher")
-    query = db.query(models.Class)
-    if current_user.role == "teacher":
-        query = query.filter(models.Class.teacher_id == current_user.id)
-    
-    classes = query.all()
-    result = []
-    for c in classes:
-        teacher_name = None
-        if c.teacher_id:
-            teacher = db.query(models.User).filter(models.User.id == c.teacher_id).first()
-            if teacher: teacher_name = teacher.name
-            
-        result.append({
-            "id": c.id,
-            "name": c.name,
-            "grade": c.grade,
-            "teacher_id": c.teacher_id,
-            "teacher_name": teacher_name,
-            "student_count": c.student_count
-        })
-    return result
+    return response
 
 @router.post("/users", response_model=UserResponse)
 async def create_user(user: UserCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
@@ -375,9 +341,6 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db), current_u
         if cls:
              class_name = cls.name
 
-    # Invalidate cache
-    redis_service.invalidate_pattern("users:*")
-
     return UserResponse(
         id=new_user.id,
         email=new_user.email,
@@ -407,10 +370,7 @@ async def delete_user(user_id: int, db: Session = Depends(get_db), current_user:
              
     db.delete(user)
     db.commit()
-    
-    # Invalidate cache
-    redis_service.invalidate_pattern("users:*")
-    
+
     return {"message": "User deleted successfully"}
 
 @router.post("/users/{user_id}/reset-password")
@@ -471,9 +431,6 @@ async def update_user(user_id: int, user_update: AdminUserUpdate, db: Session = 
     db.commit()
     db.refresh(user)
 
-    # Invalidate cache
-    redis_service.invalidate_pattern("users:*")
-
     class_name = None
     if user.class_id:
         cls = db.query(models.Class).filter(models.Class.id == user.class_id).first()
@@ -488,82 +445,3 @@ async def update_user(user_id: int, user_update: AdminUserUpdate, db: Session = 
         class_id=user.class_id,
         class_name=class_name
     )
-
-@router.post("/classes")
-async def create_class(class_data: ClassCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_roles(current_user, "admin")
-    db_class = db.query(models.Class).filter(models.Class.name == class_data.name).first()
-    if db_class:
-         raise HTTPException(status_code=400, detail="Class name already exists")
-    if class_data.teacher_id is not None:
-        teacher = db.query(models.User).filter(
-            models.User.id == class_data.teacher_id,
-            models.User.role == "teacher",
-        ).first()
-        if not teacher:
-            raise HTTPException(status_code=422, detail="Giáo viên phụ trách không hợp lệ")
-
-    new_class = models.Class(
-        name=class_data.name,
-        grade=class_data.grade,
-        teacher_id=class_data.teacher_id,
-        student_count=0
-    )
-    db.add(new_class)
-    db.commit()
-    db.refresh(new_class)
-    
-    teacher_name = None
-    if new_class.teacher_id:
-        teacher = db.query(models.User).filter(models.User.id == new_class.teacher_id).first()
-        if teacher: teacher_name = teacher.name
-
-    return {
-        "id": new_class.id,
-        "name": new_class.name,
-        "grade": new_class.grade,
-        "teacher_id": new_class.teacher_id,
-        "teacher_name": teacher_name,
-        "student_count": 0
-    }
-
-@router.put("/classes/{class_id}")
-async def update_class(class_id: int, class_data: ClassCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_roles(current_user, "admin")
-    cls = db.query(models.Class).filter(models.Class.id == class_id).first()
-    if not cls:
-        raise HTTPException(status_code=404, detail="Class not found")
-    duplicate = db.query(models.Class).filter(
-        models.Class.name == class_data.name,
-        models.Class.id != class_id,
-    ).first()
-    if duplicate:
-        raise HTTPException(status_code=400, detail="Class name already exists")
-    if class_data.teacher_id is not None:
-        teacher = db.query(models.User).filter(
-            models.User.id == class_data.teacher_id,
-            models.User.role == "teacher",
-        ).first()
-        if not teacher:
-            raise HTTPException(status_code=422, detail="Giáo viên phụ trách không hợp lệ")
-        
-    cls.name = class_data.name
-    cls.grade = class_data.grade
-    cls.teacher_id = class_data.teacher_id
-    
-    db.commit()
-    db.refresh(cls)
-    
-    teacher_name = None
-    if cls.teacher_id:
-        teacher = db.query(models.User).filter(models.User.id == cls.teacher_id).first()
-        if teacher: teacher_name = teacher.name
-
-    return {
-        "id": cls.id,
-        "name": cls.name,
-        "grade": cls.grade,
-        "teacher_id": cls.teacher_id,
-        "teacher_name": teacher_name,
-        "student_count": cls.student_count
-    }

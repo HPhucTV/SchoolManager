@@ -1,13 +1,12 @@
 
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
 from app import models, security
 from app.routers.auth import get_current_user
-import openpyxl
-from io import BytesIO
+import csv
+from io import StringIO
 
 router = APIRouter()
 
@@ -57,34 +56,19 @@ async def get_admin_stats(
 async def download_student_template(
     current_user: models.User = Depends(require_admin),
 ):
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Danh sách học sinh"
-
-    headers = ["Họ tên", "Email", "Mật khẩu"]
-    for col, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=header)
-        cell.font = openpyxl.styles.Font(bold=True)
-        ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 25
-
-    # Example row
-    ws.cell(row=2, column=1, value="Nguyễn Văn A")
-    ws.cell(row=2, column=2, value="nguyenvana@email.com")
-    ws.cell(row=2, column=3, value="123456")
-
-    output = BytesIO()
-    wb.save(output)
-    output.seek(0)
-
-    return StreamingResponse(
-        output,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=mau_danh_sach_hoc_sinh.xlsx"},
+    output = StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow(["Họ tên", "Email", "Mật khẩu"])
+    writer.writerow(["Nguyễn Văn A", "nguyenvana@example.edu", "MatKhau123"])
+    return Response(
+        content="\ufeff" + output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=mau_danh_sach_hoc_sinh.csv"},
     )
 
 
 @router.post("/import-students")
-async def import_students_from_excel(
+async def import_students_from_csv(
     class_id: int,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
@@ -95,47 +79,58 @@ async def import_students_from_excel(
     if not target_class:
         raise HTTPException(status_code=404, detail="Lớp không tồn tại")
 
-    # Read Excel file
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=415, detail="Chỉ chấp nhận file CSV")
+
     try:
-        contents = await file.read()
-        wb = openpyxl.load_workbook(BytesIO(contents))
-        ws = wb.active
-    except Exception:
-        raise HTTPException(status_code=400, detail="Không thể đọc file Excel")
+        contents = await file.read(2 * 1024 * 1024 + 1)
+        if len(contents) > 2 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="File CSV không được vượt quá 2 MB")
+        rows = list(csv.reader(StringIO(contents.decode("utf-8-sig"))))
+    except UnicodeDecodeError as exc:
+        raise HTTPException(status_code=400, detail="File CSV phải dùng mã hóa UTF-8") from exc
+
+    if not rows or [item.strip().lower() for item in rows[0][:3]] != ["họ tên", "email", "mật khẩu"]:
+        raise HTTPException(status_code=400, detail="File CSV phải có ba cột: Họ tên, Email, Mật khẩu")
 
     results = {"success": 0, "errors": []}
+    existing_emails = {
+        email.lower()
+        for email, in db.query(models.User.email).all()
+        if email
+    }
 
-    for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+    for row_num, row in enumerate(rows[1:], start=2):
         if not row or not row[0]:
             continue
 
-        name = str(row[0]).strip() if row[0] else None
-        email = str(row[1]).strip() if len(row) > 1 and row[1] else None
-        password = str(row[2]).strip() if len(row) > 2 and row[2] else None
+        name = row[0].strip() if row else ""
+        email = row[1].strip().lower() if len(row) > 1 else ""
+        password = row[2].strip() if len(row) > 2 else ""
 
         if not name or not email or not password:
             results["errors"].append(f"Dòng {row_num}: Thiếu thông tin (cần Họ tên, Email, Mật khẩu)")
             continue
+        if "@" not in email:
+            results["errors"].append(f"Dòng {row_num}: Email không hợp lệ")
+            continue
+        if len(password) < 8 or len(password.encode("utf-8")) > 72:
+            results["errors"].append(f"Dòng {row_num}: Mật khẩu phải từ 8 đến 72 byte")
+            continue
 
-        # Check duplicate email
-        existing = db.query(models.User).filter(models.User.email == email).first()
-        if existing:
+        if email in existing_emails:
             results["errors"].append(f"Dòng {row_num}: Email '{email}' đã tồn tại")
             continue
 
-        try:
-            new_user = models.User(
-                name=name,
-                email=email,
-                hashed_password=security.get_password_hash(password),
-                role="student",
-                class_id=class_id,
-            )
-            db.add(new_user)
-            db.flush()
-            results["success"] += 1
-        except Exception as e:
-            results["errors"].append(f"Dòng {row_num}: Lỗi tạo user - {str(e)}")
+        db.add(models.User(
+            name=name,
+            email=email,
+            hashed_password=security.get_password_hash(password),
+            role="student",
+            class_id=class_id,
+        ))
+        existing_emails.add(email)
+        results["success"] += 1
 
     # Update student count
     count = db.query(models.User).filter(

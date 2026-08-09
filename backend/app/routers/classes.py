@@ -1,48 +1,84 @@
-from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
-from sqlalchemy.orm import Session
-from typing import List, Optional
-from pydantic import BaseModel, ConfigDict
-from app.database import get_db
-from app import models
-from app.authorization import get_accessible_class, require_roles
-from app.routers.auth import get_current_user
-from datetime import datetime
+"""Canonical class and roster API."""
+
 import random
 import string
-import unicodedata
-import re
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy.orm import Session
+
+from app import models
+from app.application.insights import SchoolInsights
+from app.authorization import get_accessible_class, require_roles
+from app.database import get_db
+from app.routers.auth import get_current_user
+from app.schemas.insights import ClassGradebookResponse
+
 
 router = APIRouter()
 
-# --- Schemas ---
 
-class ClassCreate(BaseModel):
-    name: str
-    grade: str
-    teacher_id: Optional[int] = None
-    online_enabled: bool = False
+class ClassWrite(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    grade: str = Field(default="", max_length=30)
+    teacher_id: int | None = None
+
 
 class ClassResponse(BaseModel):
     id: int
     name: str
     grade: str
-    teacher_id: Optional[int] = None
-    teacher_name: Optional[str] = None
+    teacher_id: int | None = None
+    teacher_name: str | None = None
     student_count: int = 0
-    happiness_score: float = 0
-    engagement_score: float = 0
-    mental_health_score: float = 0
-    meeting_link: Optional[str] = None
-    class_code: Optional[str] = None
-    online_enabled: bool = False
-    created_at: Optional[str] = None
-    
+    class_code: str | None = None
+    created_at: str | None = None
+
     model_config = ConfigDict(from_attributes=True)
 
-# --- Endpoints ---
 
-@router.get("", response_model=List[ClassResponse])
-async def get_classes(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)): 
+def _teacher_name(school_class: models.Class) -> str | None:
+    return school_class.teacher.name if school_class.teacher else None
+
+
+def _class_response(school_class: models.Class) -> ClassResponse:
+    return ClassResponse(
+        id=school_class.id,
+        name=school_class.name,
+        grade=school_class.grade or "",
+        teacher_id=school_class.teacher_id,
+        teacher_name=_teacher_name(school_class),
+        student_count=len([student for student in school_class.students if student.role == "student"]),
+        class_code=school_class.class_code,
+        created_at=school_class.created_at,
+    )
+
+
+def _new_class_code(db: Session) -> str:
+    while True:
+        value = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        if db.query(models.Class.id).filter(models.Class.class_code == value).first() is None:
+            return value
+
+
+def _validated_teacher(db: Session, teacher_id: int | None) -> int | None:
+    if teacher_id is None:
+        return None
+    exists = db.query(models.User.id).filter(
+        models.User.id == teacher_id,
+        models.User.role == "teacher",
+    ).first()
+    if exists is None:
+        raise HTTPException(status_code=422, detail="Giáo viên phụ trách không hợp lệ")
+    return teacher_id
+
+
+@router.get("", response_model=list[ClassResponse])
+def get_classes(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     query = db.query(models.Class)
     if current_user.role == "teacher":
         query = query.filter(models.Class.teacher_id == current_user.id)
@@ -50,244 +86,102 @@ async def get_classes(db: Session = Depends(get_db), current_user: models.User =
         query = query.filter(models.Class.id == current_user.class_id)
     elif current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Bạn không có quyền xem danh sách lớp")
-    
-    classes = query.all()
-    result = []
-    for c in classes:
-        teacher_name = None
-        if c.teacher_id:
-            teacher = db.query(models.User).filter(models.User.id == c.teacher_id).first()
-            if teacher: teacher_name = teacher.name
-        
-        # Calculate stats
-        students = [s for s in c.students if s.role == 'student']
-        student_count = len(students)
-        
-        happiness = 0
-        engagement = 0
-        mental = 0
-        
-        if student_count > 0:
-            happiness = sum([s.happiness_score or 0 for s in students]) / student_count
-            engagement = sum([s.engagement_score or 0 for s in students]) / student_count
-            mental = sum([s.mental_health_score or 0 for s in students]) / student_count
-            
-        result.append({
-            "id": c.id,
-            "name": c.name,
-            "grade": c.grade,
-            "teacher_id": c.teacher_id,
-            "teacher_name": teacher_name,
-            "student_count": student_count, 
-            "happiness_score": round(happiness, 1),
-            "engagement_score": round(engagement, 1),
-            "mental_health_score": round(mental, 1),
-            "meeting_link": c.meeting_link,
-            "class_code": c.class_code,
-            "online_enabled": c.online_enabled,
-            "created_at": c.created_at
-        })
-    return result
+    return [_class_response(school_class) for school_class in query.order_by(models.Class.name).all()]
+
 
 @router.get("/{class_id}", response_model=ClassResponse)
-async def get_class_details(class_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    c = get_accessible_class(db, current_user, class_id, allow_student=True)
-        
-    teacher_name = None
-    if c.teacher_id:
-        teacher = db.query(models.User).filter(models.User.id == c.teacher_id).first()
-        if teacher: teacher_name = teacher.name
-        
-    students = [s for s in c.students if s.role == 'student']
-    student_count = len(students)
-    
-    happiness = 0
-    engagement = 0
-    mental = 0
-    
-    if student_count > 0:
-        happiness = sum([s.happiness_score or 0 for s in students]) / student_count
-        engagement = sum([s.engagement_score or 0 for s in students]) / student_count
-        mental = sum([s.mental_health_score or 0 for s in students]) / student_count
-        
-    return {
-        "id": c.id,
-        "name": c.name,
-        "grade": c.grade,
-        "teacher_id": c.teacher_id,
-        "teacher_name": teacher_name,
-        "student_count": student_count,
-        "happiness_score": round(happiness, 1),
-        "engagement_score": round(engagement, 1),
-        "mental_health_score": round(mental, 1),
-        "meeting_link": c.meeting_link,
-        "class_code": c.class_code,
-        "online_enabled": c.online_enabled,
-        "created_at": c.created_at
-    }
+def get_class_details(
+    class_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return _class_response(get_accessible_class(db, current_user, class_id, allow_student=True))
 
 
 @router.get("/{class_id}/students")
-async def get_class_students(class_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+def get_class_students(
+    class_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     require_roles(current_user, "admin", "teacher")
     get_accessible_class(db, current_user, class_id)
-
-    students = db.query(models.User).filter(models.User.class_id == class_id, models.User.role == "student").all()
-    
+    students = db.query(models.User).filter(
+        models.User.class_id == class_id,
+        models.User.role == "student",
+    ).order_by(models.User.name).all()
     return [
-        {
-            "id": s.id,
-            "name": s.name,
-            "email": s.email,
-            "avatar": s.avatar_url,
-            "status": s.status,
-            "happiness_score": s.happiness_score,
-            "engagement_score": s.engagement_score,
-            "mental_health_score": s.mental_health_score
-        }
-        for s in students
+        {"id": student.id, "name": student.name, "email": student.email, "avatar": student.avatar_url}
+        for student in students
     ]
 
-@router.get("/{class_id}/timeline")
-async def get_class_timeline(class_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    get_accessible_class(db, current_user, class_id, allow_student=True)
-    # Placeholder for now
-    return []
+
+@router.get("/{class_id}/gradebook", response_model=ClassGradebookResponse)
+def get_class_gradebook(
+    class_id: int,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=50, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    require_roles(current_user, "admin", "teacher")
+    school_class = get_accessible_class(db, current_user, class_id)
+    return SchoolInsights(db).class_gradebook(
+        school_class,
+        page=page,
+        page_size=page_size,
+    )
+
 
 @router.post("", response_model=ClassResponse)
-async def create_class(class_data: ClassCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+def create_class(
+    class_data: ClassWrite,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     require_roles(current_user, "admin", "teacher")
-    try:
-        db_class = db.query(models.Class).filter(models.Class.name == class_data.name).first()
-        if db_class:
-             raise HTTPException(status_code=400, detail="Class name already exists")
+    name = class_data.name.strip()
+    if db.query(models.Class.id).filter(models.Class.name == name).first():
+        raise HTTPException(status_code=400, detail="Tên lớp đã tồn tại")
 
-        # Generate meeting link if online enabled
-        meeting_link = None
-        if class_data.online_enabled:
-            # Sanitize name for URL
-            safe_name = "".join(c for c in unicodedata.normalize('NFD', class_data.name) if unicodedata.category(c) != 'Mn')
-            safe_name = re.sub(r'[^a-zA-Z0-9]', '', safe_name)
-            random_suffix = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
-            meeting_link = f"https://meet.jit.si/HappySchools_{safe_name}_{random_suffix}"
+    teacher_id = current_user.id if current_user.role == "teacher" else _validated_teacher(db, class_data.teacher_id)
+    school_class = models.Class(
+        name=name,
+        grade=class_data.grade.strip(),
+        teacher_id=teacher_id,
+        student_count=0,
+        class_code=_new_class_code(db),
+        created_at=datetime.now().isoformat(),
+    )
+    db.add(school_class)
+    db.commit()
+    db.refresh(school_class)
+    return _class_response(school_class)
 
-        # Generate Class Code
-        class_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-        # Ensure uniqueness (simple check)
-        while db.query(models.Class).filter(models.Class.class_code == class_code).first():
-            class_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-
-        teacher_id = class_data.teacher_id if current_user.role == "admin" else current_user.id
-        if teacher_id is not None:
-            teacher = db.query(models.User).filter(
-                models.User.id == teacher_id,
-                models.User.role == "teacher",
-            ).first()
-            if teacher is None:
-                raise HTTPException(status_code=422, detail="Giáo viên phụ trách không hợp lệ")
-
-        new_class = models.Class(
-            name=class_data.name,
-            grade=class_data.grade,
-            teacher_id=teacher_id,
-            student_count=0,
-            meeting_link=meeting_link,
-            class_code=class_code,
-            online_enabled=class_data.online_enabled,
-            created_at=datetime.now().isoformat()
-        )
-        db.add(new_class)
-        db.commit()
-        db.refresh(new_class)
-        
-        teacher_name = None
-        if new_class.teacher_id:
-            teacher = db.query(models.User).filter(models.User.id == new_class.teacher_id).first()
-            if teacher: teacher_name = teacher.name
-
-        return {
-            "id": new_class.id,
-            "name": new_class.name,
-            "grade": new_class.grade,
-            "teacher_id": new_class.teacher_id,
-            "teacher_name": teacher_name,
-            "student_count": 0,
-            "happiness_score": 0,
-            "engagement_score": 0,
-            "mental_health_score": 0,
-            "meeting_link": new_class.meeting_link,
-            "class_code": new_class.class_code,
-            "online_enabled": new_class.online_enabled,
-            "created_at": new_class.created_at
-        }
-    except HTTPException:
-        raise
-    except Exception:
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Không thể tạo lớp học")
 
 @router.put("/{class_id}", response_model=ClassResponse)
-async def update_class(class_id: int, class_data: ClassCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+def update_class(
+    class_id: int,
+    class_data: ClassWrite,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     require_roles(current_user, "admin", "teacher")
-    cls = get_accessible_class(db, current_user, class_id)
+    school_class = get_accessible_class(db, current_user, class_id)
+    name = class_data.name.strip()
+    duplicate = db.query(models.Class.id).filter(
+        models.Class.name == name,
+        models.Class.id != class_id,
+    ).first()
+    if duplicate:
+        raise HTTPException(status_code=400, detail="Tên lớp đã tồn tại")
 
-    teacher_id = class_data.teacher_id if current_user.role == "admin" else cls.teacher_id
-    if teacher_id is not None:
-        teacher = db.query(models.User).filter(
-            models.User.id == teacher_id,
-            models.User.role == "teacher",
-        ).first()
-        if teacher is None:
-            raise HTTPException(status_code=422, detail="Giáo viên phụ trách không hợp lệ")
-        
-    cls.name = class_data.name
-    cls.grade = class_data.grade
-    cls.teacher_id = teacher_id
-    cls.online_enabled = class_data.online_enabled
-    
-    # Generate meeting link if online enabled and link is missing
-    if cls.online_enabled and not cls.meeting_link:
-         # Sanitize name for URL
-        safe_name = "".join(c for c in unicodedata.normalize('NFD', cls.name) if unicodedata.category(c) != 'Mn')
-        safe_name = re.sub(r'[^a-zA-Z0-9]', '', safe_name)
-        random_suffix = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
-        cls.meeting_link = f"https://meet.jit.si/HappySchools_{safe_name}_{random_suffix}"
-    
-    # Ensure class_code exists (backfill if missing)
-    if not cls.class_code:
-        cls.class_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    
+    school_class.name = name
+    school_class.grade = class_data.grade.strip()
+    if current_user.role == "admin":
+        school_class.teacher_id = _validated_teacher(db, class_data.teacher_id)
+    if not school_class.class_code:
+        school_class.class_code = _new_class_code(db)
     db.commit()
-    db.refresh(cls)
-    
-    teacher_name = None
-    if cls.teacher_id:
-        teacher = db.query(models.User).filter(models.User.id == cls.teacher_id).first()
-        if teacher: teacher_name = teacher.name
-        
-    # Calculate scores
-    students = [s for s in cls.students if s.role == 'student']
-    student_count = len(students)
-    happiness = 0
-    engagement = 0
-    mental = 0
-    if student_count > 0:
-        happiness = sum([s.happiness_score or 0 for s in students]) / student_count
-        engagement = sum([s.engagement_score or 0 for s in students]) / student_count
-        mental = sum([s.mental_health_score or 0 for s in students]) / student_count
-
-    return {
-        "id": cls.id,
-        "name": cls.name,
-        "grade": cls.grade,
-        "teacher_id": cls.teacher_id,
-        "teacher_name": teacher_name,
-        "student_count": student_count,
-        "happiness_score": round(happiness, 1),
-        "engagement_score": round(engagement, 1),
-        "mental_health_score": round(mental, 1),
-        "meeting_link": cls.meeting_link,
-        "class_code": cls.class_code,
-        "online_enabled": cls.online_enabled,
-        "created_at": cls.created_at
-    }
+    db.refresh(school_class)
+    return _class_response(school_class)

@@ -1,7 +1,93 @@
+from datetime import timedelta
+
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app import models
+from app import models, security
+from app.config import get_settings
+
+
+def test_browser_cookie_session_and_bearer_compatibility(
+    client: TestClient,
+    make_user,
+):
+    user = make_user(
+        email="cookie-session@example.edu",
+        role="teacher",
+        name="Cô Cookie",
+    )
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": user.email, "password": "password123"},
+    )
+
+    assert login.status_code == 200
+    assert login.json()["access_token"]
+    cookie_name = get_settings().AUTH_COOKIE_NAME
+    assert login.cookies.get(cookie_name)
+    set_cookie = login.headers["set-cookie"].lower()
+    assert "httponly" in set_cookie
+    assert "samesite=lax" in set_cookie
+    assert "path=/" in set_cookie
+
+    current_user = client.get("/api/auth/users/me")
+    assert current_user.status_code == 200
+    assert current_user.json()["email"] == user.email
+
+    updated = client.put(
+        "/api/auth/users/me",
+        json={"name": "Cô Cookie Mới"},
+    )
+    assert updated.status_code == 200
+    assert updated.json()["name"] == "Cô Cookie Mới"
+
+    invalid_bearer = client.get(
+        "/api/auth/users/me",
+        headers={"Authorization": "Bearer invalid-token"},
+    )
+    assert invalid_bearer.status_code == 401
+
+    logout = client.post("/api/auth/logout")
+    assert logout.status_code == 204
+    assert "max-age=0" in logout.headers["set-cookie"].lower()
+    assert client.get("/api/auth/users/me").status_code == 401
+
+
+def test_production_cookie_is_secure(
+    client: TestClient,
+    make_user,
+    monkeypatch,
+):
+    user = make_user(email="secure-cookie@example.edu", role="student")
+    monkeypatch.setattr(get_settings(), "ENVIRONMENT", "production")
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": user.email, "password": "password123"},
+    )
+
+    assert login.status_code == 200
+    assert "secure" in login.headers["set-cookie"].lower()
+
+
+def test_invite_token_cannot_be_used_as_access_token(
+    client: TestClient,
+    make_user,
+):
+    """Token mời có hạn 48h, gửi qua email, không được phép dùng để đăng nhập."""
+    student = make_user(email="invited@example.edu", role="student")
+    invite_token = security.create_access_token(
+        data={"sub": student.email, "type": "invite", "class_id": 1},
+        expires_delta=timedelta(hours=48),
+    )
+
+    response = client.get(
+        "/api/auth/users/me",
+        headers={"Authorization": f"Bearer {invite_token}"},
+    )
+
+    assert response.status_code == 401
 
 
 def create_class(db: Session, *, name: str, teacher_id: int | None = None) -> models.Class:
@@ -131,40 +217,17 @@ def test_teacher_cannot_create_quiz_for_another_teachers_class(
 
     assert response.status_code == 403
 
-
-def test_activity_endpoints_require_authentication(client: TestClient):
-    response = client.get("/api/activities")
-    assert response.status_code == 401
-
-
-def test_active_battle_route_is_not_shadowed(
-    client: TestClient,
-    make_user,
-    auth_headers,
-):
-    admin = make_user(email="admin@example.edu", role="admin")
-    response = client.get("/api/battle/active", headers=auth_headers(admin))
-
-    assert response.status_code == 200
-    assert response.json() == []
-
-
-def test_teacher_cannot_read_another_teachers_class_report(
-    client: TestClient,
-    db_session: Session,
-    make_user,
-    auth_headers,
-):
-    owner = make_user(email="report-owner@example.edu", role="teacher")
-    attacker = make_user(email="report-attacker@example.edu", role="teacher")
-    school_class = create_class(db_session, name="9R1", teacher_id=owner.id)
-
-    response = client.get(
-        f"/api/analytics/class-report/{school_class.id}",
-        headers=auth_headers(attacker),
+def test_retired_product_routes_are_not_exposed(client: TestClient):
+    paths = client.get("/api/openapi.json").json()["paths"]
+    retired_prefixes = (
+        "/api/activities",
+        "/api/analytics",
+        "/api/invitations",
+        "/api/statistics",
+        "/api/students",
+        "/api/teacher/reports",
     )
-
-    assert response.status_code == 403
+    assert not any(path.startswith(retired_prefixes) for path in paths)
 
 
 def test_teacher_cannot_create_schedule_for_another_teachers_class(
@@ -192,55 +255,3 @@ def test_teacher_cannot_create_schedule_for_another_teachers_class(
     )
 
     assert response.status_code == 403
-
-
-def test_student_cannot_list_student_wellbeing_scores(
-    client: TestClient,
-    db_session: Session,
-    make_user,
-    auth_headers,
-):
-    school_class = create_class(db_session, name="9P1")
-    student = make_user(
-        email="privacy-student@example.edu",
-        role="student",
-        class_id=school_class.id,
-    )
-
-    response = client.get("/api/students", headers=auth_headers(student))
-
-    assert response.status_code == 403
-
-
-def test_student_search_is_scoped_to_their_class(
-    client: TestClient,
-    db_session: Session,
-    make_user,
-    auth_headers,
-):
-    own_class = create_class(db_session, name="9A Search")
-    other_class = create_class(db_session, name="9B Secret")
-    student = make_user(
-        email="search-student@example.edu",
-        role="student",
-        class_id=own_class.id,
-    )
-    db_session.add(models.Assignment(
-        title="Tài liệu bí mật lớp khác",
-        subject="Toán",
-        class_id=other_class.id,
-        teacher_id=None,
-        status="active",
-        total_points=10,
-        created_at="2026-08-05T00:00:00",
-    ))
-    db_session.commit()
-
-    response = client.get(
-        "/api/search",
-        params={"q": "bí mật", "type": "assignments"},
-        headers=auth_headers(student),
-    )
-
-    assert response.status_code == 200
-    assert response.json()["results"]["assignments"] == []

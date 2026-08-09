@@ -5,7 +5,6 @@ owns authorization decisions, SQLAlchemy queries, transactions, response
 visibility, notifications and audit events for assignments.
 """
 
-from dataclasses import dataclass
 from datetime import datetime
 
 from sqlalchemy.orm import Session
@@ -17,26 +16,17 @@ from app.application.notifications import add_class_notifications
 from app.application.transactions import transaction
 from app.domain import coursework as policy
 from app.schemas.coursework import (
-    AiGradeResponse,
-    AiGradeResultResponse,
     AssignmentCreateRequest,
     AssignmentResponse,
     AssignmentUpdateRequest,
     GradeRequest,
     GradeResponse,
     MessageResponse,
-    QuestionCreateRequest,
     SubmissionCreateRequest,
     SubmissionResponse,
     assignment_response,
     submission_response,
 )
-
-
-@dataclass(frozen=True)
-class AssignmentCreated:
-    response: AssignmentResponse
-    email_recipients: list[dict[str, str]]
 
 
 class Coursework:
@@ -86,7 +76,7 @@ class Coursework:
             for assignment in query.all()
         ]
 
-    def create_assignment(self, actor: models.User, request: AssignmentCreateRequest) -> AssignmentCreated:
+    def create_assignment(self, actor: models.User, request: AssignmentCreateRequest) -> AssignmentResponse:
         if actor.role != "teacher":
             raise ApplicationError(ErrorCode.FORBIDDEN, "Only teachers can create assignments")
         self._teacher_class(actor, request.class_id)
@@ -128,19 +118,7 @@ class Coursework:
                 details={"class_id": assignment.class_id},
             )
 
-        students = self.db.query(models.User).filter(
-            models.User.class_id == request.class_id,
-            models.User.role == "student",
-        ).all()
-        recipients = [
-            {"email": student.email, "name": student.name}
-            for student in students
-            if student.email_enabled and student.notify_assignments and student.email
-        ]
-        return AssignmentCreated(
-            response=assignment_response(assignment, role=actor.role),
-            email_recipients=recipients,
-        )
+        return assignment_response(assignment, role=actor.role)
 
     def update_assignment(
         self,
@@ -257,20 +235,6 @@ class Coursework:
                 details={"assignment_id": assignment.id, "total_score": total_score},
             )
         return GradeResponse(message="Graded successfully", total_score=total_score)
-
-    def import_questions(self, actor: models.User) -> list[QuestionCreateRequest]:
-        if actor.role != "teacher":
-            raise ApplicationError(ErrorCode.FORBIDDEN, "Bạn không có quyền thực hiện thao tác này")
-        return [QuestionCreateRequest(
-            question_type="multiple_choice",
-            question_text="Câu hỏi mẫu từ file vừa tải lên?",
-            points=1,
-            option_a="Đáp án A",
-            option_b="Đáp án B",
-            option_c="Đáp án C",
-            option_d="Đáp án D",
-            correct_answer="A",
-        )]
 
     def get_assignment(self, actor: models.User, assignment_id: int) -> AssignmentResponse:
         assignment = self._assignment(assignment_id)
@@ -424,76 +388,3 @@ class Coursework:
                 resource_id=assignment.id,
             )
         return MessageResponse(message="Assignment closed successfully")
-
-    def ai_grade_submission(
-        self,
-        actor: models.User,
-        assignment_id: int,
-        submission_id: int,
-    ) -> AiGradeResponse:
-        if actor.role != "teacher":
-            raise ApplicationError(ErrorCode.FORBIDDEN, "Only teachers can use AI grading")
-        submission = self.db.query(models.Submission).filter(
-            models.Submission.id == submission_id,
-            models.Submission.assignment_id == assignment_id,
-        ).first()
-        if submission is None:
-            raise ApplicationError(ErrorCode.NOT_FOUND, "Submission not found")
-        assignment = self._assignment(assignment_id)
-        self._require_manager(actor, assignment, "Bạn không có quyền truy cập tài nguyên này")
-
-        results: list[AiGradeResultResponse] = []
-        total_score = 0.0
-        with transaction(self.db):
-            for answer in submission.answers:
-                question = self.db.query(models.Question).filter(
-                    models.Question.id == answer.question_id,
-                ).first()
-                if question is None or question.question_type != "essay":
-                    results.append(AiGradeResultResponse(
-                        answer_id=answer.id,
-                        question_text=question.question_text if question else "",
-                        answer_text=answer.answer_text,
-                        ai_score=answer.score,
-                        ai_feedback="Đã chấm tự động (trắc nghiệm)",
-                        max_points=question.points if question else 0,
-                        question_type=question.question_type if question else "",
-                    ))
-                    total_score += answer.score
-                    continue
-
-                suggestion = policy.suggest_essay_grade(
-                    answer_text=answer.answer_text,
-                    maximum=question.points,
-                )
-                answer.score = suggestion.score
-                answer.feedback = f"[AI] {suggestion.feedback}"
-                total_score += suggestion.score
-                results.append(AiGradeResultResponse(
-                    answer_id=answer.id,
-                    question_text=question.question_text,
-                    answer_text=answer.answer_text,
-                    ai_score=suggestion.score,
-                    ai_feedback=suggestion.feedback,
-                    max_points=question.points,
-                    question_type="essay",
-                ))
-
-            submission.total_score = round(total_score, 1)
-            submission.status = "graded"
-            submission.graded_at = datetime.now().isoformat()
-            record_audit_event(
-                self.db,
-                actor=actor,
-                action="assignment.submission_ai_graded",
-                resource_type="submission",
-                resource_id=submission.id,
-                details={"assignment_id": assignment.id, "total_score": submission.total_score},
-            )
-
-        return AiGradeResponse(
-            message="AI đã chấm bài xong! Giáo viên có thể điều chỉnh điểm.",
-            total_score=round(total_score, 1),
-            total_points=assignment.total_points,
-            results=results,
-        )

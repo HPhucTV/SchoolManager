@@ -32,11 +32,6 @@ def test_coursework_grading_rules_are_deterministic():
     assert coursework.is_valid_manual_grade(score=4.5, maximum=5)
     assert not coursework.is_valid_manual_grade(score=5.1, maximum=5)
 
-    short_essay = coursework.suggest_essay_grade(answer_text="quá ngắn", maximum=10)
-    assert short_essay.score == 3
-    assert "quá ngắn" in short_essay.feedback
-
-
 def test_assessment_access_retake_and_scoring_policies():
     assert not assessment.can_view_quiz(
         role="student",

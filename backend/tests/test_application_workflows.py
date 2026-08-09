@@ -5,6 +5,7 @@ from app import models
 from app.application.assessment import Assessment
 from app.application.coursework import Coursework
 from app.application.errors import ApplicationError, ErrorCode
+from app.config import get_settings
 from app.schemas.assessment import (
     QuizCreateRequest,
     QuizQuestionCreateRequest,
@@ -34,7 +35,7 @@ def audit_actions(db: Session) -> list[str]:
 
 
 def test_actor_specific_openapi_contract_builds(client):
-    response = client.get("/openapi.json")
+    response = client.get(get_settings().API_V1_STR + "/openapi.json")
     assert response.status_code == 200
     paths = response.json()["paths"]
     assert "/api/assignments/{assignment_id}" in paths
@@ -72,9 +73,9 @@ def test_coursework_interface_hides_answers_and_rolls_back_invalid_grade(
             )],
         ),
     )
-    assignment_id = created.response.id
-    question_id = created.response.questions[0].id
-    assert created.response.questions[0].correct_answer == "B"
+    assignment_id = created.id
+    question_id = created.questions[0].id
+    assert created.questions[0].correct_answer == "B"
     assert coursework.get_assignment(student, assignment_id).questions[0].correct_answer is None
 
     submission = coursework.submit_assignment(
